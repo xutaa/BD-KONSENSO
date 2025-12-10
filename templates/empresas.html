@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Empresas{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Registro de Empresas</h1>
+    
+    {% if sucesso %}
+        <p class="text-success">Conexão com o Banco de Dados OK! Listando da dbo.Empresa.</p>
+        
+        <a href="#" class="btn btn-primary mb-3 disabled" aria-disabled="true">
+            <i class="fas fa-plus"></i> Nova Empresa (A desenvolver)
+        </a>
+
+        {% if dados_empresas %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID da Empresa</th>
+                            <th>Nome/Razão Social</th>
+                            <th>NIF/NIPC</th>
+                            <th>Morada</th>
+                            <th>Telefone</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for empresa in dados_empresas %}
+                            <tr>
+                                <td>{{ empresa[0] }}</td> 
+                                <td>{{ empresa[1] }}</td>
+                                <td>{{ empresa[2] }}</td>
+                                <td>{{ empresa[3] }}</td>
+                                <td>{{ empresa[4] }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-info disabled" aria-disabled="true">Detalhes</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>  
+
+        {% else %}
+            <div class="alert alert-info">
+                Nenhuma empresa encontrada. A tabela dbo.Empresa pode estar vazia.
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">🚨 Falha na Conexão ou Query</h4>
+            <p>A aplicação não conseguiu listar as empresas.</p>
+            <hr>
+            <p class="mb-0">Detalhes do Erro: {{ erro }}</p>
+        </div>
+    {% endif %}
+    
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Roadmap{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Dashboard de Desenvolvimento (P2G4)</h1>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Roadmap e Status do Projeto</h5>
+        </div>
+        <ul class="list-group list-group-flush">
+            {% for fase, status in roadmap.items() %}
+                <li class="list-group-item">
+                    <strong>{{ fase }}</strong>: <span class="float-end">{{ status }}</span>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <h2>Links Ativos</h2>
+    <div class="list-group">
+        <a href="{{ url_for('lista_produtos') }}" class="list-group-item list-group-item-action">
+            ✅ Listagem de Produtos (dbo.Produto)
+        </a>
+        <a href="{{ url_for('lista_empresas') }}" class="list-group-item list-group-item-action">
+            ✅ Listagem de Empresas (dbo.Empresa)
+        </a>
+        <a href="{{ url_for('novo_produto') }}" class="list-group-item list-group-item-action list-group-item-warning">
+            🛠️ Novo Produto (Início da Fase 2)
+        </a>
+    </div>
+
+{% endblock %}
