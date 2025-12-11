@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Fábricas{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Lista de Fábricas</h1>
+    
+    {% if sucesso %}
+        <div class="alert alert-success" role="alert">
+            Conexão com o Banco de Dados OK! Listando Fábricas da dbo.Fabrica.
+        </div>
+        
+        <a href="#" class="btn btn-primary mb-3">
+            <i class="fas fa-plus"></i> Nova Fábrica
+        </a>
+
+        {% if dados_fabricas %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Fábrica ID</th>
+                            <th>Nome</th>
+                            <th>Localização</th>
+                            <th>Empresa NIF</th>
+                            <th>Distribuidora ID</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fabrica in dados_fabricas %}
+                            <tr>
+                                <td>{{ fabrica[0] }}</td>
+                                <td>{{ fabrica[1] }}</td>
+                                <td>{{ fabrica[2] }}</td>
+                                <td>{{ fabrica[3] }}</td>
+                                <td>{{ fabrica[4] }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="#" class="btn btn-sm btn-danger">Remover</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="alert alert-info">
+                Nenhuma fábrica encontrada. A tabela pode estar vazia.
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">🚨 Falha Crítica na Conexão ou Query</h4>
+            <p>A aplicação não conseguiu listar as fábricas. Verifique as credenciais ou a query SQL.</p>
+            <hr>
+            <p class="mb-0">Detalhes do Erro: {{ erro }}</p>
+        </div>
+    {% endif %}
+    
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Funcionários{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Lista de Funcionários</h1>
+    
+    {% if sucesso %}
+        <div class="alert alert-success" role="alert">
+            Conexão com o Banco de Dados OK! Listando Funcionários da dbo.Funcionario.
+        </div>
+        
+        <a href="#" class="btn btn-primary mb-3">
+            <i class="fas fa-plus"></i> Novo Funcionário
+        </a>
+
+        {% if dados_funcionarios %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Funcionário ID</th>
+                            <th>Nome</th>
+                            <th>Cargo ID</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for funcionario in dados_funcionarios %}
+                            <tr>
+                                <td>{{ funcionario[0] }}</td>
+                                <td>{{ funcionario[1] }}</td>
+                                <td>{{ funcionario[2] }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="#" class="btn btn-sm btn-danger">Remover</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="alert alert-info">
+                Nenhum funcionário encontrado. A tabela pode estar vazia.
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">🚨 Falha Crítica na Conexão ou Query</h4>
+            <p>A aplicação não conseguiu listar os funcionários. Verifique as credenciais ou a query SQL.</p>
+            <hr>
+            <p class="mb-0">Detalhes do Erro: {{ erro }}</p>
+        </div>
+    {% endif %}
+    
+{% endblock %}

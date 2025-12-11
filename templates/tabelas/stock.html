@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Lista de Stock{% endblock %}
+
+{% block content %}
+    <h1 class="mb-4">Gestão de Stock</h1>
+    
+    {% if sucesso %}
+        <div class="alert alert-success" role="alert">
+            Conexão com o Banco de Dados OK! Listando Stock da dbo.Stock.
+        </div>
+        
+        <a href="#" class="btn btn-primary mb-3">
+            <i class="fas fa-plus"></i> Nova Entrada de Stock
+        </a>
+
+        {% if dados_stock %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Stock ID</th>
+                            <th>Produto/Matéria-Prima ID</th>
+                            <th>Quantidade</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stock in dados_stock %}
+                            <tr>
+                                <td>{{ stock[0] }}</td>
+                                <td>{{ stock[1] }}</td>
+                                <td>{{ stock[2] }}</td>
+                                <td>
+                                    <a href="#" class="btn btn-sm btn-warning">Editar</a>
+                                    <a href="#" class="btn btn-sm btn-danger">Remover</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="alert alert-info">
+                Nenhum item em stock encontrado. A tabela pode estar vazia.
+            </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">🚨 Falha Crítica na Conexão ou Query</h4>
+            <p>A aplicação não conseguiu listar o stock. Verifique as credenciais ou a query SQL.</p>
+            <hr>
+            <p class="mb-0">Detalhes do Erro: {{ erro }}</p>
+        </div>
+    {% endif %}
+    
+{% endblock %}
