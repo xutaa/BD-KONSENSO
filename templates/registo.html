@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BD-KONSENSO - Registo</title>
+    <!-- AQUI: Link para o CSS renomeado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/registo.css') }}">
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <h1>Novo Registo</h1>
+            <p>Junte-se ao BD-KONSENSO</p>
+        </div>
+
+        {% if error %}
+            <div class="error-message">{{ error }}</div>
+        {% endif %}
+
+        <!-- AQUI: Action aponta para a nova rota /registo -->
+        <form method="POST" action="/registo">
+            <div class="form-group">
+                <label for="nome">Nome de Utilizador</label>
+                <input type="text" id="nome" name="nome" required minlength="3">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Corporativo</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group half">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required minlength="6">
+                </div>
+                <div class="form-group half">
+                    <label for="confirm_password">Confirmar</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-register">Registar Conta</button>
+        </form>
+
+        <div class="register-footer">
+            <a href="/login" class="back-link">← Voltar ao Login</a>
+        </div>
+    </div>
+</body>
+</html>
