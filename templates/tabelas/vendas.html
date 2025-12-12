@@ -3,40 +3,35 @@
 {% block title %}Lista de Vendas{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Lista de Vendas</h1>
+    <h1 class="mb-4">💰 Histórico de Vendas</h1>
     
     {% if sucesso %}
         <div class="alert alert-success" role="alert">
-            Conexão com o Banco de Dados OK! Listando Vendas da dbo.Venda.
+            ✅ Conexão OK! Listando vendas da tabela Venda.
         </div>
-        
-        <a href="#" class="btn btn-primary mb-3">
-            <i class="fas fa-plus"></i> Nova Venda
-        </a>
 
         {% if dados_vendas %}
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>Venda ID</th>
-                            <th>Data</th>
-                            <th>Cliente ID</th>
-                            <th>Vendedor ID</th>
-                            <th>Ações</th>
+                            <th>ID Venda</th>
+                            <th>Data/Hora</th>
+                            <th>Valor Total (€)</th>
+                            <th>Método Pagamento</th>
+                            <th>Loja ID</th>
+                            <th>CC Cliente</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for venda in dados_vendas %}
                             <tr>
                                 <td>{{ venda[0] }}</td>
-                                <td>{{ venda[1] }}</td>
-                                <td>{{ venda[2] }}</td>
+                                <td>{{ venda[1].strftime('%d/%m/%Y') if venda[1] else 'N/A' }}</td>
+                                <td>{{ "%.2f"|format(venda[2]) }}</td>
                                 <td>{{ venda[3] }}</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-warning">Editar</a>
-                                    <a href="#" class="btn btn-sm btn-danger">Remover</a>
-                                </td>
+                                <td>{{ venda[4] }}</td>
+                                <td>{{ venda[5] }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -45,17 +40,19 @@
 
         {% else %}
             <div class="alert alert-info">
-                Nenhuma venda encontrada. A tabela pode estar vazia.
+                ℹ️ Nenhuma venda encontrada.
             </div>
         {% endif %}
         
     {% else %}
         <div class="alert alert-danger" role="alert">
-            <h4 class="alert-heading">🚨 Falha Crítica na Conexão ou Query</h4>
-            <p>A aplicação não conseguiu listar as vendas. Verifique as credenciais ou a query SQL.</p>
-            <hr>
-            <p class="mb-0">Detalhes do Erro: {{ erro }}</p>
+            <h4 class="alert-heading">🚨 Erro</h4>
+            <p class="mb-0"><strong>Detalhes:</strong> {{ erro }}</p>
         </div>
     {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
+    </div>
     
 {% endblock %}

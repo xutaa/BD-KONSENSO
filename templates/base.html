@@ -17,7 +17,7 @@
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('index') }}">KONSENSO</a>
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">KONSENSO</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -25,13 +25,7 @@
                 <ul class="navbar-nav">
 
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Dashboard</a>
-                    </li>
-                    
-                    <li class="nav-item">
-                        <a class="nav-link text-warning" href="{{ url_for('novo_produto') }}">
-                            <i class="fas fa-plus"></i> Novo Produto
-                        </a>
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                     </li>
 
                     <li class="nav-item dropdown">
@@ -39,56 +33,40 @@
                             Produtos & Vendas
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarProdutos">
-                            <li><a class="dropdown-item" href="{{ url_for('lista_produtos') }}">Produtos (Geral)</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('lista_produtos') }}">Produtos</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('lista_vendas') }}">Vendas</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_stock') }}">Stock</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_itens') }}">Itens</a></li>
                         </ul>
                     </li>
 
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarRH" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            RH & Pessoas
+                            Pessoas
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarRH">
                             <li><a class="dropdown-item" href="{{ url_for('lista_clientes') }}">Clientes</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_pessoas') }}">Pessoas</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_funcionarios') }}">Funcionários</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_vendedores') }}">Vendedores</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_cargos') }}">Cargos</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_contratos_vendedor') }}">Contratos Vendedor</a></li>
                         </ul>
                     </li>
                     
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarLogistica" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Logística & Estrutura
+                            Logística
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarLogistica">
                             <li><a class="dropdown-item" href="{{ url_for('lista_armazens') }}">Armazéns</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_maquinas') }}">Máquinas</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_lojas') }}">Lojas</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_empresas') }}">Empresas</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_distribuidoras') }}">Distribuidoras</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_distribuidoras_armazem') }}">Distr. Armazém</a></li>
-                        </ul>
-                    </li>
-
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarSuprimentos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Suprimentos
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarSuprimentos">
-                            <li><a class="dropdown-item" href="{{ url_for('lista_fornecedores') }}">Fornecedores</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_fabricas') }}">Fábricas</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('lista_materias_primas') }}">Matéria Prima</a></li>
                         </ul>
                     </li>
                     
+                </ul>
+                
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-light me-3">
+                            Olá, {{ session.get('admin_logado', 'Visitante') }}
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">Sair</a>
+                    </li>
                 </ul>
             </div>
         </div>

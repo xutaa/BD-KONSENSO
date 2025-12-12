@@ -1,34 +1,70 @@
-{% extends 'base.html' %}
-
-{% block title %}Dashboard - Roadmap{% endblock %}
-
-{% block content %}
-    <h1 class="mb-4">Dashboard de Desenvolvimento (P2G4)</h1>
-
-    <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Roadmap e Status do Projeto</h5>
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - BD Konsenso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+    <!-- Barra de Navegação -->
+    <div class="navbar">
+        <h1>🏢 BD Konsenso - Sistema de Gestão</h1>
+        <div class="navbar-right">
+            <span>👤 Olá, <strong>{{ usuario }}</strong></span>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Sair</a>
         </div>
-        <ul class="list-group list-group-flush">
-            {% for fase, status in roadmap.items() %}
-                <li class="list-group-item">
-                    <strong>{{ fase }}</strong>: <span class="float-end">{{ status }}</span>
-                </li>
-            {% endfor %}
-        </ul>
     </div>
 
-    <h2>Links Ativos</h2>
-    <div class="list-group">
-        <a href="{{ url_for('lista_produtos') }}" class="list-group-item list-group-item-action">
-            ✅ Listagem de Produtos (dbo.Produto)
-        </a>
-        <a href="{{ url_for('lista_empresas') }}" class="list-group-item list-group-item-action">
-            ✅ Listagem de Empresas (dbo.Empresa)
-        </a>
-        <a href="{{ url_for('novo_produto') }}" class="list-group-item list-group-item-action list-group-item-warning">
-            🛠️ Novo Produto (Início da Fase 2)
-        </a>
-    </div>
+    <!-- Conteúdo Principal -->
+    <div class="container">
+        <!-- Card de Boas-Vindas -->
+        <div class="welcome-card">
+            <h2>📊 Estado do Projeto</h2>
+            <ul class="status-list">
+                {% for fase, status in roadmap.items() %}
+                    <li><strong>{{ fase }}:</strong> {{ status }}</li>
+                {% endfor %}
+            </ul>
+        </div>
 
-{% endblock %}
+        <!-- Título da Secção -->
+        <h2 class="section-title">Gestão de Tabelas</h2>
+
+        <!-- Grid de Cards -->
+        <div class="grid">
+            <div class="card">
+                <a href="{{ url_for('lista_produtos') }}">
+                    <div class="card-icon">📦</div>
+                    <h3>Produtos</h3>
+                    <p>Gerir catálogo de produtos</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_clientes') }}">
+                    <div class="card-icon">👥</div>
+                    <h3>Clientes</h3>
+                    <p>Base de dados de clientes</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_vendas') }}">
+                    <div class="card-icon">💰</div>
+                    <h3>Vendas</h3>
+                    <p>Histórico de vendas</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_armazens') }}">
+                    <div class="card-icon">🏭</div>
+                    <h3>Armazéns</h3>
+                    <p>Gestão de armazéns</p>
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

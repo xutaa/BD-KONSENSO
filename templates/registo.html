@@ -3,49 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BD-KONSENSO - Registo</title>
-    <!-- AQUI: Link para o CSS renomeado -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/registo.css') }}">
+    <title>Registo - BD Konsenso</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='registo.css') }}">
 </head>
 <body>
-    <div class="register-container">
-        <div class="register-header">
-            <h1>Novo Registo</h1>
-            <p>Junte-se ao BD-KONSENSO</p>
+    <div class="registo-container">
+        <div class="registo-header">
+            <h2>Criar Conta</h2>
+            <p>Registe um novo administrador</p>
         </div>
 
         {% if error %}
-            <div class="error-message">{{ error }}</div>
+            <div class="alert error">{{ error }}</div>
         {% endif %}
 
-        <!-- AQUI: Action aponta para a nova rota /registo -->
-        <form method="POST" action="/registo">
+        <form action="{{ url_for('registo') }}" method="POST">
             <div class="form-group">
                 <label for="nome">Nome de Utilizador</label>
-                <input type="text" id="nome" name="nome" required minlength="3">
+                <input type="text" id="nome" name="nome" required>
             </div>
 
             <div class="form-group">
-                <label for="email">Email Corporativo</label>
+                <label for="email">Email</label>
                 <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="tipo_admin">Tipo de Administrador</label>
+                <select id="tipo_admin" name="tipo_admin" required>
+                    <option value="Geral">Geral</option>
+                    <option value="Supervisor">Supervisor</option>
+                    <option value="Gerente">Gerente</option>
+                </select>
             </div>
 
             <div class="form-row">
                 <div class="form-group half">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required minlength="6">
+                    <input type="password" id="password" name="password" required>
                 </div>
                 <div class="form-group half">
-                    <label for="confirm_password">Confirmar</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                    <label for="confirm_password">Confirmar Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
                 </div>
             </div>
 
-            <button type="submit" class="btn-register">Registar Conta</button>
+            <button type="submit" class="btn-registo">Registar</button>
         </form>
 
-        <div class="register-footer">
-            <a href="/login" class="back-link">← Voltar ao Login</a>
+        <div class="registo-footer">
+            <p>Já tem conta? <a href="{{ url_for('login') }}">Fazer Login</a></p>
         </div>
     </div>
 </body>
