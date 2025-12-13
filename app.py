@@ -141,24 +141,43 @@ def dashboard():
                          usuario=session['admin_logado'])
 
 # --- ROTAS DE DADOS (Protegidas por login) ---
-
-@app.route('/produtos')
-def lista_produtos():
+@app.route('/armazens')
+def lista_armazens():
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/produtos.html', erro="Erro de conexão à base de dados", sucesso=False)
+            return render_template('tabelas/armazens.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("SELECT Referencia, Descricao, Nome, Preco, Maquina_Id, Distribuidora_Id FROM dbo.Produto")
-        produtos = cursor.fetchall()
+        cursor.execute("SELECT Id, Localizacao, Capacidade FROM dbo.Armazem")
+        armazens = cursor.fetchall()
         cursor.close()
-        return render_template('tabelas/produtos.html', dados_produtos=produtos, sucesso=True)
+        return render_template('tabelas/armazens.html', dados_armazens=armazens, sucesso=True)
     except Exception as e:
-        print(f"Erro ao listar produtos: {e}")
-        return render_template('tabelas/produtos.html', erro=str(e), sucesso=False)
+        return render_template('tabelas/armazens.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/cargos')
+def lista_cargos():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/cargos.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM dbo.Cargo")
+        cargos = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/cargos.html', dados_cargos=cargos, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar cargos: {e}")
+        return render_template('tabelas/cargos.html', erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -188,6 +207,309 @@ def lista_clientes():
         if conn:
             conn.close()
 
+@app.route('/contratos_vendedor')
+def lista_contratos_vendedor():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/contratos_vendedor.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT DataIn, Empresa_Nif, Vendedor_Id FROM dbo.ContratoVendedor")
+        contratos = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/contratos_vendedor.html', dados_contratos=contratos, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar contratos vendedor: {e}")
+        return render_template('tabelas/contratos_vendedor.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/distribuidoras')
+def lista_distribuidoras():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/distribuidoras.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Id, Nome, Localizacao FROM dbo.Distribuidora")
+        distribuidoras = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/distribuidoras.html', dados_distribuidoras=distribuidoras, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar distribuidoras: {e}")
+        return render_template('tabelas/distribuidoras.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/distribuidoras_armazem')
+def lista_distribuidoras_armazem():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/distribuidoras_armazem.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Distribuidora_Id, Armazem_Id FROM dbo.DistribuidoraArmazem")
+        dados = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/distribuidoras_armazem.html', dados=dados, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar distribuidoras armazem: {e}")
+        return render_template('tabelas/distribuidoras_armazem.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/empresas')
+def lista_empresas():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/empresas.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Nif, Nome, Localizacao, NumTelefone, Email FROM dbo.Empresa")
+        empresas = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/empresas.html', dados_empresas=empresas, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar empresas: {e}")
+        return render_template('tabelas/empresas.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/fabricas')
+def lista_fabricas():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/fabricas.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Id, Nome, Localizacao, Empresa_Nif, Distribuidora_Id FROM dbo.Fabrica")
+        fabricas = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/fabricas.html', dados_fabricas=fabricas, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar fabricas: {e}")
+        return render_template('tabelas/fabricas.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/fornecedores')
+def lista_fornecedores():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/fornecedores.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Id, Nome, Empresa_Nif FROM dbo.Fornecedor")
+        fornecedores = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/fornecedores.html', dados_fornecedores=fornecedores, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar fornecedores: {e}")
+        return render_template('tabelas/fornecedores.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/funcionarios')
+def lista_funcionarios():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/funcionarios.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("""
+        """)
+        funcionarios = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/funcionarios.html', dados_funcionarios=funcionarios, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar funcionarios: {e}")
+        return render_template('tabelas/funcionarios.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/itens')
+def lista_itens():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/itens.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Quantidade, Preco, Venda_Id, Produto_Referencia FROM dbo.Item")
+        itens = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/itens.html', dados_itens=itens, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar itens: {e}")
+        return render_template('tabelas/itens.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/lojas')
+def lista_lojas():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/lojas.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("""
+                SELECT Id, Nome, Localizacao, Armazem_Id FROM dbo.Loja
+            """)
+        lojas = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/lojas.html', dados_lojas=lojas, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar lojas: {e}")
+        return render_template('tabelas/lojas.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/maquinas')
+def lista_maquinas():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/maquinas.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Id, Descricao, Tipo, Fabrica_Id FROM dbo.Maquina")
+        maquinas = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/maquinas.html', dados_maquinas=maquinas, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar maquinas: {e}")
+        return render_template('tabelas/maquinas.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/materias_primas')
+def lista_materias_primas():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/materias_primas.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT Referencia, Descricao, Fornecedor_Id FROM dbo.MateriaPrima
+            """)
+        materias_primas = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/materias_primas.html', dados_materias_primas=materias_primas, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar materias primas: {e}")
+        return render_template('tabelas/materias_primas.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/pessoas')
+def lista_pessoas():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/pessoas.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT Cc, Nome, Email, DataNascimento, Morada, NumTelefone FROM dbo.Pessoa
+        """)
+        pessoas = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/pessoas.html', dados_pessoas=pessoas, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar pessoas: {e}")
+        return render_template('tabelas/pessoas.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/produtos')
+def lista_produtos():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/produtos.html', erro="Erro de conexão à base de dados", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("SELECT Referencia, Descricao, Nome, Preco, Maquina_Id, Distribuidora_Id FROM dbo.Produto")
+        produtos = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/produtos.html', dados_produtos=produtos, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar produtos: {e}")
+        return render_template('tabelas/produtos.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
+@app.route('/stock')
+def lista_stock():
+    if 'admin_logado' not in session: 
+        return redirect(url_for('login'))
+    conn = None
+    try:
+        conn = get_db_connection()
+        if conn is None: 
+            return render_template('tabelas/stock.html', erro="Erro de conexão", sucesso=False)
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT UltimoMov, Quantidade, Produto_Referencia, Armazem_Id FROM dbo.Stock
+        """)
+        stock = cursor.fetchall()
+        cursor.close()
+        return render_template('tabelas/stock.html', dados_stock=stock, sucesso=True)
+    except Exception as e:
+        print(f"Erro ao listar stock: {e}")
+        return render_template('tabelas/stock.html', erro=str(e), sucesso=False)
+    finally:
+        if conn:
+            conn.close()
+
 @app.route('/vendas')
 def lista_vendas():
     if 'admin_logado' not in session: 
@@ -209,22 +531,25 @@ def lista_vendas():
         if conn:
             conn.close()
 
-@app.route('/armazens')
-def lista_armazens():
+@app.route('/vendedores')
+def lista_vendedores():
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/armazens.html', erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/vendedores.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("SELECT Id, Localizacao, Capacidade FROM dbo.Armazem")
-        armazens = cursor.fetchall()
+        cursor.execute("""
+        
+        """)
+        vendedores = cursor.fetchall()
         cursor.close()
-        return render_template('tabelas/armazens.html', dados_armazens=armazens, sucesso=True)
+        return render_template('tabelas/vendedores.html', dados_vendedores=vendedores, sucesso=True)
     except Exception as e:
-        return render_template('tabelas/armazens.html', erro=str(e), sucesso=False)
+        print(f"Erro ao listar vendedores: {e}")
+        return render_template('tabelas/vendedores.html', erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()

@@ -19,9 +19,10 @@
                 <table class="table table-striped table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>Stock ID</th>
-                            <th>Produto/Matéria-Prima ID</th>
+                            <th>Último Movimento</th>
                             <th>Quantidade</th>
+                            <th>Produto Referência</th>
+                            <th>Armazém ID</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -31,6 +32,7 @@
                                 <td>{{ stock[0] }}</td>
                                 <td>{{ stock[1] }}</td>
                                 <td>{{ stock[2] }}</td>
+                                <td>{{ stock[3] }}</td>
                                 <td>
                                     <a href="#" class="btn btn-sm btn-warning">Editar</a>
                                     <a href="#" class="btn btn-sm btn-danger">Remover</a>
