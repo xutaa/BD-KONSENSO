@@ -20,8 +20,14 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Vendedor ID</th>
-                            <th>Pessoa ID</th>
-                            <th>Salário</th>
+                            <th>Pessoa Cc</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Data de Nascimento</th>
+                            <th>Morada</th>
+                            <th>Telefone</th>
+                            <th>Cargo ID</th>
+                            <th>Num Vendas</th>
                             <th>Ações</th>
                         </tr>
                     </thead>
@@ -30,7 +36,13 @@
                             <tr>
                                 <td>{{ vendedor[0] }}</td>
                                 <td>{{ vendedor[1] }}</td>
-                                <td>R$ {{ "%.2f" | format(vendedor[2] | float) }}</td>
+                                <td>{{ vendedor[2] }}</td>
+                                <td>{{ vendedor[3] }}</td>
+                                <td>{{ vendedor[4] }}</td>
+                                <td>{{ vendedor[5] }}</td>
+                                <td>{{ vendedor[6] }}</td>
+                                <td>{{ vendedor[7] }}</td>
+                                <td>{{ vendedor[8] }}</td>
                                 <td>
                                     <a href="#" class="btn btn-sm btn-warning">Editar</a>
                                     <a href="#" class="btn btn-sm btn-danger">Remover</a>

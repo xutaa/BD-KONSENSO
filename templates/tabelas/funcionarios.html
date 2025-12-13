@@ -20,7 +20,13 @@
                     <thead class="table-dark">
                         <tr>
                             <th>Funcionário ID</th>
+                            <th>Pessoa Cc</th>
                             <th>Nome</th>
+                            <th>Email</th>
+                            <th>Data de Nascimento</th>
+                            <th>Morada</th>
+                            <th>Telefone</th>
+                            <th>Empresa NIF</th>
                             <th>Cargo ID</th>
                             <th>Ações</th>
                         </tr>
@@ -31,6 +37,12 @@
                                 <td>{{ funcionario[0] }}</td>
                                 <td>{{ funcionario[1] }}</td>
                                 <td>{{ funcionario[2] }}</td>
+                                <td>{{ funcionario[3] }}</td>
+                                <td>{{ funcionario[4] }}</td>
+                                <td>{{ funcionario[5] }}</td>
+                                <td>{{ funcionario[6] }}</td>
+                                <td>{{ funcionario[7] }}</td>
+                                <td>{{ funcionario[8] }}</td>
                                 <td>
                                     <a href="#" class="btn btn-sm btn-warning">Editar</a>
                                     <a href="#" class="btn btn-sm btn-danger">Remover</a>

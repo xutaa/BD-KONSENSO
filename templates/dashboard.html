@@ -28,24 +28,14 @@
             </ul>
         </div>
 
-        <!-- Título da Secção -->
-        <h2 class="section-title">Gestão de Tabelas</h2>
-
-        <!-- Grid de Cards -->
+        <!-- Título da Secção: Gestão Principal -->
+        <h2 class="section-title">📦 Gestão Principal</h2>
         <div class="grid">
             <div class="card">
                 <a href="{{ url_for('lista_produtos') }}">
                     <div class="card-icon">📦</div>
                     <h3>Produtos</h3>
                     <p>Gerir catálogo de produtos</p>
-                </a>
-            </div>
-
-            <div class="card">
-                <a href="{{ url_for('lista_clientes') }}">
-                    <div class="card-icon">👥</div>
-                    <h3>Clientes</h3>
-                    <p>Base de dados de clientes</p>
                 </a>
             </div>
 
@@ -58,10 +48,154 @@
             </div>
 
             <div class="card">
+                <a href="{{ url_for('lista_stock') }}">
+                    <div class="card-icon">📊</div>
+                    <h3>Stock</h3>
+                    <p>Controlo de inventário</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_itens') }}">
+                    <div class="card-icon">🧾</div>
+                    <h3>Itens de Venda</h3>
+                    <p>Detalhes de vendas</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Título da Secção: Pessoas e Clientes -->
+        <h2 class="section-title">👥 Pessoas e Clientes</h2>
+        <div class="grid">
+            <div class="card">
+                <a href="{{ url_for('lista_pessoas') }}">
+                    <div class="card-icon">👤</div>
+                    <h3>Pessoas</h3>
+                    <p>Registo de pessoas</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_clientes') }}">
+                    <div class="card-icon">👥</div>
+                    <h3>Clientes</h3>
+                    <p>Base de dados de clientes</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_vendedores') }}">
+                    <div class="card-icon">💼</div>
+                    <h3>Vendedores</h3>
+                    <p>Equipa de vendas</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_funcionarios') }}">
+                    <div class="card-icon">👔</div>
+                    <h3>Funcionários</h3>
+                    <p>Recursos humanos</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_cargos') }}">
+                    <div class="card-icon">🎖️</div>
+                    <h3>Cargos</h3>
+                    <p>Funções e cargos</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_contratos_vendedor') }}">
+                    <div class="card-icon">📝</div>
+                    <h3>Contratos Vendedor</h3>
+                    <p>Contratos de vendedores</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Título da Secção: Empresas e Organizações -->
+        <h2 class="section-title">🏢 Empresas e Organizações</h2>
+        <div class="grid">
+            <div class="card">
+                <a href="{{ url_for('lista_empresas') }}">
+                    <div class="card-icon">🏢</div>
+                    <h3>Empresas</h3>
+                    <p>Empresas registadas</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_fornecedores') }}">
+                    <div class="card-icon">🚚</div>
+                    <h3>Fornecedores</h3>
+                    <p>Rede de fornecedores</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_distribuidoras') }}">
+                    <div class="card-icon">🚛</div>
+                    <h3>Distribuidoras</h3>
+                    <p>Centros de distribuição</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_distribuidoras_armazem') }}">
+                    <div class="card-icon">🔗</div>
+                    <h3>Distribuidoras-Armazém</h3>
+                    <p>Relação dist./armazém</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Título da Secção: Infraestrutura -->
+        <h2 class="section-title">🏭 Infraestrutura</h2>
+        <div class="grid">
+            <div class="card">
                 <a href="{{ url_for('lista_armazens') }}">
                     <div class="card-icon">🏭</div>
                     <h3>Armazéns</h3>
                     <p>Gestão de armazéns</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_lojas') }}">
+                    <div class="card-icon">🏪</div>
+                    <h3>Lojas</h3>
+                    <p>Pontos de venda</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_fabricas') }}">
+                    <div class="card-icon">🏗️</div>
+                    <h3>Fábricas</h3>
+                    <p>Unidades de produção</p>
+                </a>
+            </div>
+
+            <div class="card">
+                <a href="{{ url_for('lista_maquinas') }}">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Máquinas</h3>
+                    <p>Equipamentos industriais</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Título da Secção: Produção -->
+        <h2 class="section-title">🔧 Produção e Materiais</h2>
+        <div class="grid">
+            <div class="card">
+                <a href="{{ url_for('lista_materias_primas') }}">
+                    <div class="card-icon">🧱</div>
+                    <h3>Matérias-Primas</h3>
+                    <p>Materiais de produção</p>
                 </a>
             </div>
         </div>

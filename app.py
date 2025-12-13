@@ -344,6 +344,9 @@ def lista_funcionarios():
             return render_template('tabelas/funcionarios.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
+            SELECT Id, Pessoa_Cc, Nome, Email, DataNascimento, Morada, NumTelefone, Empresa_Nif, Cargo_Id
+            FROM Funcionario F
+            JOIN Pessoa P ON F.Pessoa_Cc = P.Cc
         """)
         funcionarios = cursor.fetchall()
         cursor.close()
@@ -542,7 +545,9 @@ def lista_vendedores():
             return render_template('tabelas/vendedores.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
-        
+            SELECT Id, Pessoa_Cc, Nome, Email, DataNascimento, Morada, NumTelefone, Cargo_Id, NumVendas
+            FROM Vendedor V
+            JOIN Pessoa P ON P.Cc = V.Pessoa_Cc
         """)
         vendedores = cursor.fetchall()
         cursor.close()
