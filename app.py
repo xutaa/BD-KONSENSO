@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from database import get_db_connection
 
 app = Flask(__name__)
@@ -131,9 +131,9 @@ def dashboard():
     
     roadmap_status = {
         "Fase 1: Leitura (Listagem)": "✅ Concluída",
-        "Fase 2: Inserção": "🔄 Em Desenvolvimento",
-        "Fase 3: Edição e Remoção": "📋 A Iniciar",
-        "Fase 4: Relatórios": "📋 A Iniciar"
+        "Fase 2: Inserção": "Produtos Done, Outros a Fazer",
+        "Fase 3: Edição e Remoção": "Não Iniciada",
+        "Fase 4: Relatórios": "Não Iniciada",
     }
     
     return render_template('dashboard.html', 
@@ -471,21 +471,122 @@ def lista_pessoas():
 
 @app.route('/produtos')
 def lista_produtos():
+    """
+    Rota /produtos. 
+    1. Lista todos os produtos para a tabela.
+    2. Busca Máquinas e Distribuidoras para preencher os Selects do Modal.
+    """
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
+    
     conn = None
+    dados_produtos = []
+    maquinas = []           # Lista para o Dropdown
+    distribuidoras = []     # Lista para o Dropdown
+    sucesso = False
+    erro = None
+
     try:
         conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/produtos.html', erro="Erro de conexão à base de dados", sucesso=False)
+        if conn is None:
+             raise ConnectionError("Conexão com o banco de dados falhou.")
+
         cursor = conn.cursor()
-        cursor.execute("SELECT Referencia, Descricao, Nome, Preco, Maquina_Id, Distribuidora_Id FROM dbo.Produto")
-        produtos = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/produtos.html', dados_produtos=produtos, sucesso=True)
+        
+        cursor.execute("""
+            SELECT Referencia, Descricao, Nome, Preco, Maquina_Id, Distribuidora_Id 
+            FROM dbo.Produto
+        """) 
+        dados_produtos = cursor.fetchall()
+        
+        cursor.execute("SELECT Id, Descricao FROM dbo.Maquina") 
+        maquinas = cursor.fetchall()
+
+        cursor.execute("SELECT Id, Nome FROM dbo.Distribuidora")
+        distribuidoras = cursor.fetchall()
+        
+        sucesso = True
+
     except Exception as e:
-        print(f"Erro ao listar produtos: {e}")
-        return render_template('tabelas/produtos.html', erro=str(e), sucesso=False)
+        erro = f"Erro ao carregar dados: {str(e)}"
+        print(f"❌ {erro}")
+        
+    finally:
+        if conn:
+            conn.close()
+
+    return render_template('tabelas/produtos.html', 
+                           dados_produtos=dados_produtos,
+                           maquinas=maquinas,            
+                           distribuidoras=distribuidoras,
+                           sucesso=sucesso,
+                           erro=erro)
+
+@app.route('/produto/novo', methods=['POST'])
+def adicionar_produto():
+    """
+    Processa a submissão do Modal e insere um novo produto no BD através de uma SP.
+    """
+    if 'admin_logado' not in session: 
+        flash('Sessão expirada. Faça login novamente.', 'error')
+        return redirect(url_for('login'))
+
+    referencia = request.form.get('referencia', '').strip()
+    descricao = request.form.get('descricao', '').strip()
+    nome = request.form.get('nome', '').strip()
+    preco_str = request.form.get('preco', '').replace(',', '.')
+    maquina_id_str = request.form.get('maquina_id', '').strip()
+    distribuidora_id_str = request.form.get('distribuidora_id', '').strip()
+    
+    conn = None
+    
+    try:
+        if not referencia or not nome or not preco_str:
+            flash('Erro: Os campos Referência, Nome e Preço são obrigatórios.', 'error')
+            return redirect(url_for('lista_produtos'))
+
+        try:
+            preco = float(preco_str)
+            if preco <= 0:
+                raise ValueError("O preço deve ser positivo.")
+            
+            maquina_id = int(maquina_id_str) if maquina_id_str else None
+            distribuidora_id = int(distribuidora_id_str) if distribuidora_id_str else None
+            
+        except ValueError as e:
+            flash(f'Erro de formato: Preço, Máquina ID e Distribuidora ID devem ser numéricos válidos. Detalhe: {e}', 'error')
+            return redirect(url_for('lista_produtos'))
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("{CALL dbo.InserirNovoProduto (?, ?, ?, ?, ?, ?)}", 
+                       referencia, 
+                       descricao, 
+                       nome, 
+                       preco, 
+                       maquina_id, 
+                       distribuidora_id)
+        
+        conn.commit()
+        
+        try:
+            produto_id = cursor.fetchone()[0]
+            flash(f'Produto "{nome}" (Ref: {referencia}) registado com sucesso! ID: {produto_id}', 'success')
+        except:
+            flash(f'Produto "{nome}" (Ref: {referencia}) registado com sucesso!', 'success')
+        
+        return redirect(url_for('lista_produtos'))
+        
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        
+        print(f"❌ Erro ao inserir produto: {e}")
+        flash(f'Falha ao registar o produto no banco de dados. Detalhe: {str(e)}', 'error')
+        
+        return redirect(url_for('lista_produtos'))
+            
     finally:
         if conn:
             conn.close()
