@@ -254,28 +254,66 @@ def lista_cargos():
 
 @app.route('/clientes')
 def lista_clientes():
-    if 'admin_logado' not in session: 
+    """Lista todos os clientes com opção de adicionar"""
+    if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    conn = None
+    
+    conn = get_db_connection()
+    if not conn:
+        return render_template('tabelas/clientes.html', registos=[], pessoas=[])
+    
     try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/clientes.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT C.Pessoa_Cc, C.Nif, P.Nome, P.Email, P.DataNascimento, P.Morada, P.NumTelefone 
-            FROM dbo.Cliente C 
-            JOIN dbo.Pessoa P ON C.Pessoa_Cc = P.Cc
+            SELECT c.Pessoa_Cc, p.Nome, p.Email, p.NumTelefone, c.Nif
+            FROM Cliente c
+            JOIN Pessoa p ON c.Pessoa_Cc = p.Cc
+            ORDER BY p.Nome
         """)
-        clientes = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/clientes.html', dados_clientes=clientes, sucesso=True)
+        registos = cursor.fetchall()
+        
+        cursor.execute("""
+            SELECT p.Cc, p.Nome, p.Email
+            FROM Pessoa p
+            WHERE p.Cc NOT IN (SELECT Pessoa_Cc FROM Cliente)
+            ORDER BY p.Nome
+        """)
+        pessoas = cursor.fetchall()
+        
+        return render_template('tabelas/clientes.html', registos=registos, pessoas=pessoas)
     except Exception as e:
-        print(f"Erro ao listar clientes: {e}")
-        return render_template('tabelas/clientes.html', erro=str(e), sucesso=False)
+        print(f"Erro: {e}")
+        return render_template('tabelas/clientes.html', registos=[], pessoas=[])
+    finally:
+        conn.close()
+
+@app.route('/cliente/novo', methods=['POST'])
+def adicionar_cliente():
+    """Insere novo cliente usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        pessoa_cc = request.form.get('pessoa_cc')
+        nif = request.form.get('nif')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_clientes'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoCliente (?, ?)}", (pessoa_cc, nif))
+        conn.commit()
+        flash('✅ Cliente adicionado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar cliente: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
+    
+    return redirect(url_for('lista_clientes'))
 
 @app.route('/contratos_vendedor')
 def lista_contratos_vendedor():
@@ -663,26 +701,66 @@ def adicionar_produto():
 
 @app.route('/stock')
 def lista_stock():
-    if 'admin_logado' not in session: 
+    """Lista todo o stock com opção de adicionar"""
+    if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    conn = None
+    
+    conn = get_db_connection()
+    if not conn:
+        return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+    
     try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/stock.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT UltimoMov, Quantidade, Produto_Referencia, Armazem_Id FROM dbo.Stock
+            SELECT s.Produto_Referencia, p.Nome, a.Localizacao, s.Quantidade, s.UltimoMov
+            FROM Stock s
+            JOIN Produto p ON s.Produto_Referencia = p.Referencia
+            JOIN Armazem a ON s.Armazem_Id = a.Id
+            ORDER BY s.UltimoMov DESC
         """)
-        stock = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/stock.html', dados_stock=stock, sucesso=True)
+        registos = cursor.fetchall()
+        
+        cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
+        produtos = cursor.fetchall()
+        
+        cursor.execute("SELECT Id, Localizacao FROM Armazem ORDER BY Localizacao")
+        armazens = cursor.fetchall()
+        
+        return render_template('tabelas/stock.html', registos=registos, produtos=produtos, armazens=armazens)
     except Exception as e:
-        print(f"Erro ao listar stock: {e}")
-        return render_template('tabelas/stock.html', erro=str(e), sucesso=False)
+        print(f"Erro: {e}")
+        return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+    finally:
+        conn.close()
+
+@app.route('/stock/novo', methods=['POST'])
+def adicionar_stock():
+    """Insere nova entrada de stock usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        produto_ref = request.form.get('produto_referencia')
+        armazem_id = request.form.get('armazem_id')
+        quantidade = request.form.get('quantidade')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_stock'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoStock (?, ?, ?)}", (produto_ref, armazem_id, quantidade))
+        conn.commit()
+        flash('✅ Stock atualizado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar stock: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
+    
+    return redirect(url_for('lista_stock'))
 
 @app.route('/vendas')
 def lista_vendas():
@@ -707,28 +785,72 @@ def lista_vendas():
 
 @app.route('/vendedores')
 def lista_vendedores():
-    if 'admin_logado' not in session: 
+    """Lista todos os vendedores com opção de adicionar"""
+    if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    conn = None
+    
+    conn = get_db_connection()
+    if not conn:
+        return render_template('tabelas/vendedores.html', registos=[], pessoas=[], cargos=[])
+    
     try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/vendedores.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT Id, Pessoa_Cc, Nome, Email, DataNascimento, Morada, NumTelefone, Cargo_Id, NumVendas
-            FROM Vendedor V
-            JOIN Pessoa P ON P.Cc = V.Pessoa_Cc
+            SELECT v.Pessoa_Cc, p.Nome, c.Nome AS Cargo, v.NumVendas
+            FROM Vendedor v
+            JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
+            JOIN Cargo c ON v.Cargo_Id = c.Id
+            ORDER BY v.NumVendas DESC
         """)
-        vendedores = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/vendedores.html', dados_vendedores=vendedores, sucesso=True)
+        registos = cursor.fetchall()
+        
+        cursor.execute("""
+            SELECT p.Cc, p.Nome, p.Email
+            FROM Pessoa p
+            WHERE p.Cc NOT IN (SELECT Pessoa_Cc FROM Vendedor)
+            ORDER BY p.Nome
+        """)
+        pessoas = cursor.fetchall()
+        
+        cursor.execute("SELECT Id, Nome FROM Cargo ORDER BY Nome")
+        cargos = cursor.fetchall()
+        
+        return render_template('tabelas/vendedores.html', registos=registos, pessoas=pessoas, cargos=cargos)
     except Exception as e:
-        print(f"Erro ao listar vendedores: {e}")
-        return render_template('tabelas/vendedores.html', erro=str(e), sucesso=False)
+        print(f"Erro: {e}")
+        return render_template('tabelas/vendedores.html', registos=[], pessoas=[], cargos=[])
+    finally:
+        conn.close()
+
+@app.route('/vendedor/novo', methods=['POST'])
+def adicionar_vendedor():
+    """Insere novo vendedor usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        pessoa_cc = request.form.get('pessoa_cc')
+        cargo_id = request.form.get('cargo_id')
+        num_vendas = request.form.get('num_vendas', 0)
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_vendedores'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoVendedor (?, ?, ?)}", (pessoa_cc, cargo_id, num_vendas))
+        conn.commit()
+        flash('✅ Vendedor adicionado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar vendedor: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
+    
+    return redirect(url_for('lista_vendedores'))
+
 
 if __name__ == '__main__':
     print("🚀 A iniciar servidor Flask...")
