@@ -96,7 +96,6 @@ def login():
             flash('❌ Nome ou password incorretos!', 'error')
             return render_template('login.html')
     
-    # GET request - mostra formulário
     success_msg = request.args.get('success')
     return render_template('login.html', success=success_msg)
 
@@ -106,7 +105,6 @@ def registo():
     lojas = []
     fabricas = []
     
-    # Buscar Lojas e Fábricas para os dropdowns
     conn = get_db_connection()
     if conn:
         try:
@@ -142,14 +140,12 @@ def registo():
             flash('❌ Password deve ter pelo menos 4 caracteres!', 'error')
             return render_template('registo.html', lojas=lojas, fabricas=fabricas)
         
-        # Tenta criar na base de dados
         if criar_novo_administrador(nome, email, password, tipo_admin, loja_id, fabrica_id):
             return redirect(url_for('login', success='Registo bem-sucedido! Faça login.'))
         else:
             flash('❌ Nome já existe ou erro ao criar conta!', 'error')
             return render_template('registo.html', lojas=lojas, fabricas=fabricas)
     
-    # GET request - mostra formulário
     return render_template('registo.html', lojas=lojas, fabricas=fabricas)
 
 @app.route('/logout')
@@ -879,24 +875,53 @@ def adicionar_stock():
 
 @app.route('/vendas')
 def lista_vendas():
+    """
+    Lista as vendas. Filtra automaticamente por Loja_Id se o admin for 'Loja'.
+    Se for 'Geral', lista todas as vendas.
+    """
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
+    
+    # 1. Obter contexto do administrador
+    tipo_admin = session.get('tipo_admin')
+    loja_id_sessao = session.get('loja_id') 
+
+    if tipo_admin == 'Loja' and loja_id_sessao is not None:
+        parametro_loja_id = loja_id_sessao
+    else:
+        parametro_loja_id = None 
+
     conn = None
+    sucesso = False
+    erro = None
+    
     try:
         conn = get_db_connection()
         if conn is None: 
             return render_template('tabelas/vendas.html', erro="Erro de conexão", sucesso=False)
+        
         cursor = conn.cursor()
-        cursor.execute("SELECT Id, DataHora, ValorTotal, MetodoPagamento, Loja_Id, Cliente_Pessoa_Cc FROM dbo.Venda")
+        
+        cursor.execute("{CALL dbo.ObterVendasPorLoja (?)}", parametro_loja_id)
+        
         vendas = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/vendas.html', dados_vendas=vendas, sucesso=True)
+        sucesso = True
+        
     except Exception as e:
-        print(f"Erro ao listar vendas: {e}")
-        return render_template('tabelas/vendas.html', erro=str(e), sucesso=False)
+        erro = f"Erro ao listar vendas: {e}"
+        print(f"❌ {erro}")
+        vendas = []
+        
     finally:
         if conn:
             conn.close()
+            
+    # 3. Usa o template 'vendas.html'
+    return render_template('tabelas/vendas.html', 
+                           dados_vendas=vendas, 
+                           sucesso=sucesso, 
+                           erro=erro,
+                           filtro_ativo=True if parametro_loja_id is not None else False)
 
 @app.route('/vendedores')
 def lista_vendedores():
