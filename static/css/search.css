@@ -1,0 +1,65 @@
+.search-container {
+    position: relative;
+    max-width: 500px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 45px 12px 45px;
+    border: 1px solid #e0e0e0;
+    border-radius: 25px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+}
+
+/* ❌ REMOVER OUTLINE AZUL */
+.search-input:focus {
+    outline: none;
+    border-color: #d0d0d0;
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #999;
+    font-size: 18px;
+    pointer-events: none;
+}
+
+.clear-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+    color: #666;
+    background-color: #f0f0f0;
+}
+
+.clear-btn:focus {
+    outline: none;
+}
+
+/* Animação suave ao esconder linhas */
+.table tbody tr {
+    transition: opacity 0.2s ease;
+}
+
+.table tbody tr[style*="display: none"] {
+    opacity: 0;
+}
