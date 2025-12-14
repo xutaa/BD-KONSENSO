@@ -468,24 +468,66 @@ def lista_funcionarios():
 
 @app.route('/itens')
 def lista_itens():
-    if 'admin_logado' not in session: 
+    """Lista todos os itens de venda com opção de adicionar"""
+    if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    conn = None
+    
+    conn = get_db_connection()
+    if not conn:
+        return render_template('tabelas/itens.html', registos=[], vendas=[], produtos=[])
+    
     try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/itens.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("SELECT Quantidade, Preco, Venda_Id, Produto_Referencia FROM dbo.Item")
-        itens = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/itens.html', dados_itens=itens, sucesso=True)
+        cursor.execute("""
+            SELECT i.Venda_Id, p.Nome, i.Quantidade, i.Preco, (i.Quantidade * i.Preco) AS Total
+            FROM Item i
+            JOIN Produto p ON i.Produto_Referencia = p.Referencia
+            ORDER BY i.Venda_Id DESC
+        """)
+        registos = cursor.fetchall()
+        
+        cursor.execute("SELECT Id FROM Venda ORDER BY Id DESC")
+        vendas = cursor.fetchall()
+        
+        cursor.execute("SELECT Referencia, Nome, Preco FROM Produto ORDER BY Nome")
+        produtos = cursor.fetchall()
+        
+        return render_template('tabelas/itens.html', registos=registos, vendas=vendas, produtos=produtos)
     except Exception as e:
-        print(f"Erro ao listar itens: {e}")
-        return render_template('tabelas/itens.html', erro=str(e), sucesso=False)
+        print(f"Erro: {e}")
+        return render_template('tabelas/itens.html', registos=[], vendas=[], produtos=[])
+    finally:
+        conn.close()
+
+@app.route('/item/novo', methods=['POST'])
+def adicionar_item():
+    """Insere novo item de venda usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        venda_id = request.form.get('venda_id')
+        produto_ref = request.form.get('produto_referencia')
+        quantidade = request.form.get('quantidade')
+        preco = request.form.get('preco')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_itens'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoItem (?, ?, ?, ?)}", (venda_id, produto_ref, quantidade, preco))
+        conn.commit()
+        flash('✅ Item adicionado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar item: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
+    
+    return redirect(url_for('lista_itens'))
 
 @app.route('/lojas')
 def lista_lojas():
