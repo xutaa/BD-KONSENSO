@@ -422,24 +422,61 @@ def lista_fabricas():
 
 @app.route('/fornecedores')
 def lista_fornecedores():
-    if 'admin_logado' not in session: 
+    """Lista todos os fornecedores com opção de adicionar"""
+    if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    conn = None
+    
+    conn = get_db_connection()
+    if not conn:
+        return render_template('tabelas/fornecedores.html', registos=[], empresas=[])
+    
     try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/fornecedores.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("SELECT Id, Nome, Empresa_Nif FROM dbo.Fornecedor")
-        fornecedores = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/fornecedores.html', dados_fornecedores=fornecedores, sucesso=True)
+        cursor.execute("""
+            SELECT f.Id, f.Nome, e.Nome AS Empresa, e.Nif
+            FROM Fornecedor f
+            JOIN Empresa e ON f.Empresa_Nif = e.Nif
+            ORDER BY f.Nome
+        """)
+        registos = cursor.fetchall()
+        
+        cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
+        empresas = cursor.fetchall()
+        
+        return render_template('tabelas/fornecedores.html', registos=registos, empresas=empresas)
     except Exception as e:
-        print(f"Erro ao listar fornecedores: {e}")
-        return render_template('tabelas/fornecedores.html', erro=str(e), sucesso=False)
+        print(f"Erro: {e}")
+        return render_template('tabelas/fornecedores.html', registos=[], empresas=[])
+    finally:
+        conn.close()
+
+@app.route('/fornecedor/novo', methods=['POST'])
+def adicionar_fornecedor():
+    """Insere novo fornecedor usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        nome = request.form.get('nome')
+        empresa_nif = request.form.get('empresa_nif')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_fornecedores'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoFornecedor (?, ?)}", (nome, empresa_nif))
+        conn.commit()
+        flash('✅ Fornecedor adicionado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar fornecedor: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
+    
+    return redirect(url_for('lista_fornecedores'))
 
 @app.route('/funcionarios')
 def lista_funcionarios():
@@ -575,26 +612,62 @@ def lista_maquinas():
 
 @app.route('/materias_primas')
 def lista_materias_primas():
-    if 'admin_logado' not in session: 
+    """Lista todas as matérias-primas com opção de adicionar"""
+    if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    conn = None
+    
+    conn = get_db_connection()
+    if not conn:
+        return render_template('tabelas/materias_primas.html', registos=[], fornecedores=[])
+    
     try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/materias_primas.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT Referencia, Descricao, Fornecedor_Id FROM dbo.MateriaPrima
-            """)
-        materias_primas = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/materias_primas.html', dados_materias_primas=materias_primas, sucesso=True)
+            SELECT mp.Referencia, mp.Descricao, f.Nome AS Fornecedor
+            FROM MateriaPrima mp
+            JOIN Fornecedor f ON mp.Fornecedor_Id = f.Id
+            ORDER BY mp.Referencia
+        """)
+        registos = cursor.fetchall()
+        
+        cursor.execute("SELECT Id, Nome FROM Fornecedor ORDER BY Nome")
+        fornecedores = cursor.fetchall()
+        
+        return render_template('tabelas/materias_primas.html', registos=registos, fornecedores=fornecedores)
     except Exception as e:
-        print(f"Erro ao listar materias primas: {e}")
-        return render_template('tabelas/materias_primas.html', erro=str(e), sucesso=False)
+        print(f"Erro: {e}")
+        return render_template('tabelas/materias_primas.html', registos=[], fornecedores=[])
+    finally:
+        conn.close()
+
+@app.route('/materia_prima/nova', methods=['POST'])
+def adicionar_materia_prima():
+    """Insere nova matéria-prima usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        referencia = request.form.get('referencia')
+        descricao = request.form.get('descricao')
+        fornecedor_id = request.form.get('fornecedor_id')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_materias_primas'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovaMateriaPrima (?, ?, ?)}", (referencia, descricao, fornecedor_id))
+        conn.commit()
+        flash('✅ Matéria-prima adicionada com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar matéria-prima: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
+    
+    return redirect(url_for('lista_materias_primas'))
 
 @app.route('/pessoas')
 def lista_pessoas():
