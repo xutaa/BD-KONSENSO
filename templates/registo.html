@@ -9,8 +9,10 @@
 <body>
     <div class="container">
         <div class="register-box">
-            <h1>📝 Criar Nova Conta</h1>
-            <p class="subtitle">Sistema de Gestão BD Konsenso</p>
+            <div class="logo-section">
+                <h1>BD Konsenso</h1>
+                <p>Criar Nova Conta de Administrador</p>
+            </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
@@ -22,36 +24,65 @@
 
             <form method="POST">
                 <div class="form-group">
-                    <label for="nome">👤 Nome de Utilizador</label>
-                    <input type="text" id="nome" name="nome" required placeholder="Insira o seu nome">
+                    <label for="nome">Nome de Utilizador</label>
+                    <input 
+                        type="text" 
+                        id="nome" 
+                        name="nome" 
+                        required 
+                        placeholder="Nome único no sistema"
+                        autocomplete="username"
+                    >
                 </div>
 
                 <div class="form-group">
-                    <label for="email">📧 Email</label>
-                    <input type="email" id="email" name="email" required placeholder="exemplo@email.com">
+                    <label for="email">Endereço de Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required 
+                        placeholder="exemplo@empresa.com"
+                        autocomplete="email"
+                    >
                 </div>
 
                 <div class="form-group">
-                    <label for="password">🔒 Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Mínimo 4 caracteres">
+                    <label for="password">Palavra-passe</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="Mínimo 4 caracteres"
+                        autocomplete="new-password"
+                    >
                 </div>
 
                 <div class="form-group">
-                    <label for="confirm_password">🔒 Confirmar Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Repita a password">
+                    <label for="confirm_password">Confirmar Palavra-passe</label>
+                    <input 
+                        type="password" 
+                        id="confirm_password" 
+                        name="confirm_password" 
+                        required 
+                        placeholder="Repita a palavra-passe"
+                        autocomplete="new-password"
+                    >
                 </div>
 
                 <div class="form-group">
-                    <label for="tipo_admin">🎯 Tipo de Administrador</label>
+                    <label for="tipo_admin">Tipo de Administrador</label>
                     <select id="tipo_admin" name="tipo_admin" required onchange="toggleSelects()">
-                        <option value="Geral">Geral (Acesso Total)</option>
-                        <option value="Loja">Loja</option>
-                        <option value="Fabrica">Fábrica</option>
+                        <option value="Geral">Geral - Acesso Total ao Sistema</option>
+                        <option value="Loja">Loja - Gestão de Vendas e Clientes</option>
+                        <option value="Fabrica">Fábrica - Gestão de Produção</option>
                     </select>
+                    <p class="info-text" id="tipo-info">Acesso completo a todas as funcionalidades</p>
                 </div>
 
                 <div class="form-group" id="loja-group" style="display: none;">
-                    <label for="loja_id">🏪 Selecionar Loja</label>
+                    <label for="loja_id">Loja Associada</label>
                     <select id="loja_id" name="loja_id">
                         <option value="">-- Selecione uma loja --</option>
                         {% for loja in lojas %}
@@ -61,7 +92,7 @@
                 </div>
 
                 <div class="form-group" id="fabrica-group" style="display: none;">
-                    <label for="fabrica_id">🏭 Selecionar Fábrica</label>
+                    <label for="fabrica_id">Fábrica Associada</label>
                     <select id="fabrica_id" name="fabrica_id">
                         <option value="">-- Selecione uma fábrica --</option>
                         {% for fabrica in fabricas %}
@@ -74,7 +105,7 @@
             </form>
 
             <div class="login-link">
-                <p>Já tem conta? <a href="{{ url_for('login') }}">Faça login aqui</a></p>
+                <p>Já tem conta? <a href="{{ url_for('login') }}">Iniciar sessão</a></p>
             </div>
         </div>
     </div>
@@ -86,6 +117,7 @@
             const fabricaGroup = document.getElementById('fabrica-group');
             const lojaSelect = document.getElementById('loja_id');
             const fabricaSelect = document.getElementById('fabrica_id');
+            const tipoInfo = document.getElementById('tipo-info');
 
             // Reset
             lojaGroup.style.display = 'none';
@@ -93,13 +125,17 @@
             lojaSelect.removeAttribute('required');
             fabricaSelect.removeAttribute('required');
 
-            // Mostrar o campo apropriado
+            // Atualizar info e mostrar campo apropriado
             if (tipoAdmin === 'Loja') {
                 lojaGroup.style.display = 'block';
                 lojaSelect.setAttribute('required', 'required');
+                tipoInfo.textContent = 'Acesso a vendas, clientes e stock da loja';
             } else if (tipoAdmin === 'Fabrica') {
                 fabricaGroup.style.display = 'block';
                 fabricaSelect.setAttribute('required', 'required');
+                tipoInfo.textContent = 'Acesso a produção, fornecedores e matérias-primas';
+            } else {
+                tipoInfo.textContent = 'Acesso completo a todas as funcionalidades';
             }
         }
     </script>

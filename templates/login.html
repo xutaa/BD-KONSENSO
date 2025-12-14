@@ -7,36 +7,56 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
-            <h2>Bem-vindo</h2>
-            <p>Insira as suas credenciais para aceder</p>
-        </div>
-
-        {% if error %}
-            <div class="alert error">{{ error }}</div>
-        {% endif %}
-        
-        {% if success %}
-            <div class="alert success">{{ success }}</div>
-        {% endif %}
-
-        <form action="{{ url_for('login') }}" method="POST">
-            <div class="form-group">
-                <label for="nome">Nome de Utilizador</label>
-                <input type="text" id="nome" name="nome" required placeholder="Ex: admin">
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required placeholder="••••••••">
+    <div class="container">
+        <div class="login-box">
+            <div class="logo-section">
+                <h1>BD Konsenso</h1>
+                <p>Sistema de Gestão Empresarial</p>
             </div>
 
-            <button type="submit" class="btn-login">Entrar</button>
-        </form>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        <div class="login-footer">
-            <p>Ainda não tem conta? <a href="{{ url_for('registo') }}">Criar conta</a></p>
+            {% if success %}
+                <div class="alert alert-success">{{ success }}</div>
+            {% endif %}
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="nome">Nome de Utilizador</label>
+                    <input 
+                        type="text" 
+                        id="nome" 
+                        name="nome" 
+                        required 
+                        placeholder="Insira o seu nome de utilizador"
+                        autocomplete="username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Palavra-passe</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        placeholder="Insira a sua palavra-passe"
+                        autocomplete="current-password"
+                    >
+                </div>
+
+                <button type="submit" class="btn-login">Iniciar Sessão</button>
+            </form>
+
+            <div class="register-link">
+                <p>Ainda não tem conta? <a href="{{ url_for('registo') }}">Criar nova conta</a></p>
+            </div>
         </div>
     </div>
 </body>
