@@ -7,28 +7,37 @@ app.secret_key = 'bd_konsenso_secret_key_2024'
 # --- FUNÇÕES DE AUTENTICAÇÃO ---
 
 def validar_administrador(nome, password):
-    """Verifica login na tabela Administradores"""
+    """Verifica login na tabela Administradores e retorna dados do admin"""
     conn = get_db_connection()
     if not conn: 
         print("❌ Erro: Sem conexão à base de dados")
-        return False
+        return None
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT Nome FROM Administradores WHERE Nome = ? AND Password = ?", (nome, password))
+        cursor.execute("""
+            SELECT Nome, Tipo_Admin, Loja_Id, Fabrica_Id 
+            FROM Administradores 
+            WHERE Nome = ? AND Password = ?
+        """, (nome, password))
         admin = cursor.fetchone()
         if admin:
-            print(f"✅ Login bem-sucedido: {nome}")
-            return True
+            print(f"✅ Login bem-sucedido: {nome} ({admin[1]})")
+            return {
+                'nome': admin[0],
+                'tipo_admin': admin[1],
+                'loja_id': admin[2],
+                'fabrica_id': admin[3]
+            }
         else:
             print(f"❌ Login falhou: {nome}")
-            return False
+            return None
     except Exception as e:
         print(f"❌ Erro ao validar login: {e}")
-        return False
+        return None
     finally:
         conn.close()
 
-def criar_novo_administrador(nome, email, password, tipo_admin):
+def criar_novo_administrador(nome, email, password, tipo_admin, loja_id=None, fabrica_id=None):
     """Cria novo registo na tabela Administradores"""
     conn = get_db_connection()
     if not conn: 
@@ -41,10 +50,10 @@ def criar_novo_administrador(nome, email, password, tipo_admin):
             print(f"❌ Nome '{nome}' já existe na base de dados")
             return False
         
-        cursor.execute(
-            "INSERT INTO Administradores (Nome, Email, Password, Tipo_Admin) VALUES (?, ?, ?, ?)", 
-            (nome, email, password, tipo_admin)
-        )
+        cursor.execute("""
+            INSERT INTO Administradores (Nome, Email, Password, Tipo_Admin, Loja_Id, Fabrica_Id) 
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (nome, email, password, tipo_admin, loja_id, fabrica_id))
         conn.commit()
         print(f"✅ Administrador '{nome}' criado com sucesso!")
         return True
@@ -72,14 +81,20 @@ def login():
         password = request.form.get('password', '').strip()
         
         if not nome or not password:
-            return render_template('login.html', error="Preencha todos os campos.")
+            flash('❌ Preencha todos os campos!', 'error')
+            return render_template('login.html')
         
-        if validar_administrador(nome, password):
-            session['admin_logado'] = nome
-            print(f"🎉 Sessão criada para: {nome}")
+        admin_data = validar_administrador(nome, password)
+        if admin_data:
+            session['admin_logado'] = admin_data['nome']
+            session['tipo_admin'] = admin_data['tipo_admin']
+            session['loja_id'] = admin_data['loja_id']
+            session['fabrica_id'] = admin_data['fabrica_id']
+            print(f"✅ Sessão criada para {nome} ({admin_data['tipo_admin']})")
             return redirect(url_for('dashboard'))
         else:
-            return render_template('login.html', error="Nome ou Password incorretos.")
+            flash('❌ Nome ou password incorretos!', 'error')
+            return render_template('login.html')
     
     # GET request - mostra formulário
     success_msg = request.args.get('success')
@@ -88,37 +103,63 @@ def login():
 @app.route('/registo', methods=['GET', 'POST'])
 def registo():
     """Página de registo - cria novo administrador na BD"""
+    lojas = []
+    fabricas = []
+    
+    # Buscar Lojas e Fábricas para os dropdowns
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT Id, Localizacao FROM Loja ORDER BY Localizacao")
+            lojas = cursor.fetchall()
+            cursor.execute("SELECT Id, Localizacao FROM Fabrica ORDER BY Localizacao")
+            fabricas = cursor.fetchall()
+        except Exception as e:
+            print(f"❌ Erro ao buscar lojas/fábricas: {e}")
+        finally:
+            conn.close()
+    
     if request.method == 'POST':
         nome = request.form.get('nome', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
         tipo_admin = request.form.get('tipo_admin', 'Geral')
+        loja_id = request.form.get('loja_id') if tipo_admin == 'Loja' else None
+        fabrica_id = request.form.get('fabrica_id') if tipo_admin == 'Fabrica' else None
         
         # Validações
         if not nome or not email or not password:
-            return render_template('registo.html', error="Preencha todos os campos obrigatórios.")
+            flash('❌ Preencha todos os campos obrigatórios!', 'error')
+            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
         
         if password != confirm_password:
-            return render_template('registo.html', error="As passwords não coincidem.")
+            flash('❌ As passwords não coincidem!', 'error')
+            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
         
         if len(password) < 4:
-            return render_template('registo.html', error="A password deve ter pelo menos 4 caracteres.")
+            flash('❌ Password deve ter pelo menos 4 caracteres!', 'error')
+            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
         
         # Tenta criar na base de dados
-        if criar_novo_administrador(nome, email, password, tipo_admin):
-            return redirect(url_for('login', success="✅ Conta criada com sucesso! Faça login."))
+        if criar_novo_administrador(nome, email, password, tipo_admin, loja_id, fabrica_id):
+            return redirect(url_for('login', success='Registo bem-sucedido! Faça login.'))
         else:
-            return render_template('registo.html', error="❌ Erro ao criar conta. O nome pode já existir.")
+            flash('❌ Nome já existe ou erro ao criar conta!', 'error')
+            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
     
     # GET request - mostra formulário
-    return render_template('registo.html')
+    return render_template('registo.html', lojas=lojas, fabricas=fabricas)
 
 @app.route('/logout')
 def logout():
     """Remove sessão e redireciona para login"""
     nome = session.get('admin_logado', 'Desconhecido')
     session.pop('admin_logado', None)
+    session.pop('tipo_admin', None)
+    session.pop('loja_id', None)
+    session.pop('fabrica_id', None)
     print(f"👋 Logout: {nome}")
     return redirect(url_for('login'))
 
@@ -129,6 +170,8 @@ def dashboard():
         print("⚠️ Tentativa de acesso sem login")
         return redirect(url_for('login'))
     
+    tipo_admin = session.get('tipo_admin', 'Geral')
+    
     roadmap_status = {
         "Fase 1: Leitura (Listagem)": "✅ Concluída",
         "Fase 2: Inserção": "Produtos Done, Outros a Fazer",
@@ -136,9 +179,36 @@ def dashboard():
         "Fase 4: Relatórios": "Não Iniciada",
     }
     
+    # Definir permissões por tipo
+    permissoes = {
+        'Geral': {
+            'gestao_principal': True,
+            'pessoas_clientes': True,
+            'empresas': True,
+            'infraestrutura': True,
+            'producao': True
+        },
+        'Loja': {
+            'gestao_principal': True,  # Produtos, Vendas, Stock, Itens
+            'pessoas_clientes': True,  # Clientes, Vendedores
+            'empresas': False,
+            'infraestrutura': False,
+            'producao': False
+        },
+        'Fabrica': {
+            'gestao_principal': True,  # Produtos, Stock
+            'pessoas_clientes': False,
+            'empresas': True,  # Fornecedores
+            'infraestrutura': True,  # Armazéns, Máquinas
+            'producao': True  # Matérias-Primas
+        }
+    }
+    
     return render_template('dashboard.html', 
                          roadmap=roadmap_status, 
-                         usuario=session['admin_logado'])
+                         usuario=session['admin_logado'],
+                         tipo_admin=tipo_admin,
+                         permissoes=permissoes.get(tipo_admin, permissoes['Geral']))
 
 # --- ROTAS DE DADOS (Protegidas por login) ---
 @app.route('/armazens')

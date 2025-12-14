@@ -7,53 +7,101 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='registo.css') }}">
 </head>
 <body>
-    <div class="registo-container">
-        <div class="registo-header">
-            <h2>Criar Conta</h2>
-            <p>Registe um novo administrador</p>
-        </div>
+    <div class="container">
+        <div class="register-box">
+            <h1>📝 Criar Nova Conta</h1>
+            <p class="subtitle">Sistema de Gestão BD Konsenso</p>
 
-        {% if error %}
-            <div class="alert error">{{ error }}</div>
-        {% endif %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
-        <form action="{{ url_for('registo') }}" method="POST">
-            <div class="form-group">
-                <label for="nome">Nome de Utilizador</label>
-                <input type="text" id="nome" name="nome" required>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="tipo_admin">Tipo de Administrador</label>
-                <select id="tipo_admin" name="tipo_admin" required>
-                    <option value="Geral">Geral</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Gerente">Gerente</option>
-                </select>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group half">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
+            <form method="POST">
+                <div class="form-group">
+                    <label for="nome">👤 Nome de Utilizador</label>
+                    <input type="text" id="nome" name="nome" required placeholder="Insira o seu nome">
                 </div>
-                <div class="form-group half">
-                    <label for="confirm_password">Confirmar Password</label>
-                    <input type="password" id="confirm_password" name="confirm_password" required>
+
+                <div class="form-group">
+                    <label for="email">📧 Email</label>
+                    <input type="email" id="email" name="email" required placeholder="exemplo@email.com">
                 </div>
+
+                <div class="form-group">
+                    <label for="password">🔒 Password</label>
+                    <input type="password" id="password" name="password" required placeholder="Mínimo 4 caracteres">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">🔒 Confirmar Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required placeholder="Repita a password">
+                </div>
+
+                <div class="form-group">
+                    <label for="tipo_admin">🎯 Tipo de Administrador</label>
+                    <select id="tipo_admin" name="tipo_admin" required onchange="toggleSelects()">
+                        <option value="Geral">Geral (Acesso Total)</option>
+                        <option value="Loja">Loja</option>
+                        <option value="Fabrica">Fábrica</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="loja-group" style="display: none;">
+                    <label for="loja_id">🏪 Selecionar Loja</label>
+                    <select id="loja_id" name="loja_id">
+                        <option value="">-- Selecione uma loja --</option>
+                        {% for loja in lojas %}
+                            <option value="{{ loja[0] }}">{{ loja[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group" id="fabrica-group" style="display: none;">
+                    <label for="fabrica_id">🏭 Selecionar Fábrica</label>
+                    <select id="fabrica_id" name="fabrica_id">
+                        <option value="">-- Selecione uma fábrica --</option>
+                        {% for fabrica in fabricas %}
+                            <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-register">Criar Conta</button>
+            </form>
+
+            <div class="login-link">
+                <p>Já tem conta? <a href="{{ url_for('login') }}">Faça login aqui</a></p>
             </div>
-
-            <button type="submit" class="btn-registo">Registar</button>
-        </form>
-
-        <div class="registo-footer">
-            <p>Já tem conta? <a href="{{ url_for('login') }}">Fazer Login</a></p>
         </div>
     </div>
+
+    <script>
+        function toggleSelects() {
+            const tipoAdmin = document.getElementById('tipo_admin').value;
+            const lojaGroup = document.getElementById('loja-group');
+            const fabricaGroup = document.getElementById('fabrica-group');
+            const lojaSelect = document.getElementById('loja_id');
+            const fabricaSelect = document.getElementById('fabrica_id');
+
+            // Reset
+            lojaGroup.style.display = 'none';
+            fabricaGroup.style.display = 'none';
+            lojaSelect.removeAttribute('required');
+            fabricaSelect.removeAttribute('required');
+
+            // Mostrar o campo apropriado
+            if (tipoAdmin === 'Loja') {
+                lojaGroup.style.display = 'block';
+                lojaSelect.setAttribute('required', 'required');
+            } else if (tipoAdmin === 'Fabrica') {
+                fabricaGroup.style.display = 'block';
+                fabricaSelect.setAttribute('required', 'required');
+            }
+        }
+    </script>
 </body>
 </html>

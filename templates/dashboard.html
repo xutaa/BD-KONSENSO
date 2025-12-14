@@ -11,7 +11,15 @@
     <div class="navbar">
         <h1>🏢 BD Konsenso - Sistema de Gestão</h1>
         <div class="navbar-right">
-            <span>👤 Olá, <strong>{{ usuario }}</strong></span>
+            <span>👤 Olá, <strong>{{ usuario }}</strong> 
+                {% if tipo_admin == 'Loja' %}
+                    <span style="background: #2196F3; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">🏪 Loja</span>
+                {% elif tipo_admin == 'Fabrica' %}
+                    <span style="background: #FF9800; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">🏭 Fábrica</span>
+                {% else %}
+                    <span style="background: #4CAF50; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">⚙️ Geral</span>
+                {% endif %}
+            </span>
             <a href="{{ url_for('logout') }}" class="btn-logout">Sair</a>
         </div>
     </div>
@@ -28,7 +36,8 @@
             </ul>
         </div>
 
-        <!-- Título da Secção: Gestão Principal -->
+        <!-- Gestão Principal -->
+        {% if permissoes.gestao_principal %}
         <h2 class="section-title">📦 Gestão Principal</h2>
         <div class="grid">
             <div class="card">
@@ -39,6 +48,7 @@
                 </a>
             </div>
 
+            {% if tipo_admin != 'Fabrica' %}
             <div class="card">
                 <a href="{{ url_for('lista_vendas') }}">
                     <div class="card-icon">💰</div>
@@ -46,6 +56,7 @@
                     <p>Histórico de vendas</p>
                 </a>
             </div>
+            {% endif %}
 
             <div class="card">
                 <a href="{{ url_for('lista_stock') }}">
@@ -55,6 +66,7 @@
                 </a>
             </div>
 
+            {% if tipo_admin != 'Fabrica' %}
             <div class="card">
                 <a href="{{ url_for('lista_itens') }}">
                     <div class="card-icon">🧾</div>
@@ -62,11 +74,15 @@
                     <p>Detalhes de vendas</p>
                 </a>
             </div>
+            {% endif %}
         </div>
+        {% endif %}
 
-        <!-- Título da Secção: Pessoas e Clientes -->
+        <!-- Pessoas e Clientes -->
+        {% if permissoes.pessoas_clientes %}
         <h2 class="section-title">👥 Pessoas e Clientes</h2>
         <div class="grid">
+            {% if tipo_admin == 'Geral' %}
             <div class="card">
                 <a href="{{ url_for('lista_pessoas') }}">
                     <div class="card-icon">👤</div>
@@ -74,6 +90,7 @@
                     <p>Registo de pessoas</p>
                 </a>
             </div>
+            {% endif %}
 
             <div class="card">
                 <a href="{{ url_for('lista_clientes') }}">
@@ -91,6 +108,7 @@
                 </a>
             </div>
 
+            {% if tipo_admin == 'Geral' %}
             <div class="card">
                 <a href="{{ url_for('lista_funcionarios') }}">
                     <div class="card-icon">👔</div>
@@ -114,11 +132,15 @@
                     <p>Contratos de vendedores</p>
                 </a>
             </div>
+            {% endif %}
         </div>
+        {% endif %}
 
-        <!-- Título da Secção: Empresas e Organizações -->
+        <!-- Empresas e Organizações -->
+        {% if permissoes.empresas %}
         <h2 class="section-title">🏢 Empresas e Organizações</h2>
         <div class="grid">
+            {% if tipo_admin == 'Geral' %}
             <div class="card">
                 <a href="{{ url_for('lista_empresas') }}">
                     <div class="card-icon">🏢</div>
@@ -126,6 +148,7 @@
                     <p>Empresas registadas</p>
                 </a>
             </div>
+            {% endif %}
 
             <div class="card">
                 <a href="{{ url_for('lista_fornecedores') }}">
@@ -135,6 +158,7 @@
                 </a>
             </div>
 
+            {% if tipo_admin == 'Geral' %}
             <div class="card">
                 <a href="{{ url_for('lista_distribuidoras') }}">
                     <div class="card-icon">🚛</div>
@@ -150,9 +174,12 @@
                     <p>Relação dist./armazém</p>
                 </a>
             </div>
+            {% endif %}
         </div>
+        {% endif %}
 
-        <!-- Título da Secção: Infraestrutura -->
+        <!-- Infraestrutura -->
+        {% if permissoes.infraestrutura %}
         <h2 class="section-title">🏭 Infraestrutura</h2>
         <div class="grid">
             <div class="card">
@@ -163,6 +190,7 @@
                 </a>
             </div>
 
+            {% if tipo_admin == 'Geral' %}
             <div class="card">
                 <a href="{{ url_for('lista_lojas') }}">
                     <div class="card-icon">🏪</div>
@@ -178,6 +206,7 @@
                     <p>Unidades de produção</p>
                 </a>
             </div>
+            {% endif %}
 
             <div class="card">
                 <a href="{{ url_for('lista_maquinas') }}">
@@ -187,8 +216,10 @@
                 </a>
             </div>
         </div>
+        {% endif %}
 
-        <!-- Título da Secção: Produção -->
+        <!-- Produção -->
+        {% if permissoes.producao %}
         <h2 class="section-title">🔧 Produção e Materiais</h2>
         <div class="grid">
             <div class="card">
@@ -199,6 +230,7 @@
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </body>
 </html>
