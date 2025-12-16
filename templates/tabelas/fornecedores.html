@@ -2,6 +2,10 @@
 
 {% block title %}Gestão de Fornecedores{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>🚚 Gestão de Fornecedores</h1>
@@ -28,33 +32,53 @@
         {% endif %}
     {% endwith %}
 
+    <!-- 🔍 BARRA DE PESQUISA -->
+    <div class="mb-4">
+        <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Pesquisar fornecedor..."
+                   onkeyup="filtrarTabela('searchInput', 'tabelaFornecedores', 'totalFornecedores', 'nenhumResultado')">
+            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <small class="text-muted">
+            <span id="totalFornecedores">{{ registos|length }}</span> fornecedor(es)
+        </small>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover" id="tabelaFornecedores">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Nome Fornecedor</th>
+                    <th>Nome</th>
                     <th>Empresa</th>
-                    <th>NIF Empresa</th>
                 </tr>
             </thead>
             <tbody>
                 {% if registos %}
-                    {% for registo in registos %}
+                    {% for fornecedor in registos %}
                     <tr>
-                        <td>{{ registo[0] }}</td>
-                        <td>{{ registo[1] }}</td>
-                        <td>{{ registo[2] }}</td>
-                        <td>{{ registo[3] }}</td>
+                        <td>{{ fornecedor[0] }}</td>
+                        <td>{{ fornecedor[1] }}</td>
+                        <td>{{ fornecedor[2] }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr>
-                        <td colspan="4" class="text-center text-muted">Nenhum fornecedor registado</td>
+                    <tr id="semResultados">
+                        <td colspan="3" class="text-center text-muted">Nenhum fornecedor registado</td>
                     </tr>
                 {% endif %}
             </tbody>
         </table>
+    </div>
+
+    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
+        <i class="bi bi-exclamation-triangle"></i> Nenhum fornecedor encontrado.
     </div>
 
     <div class="mt-4">
@@ -74,19 +98,19 @@
                 <form method="POST" action="{{ url_for('adicionar_fornecedor') }}">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="nome" class="form-label">Nome do Fornecedor *</label>
+                            <label for="nome" class="form-label">Nome *</label>
                             <input type="text" class="form-control" id="nome" name="nome" 
-                                   required maxlength="100" placeholder="Ex: Fornecedor Têxtil Lda">
+                                   required maxlength="100" placeholder="Nome do Fornecedor">
                         </div>
                         <div class="mb-3">
                             <label for="empresa_nif" class="form-label">Empresa *</label>
                             <select class="form-select" id="empresa_nif" name="empresa_nif" required>
                                 <option value="">-- Selecione a Empresa --</option>
-                                {% for empresa in empresas %}
-                                    <option value="{{ empresa[0] }}">
-                                        {{ empresa[1] }} (NIF: {{ empresa[0] }})
-                                    </option>
-                                {% endfor %}
+                                {% if empresas %}
+                                    {% for empresa in empresas %}
+                                        <option value="{{ empresa[0] }}">{{ empresa[1] }}</option>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </div>
                     </div>
@@ -98,4 +122,13 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        configurarAtalhos('searchInput');
+    });
+</script>
 {% endblock %}

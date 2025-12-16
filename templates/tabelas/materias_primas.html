@@ -2,9 +2,13 @@
 
 {% block title %}Gestão de Matérias-Primas{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>🧱 Gestão de Matérias-Primas</h1>
+        <h1>🧪 Gestão de Matérias-Primas</h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaMateriaPrima">
             <i class="bi bi-plus-circle"></i> Nova Matéria-Prima
         </button>
@@ -28,8 +32,26 @@
         {% endif %}
     {% endwith %}
 
+    <!-- 🔍 BARRA DE PESQUISA -->
+    <div class="mb-4">
+        <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Pesquisar matéria-prima..."
+                   onkeyup="filtrarTabela('searchInput', 'tabelaMateriasPrimas', 'totalMateriasPrimas', 'nenhumResultado')">
+            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <small class="text-muted">
+            <span id="totalMateriasPrimas">{{ registos|length }}</span> matéria(s)-prima(s)
+        </small>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover" id="tabelaMateriasPrimas">
             <thead class="table-dark">
                 <tr>
                     <th>Referência</th>
@@ -39,20 +61,24 @@
             </thead>
             <tbody>
                 {% if registos %}
-                    {% for registo in registos %}
+                    {% for mp in registos %}
                     <tr>
-                        <td>{{ registo[0] }}</td>
-                        <td>{{ registo[1] }}</td>
-                        <td>{{ registo[2] }}</td>
+                        <td>{{ mp[0] }}</td>
+                        <td>{{ mp[1] }}</td>
+                        <td>{{ mp[2] }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr>
+                    <tr id="semResultados">
                         <td colspan="3" class="text-center text-muted">Nenhuma matéria-prima registada</td>
                     </tr>
                 {% endif %}
             </tbody>
         </table>
+    </div>
+
+    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
+        <i class="bi bi-exclamation-triangle"></i> Nenhuma matéria-prima encontrada.
     </div>
 
     <div class="mt-4">
@@ -74,20 +100,22 @@
                         <div class="mb-3">
                             <label for="referencia" class="form-label">Referência *</label>
                             <input type="text" class="form-control" id="referencia" name="referencia" 
-                                   required maxlength="20" placeholder="Ex: MP001">
+                                   required maxlength="20" placeholder="MP001">
                         </div>
                         <div class="mb-3">
                             <label for="descricao" class="form-label">Descrição *</label>
-                            <textarea class="form-control" id="descricao" name="descricao" rows="3" 
-                                      required maxlength="200" placeholder="Descrição detalhada da matéria-prima"></textarea>
+                            <textarea class="form-control" id="descricao" name="descricao" 
+                                      rows="2" required maxlength="200"></textarea>
                         </div>
                         <div class="mb-3">
                             <label for="fornecedor_id" class="form-label">Fornecedor *</label>
                             <select class="form-select" id="fornecedor_id" name="fornecedor_id" required>
                                 <option value="">-- Selecione o Fornecedor --</option>
-                                {% for fornecedor in fornecedores %}
-                                    <option value="{{ fornecedor[0] }}">{{ fornecedor[1] }}</option>
-                                {% endfor %}
+                                {% if fornecedores %}
+                                    {% for fornecedor in fornecedores %}
+                                        <option value="{{ fornecedor[0] }}">{{ fornecedor[1] }}</option>
+                                    {% endfor %}
+                                {% endif %}
                             </select>
                         </div>
                     </div>
@@ -99,4 +127,13 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        configurarAtalhos('searchInput');
+    });
+</script>
 {% endblock %}

@@ -2,6 +2,10 @@
 
 {% block title %}Gestão de Itens{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
+
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>🧾 Gestão de Itens de Venda</h1>
@@ -28,8 +32,26 @@
         {% endif %}
     {% endwith %}
 
+    <!-- 🔍 BARRA DE PESQUISA -->
+    <div class="mb-4">
+        <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Pesquisar item..."
+                   onkeyup="filtrarTabela('searchInput', 'tabelaItens', 'totalItens', 'nenhumResultado')">
+            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <small class="text-muted">
+            <span id="totalItens">{{ registos|length }}</span> item(ns)
+        </small>
+    </div>
+
     <div class="table-responsive">
-        <table class="table table-striped table-hover">
+        <table class="table table-striped table-hover" id="tabelaItens">
             <thead class="table-dark">
                 <tr>
                     <th>Venda ID</th>
@@ -51,12 +73,16 @@
                     </tr>
                     {% endfor %}
                 {% else %}
-                    <tr>
+                    <tr id="semResultados">
                         <td colspan="5" class="text-center text-muted">Nenhum item registado</td>
                     </tr>
                 {% endif %}
             </tbody>
         </table>
+    </div>
+
+    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
+        <i class="bi bi-exclamation-triangle"></i> Nenhum item encontrado.
     </div>
 
     <div class="mt-4">
@@ -120,8 +146,15 @@
             </div>
         </div>
     </div>
+{% endblock %}
 
-    <script>
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        configurarAtalhos('searchInput');
+    });
+
     function atualizarPreco() {
         const select = document.getElementById('produto_referencia');
         const precoInput = document.getElementById('preco');
@@ -139,5 +172,5 @@
         const total = quantidade * preco;
         document.getElementById('valor_total').value = total.toFixed(2) + '€';
     }
-    </script>
+</script>
 {% endblock %}

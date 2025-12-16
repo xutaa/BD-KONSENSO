@@ -1,61 +1,77 @@
 {% extends 'base.html' %}
 
-{% block title %}Lista de Máquinas{% endblock %}
+{% block title %}Gestão de Máquinas{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">Lista de Máquinas</h1>
-    
-    {% if sucesso %}
-        <div class="alert alert-success" role="alert">
-            Conexão com o Banco de Dados OK! Listando Máquinas da dbo.Maquina.
-        </div>
-        
-        <a href="#" class="btn btn-primary mb-3">
-            <i class="fas fa-plus"></i> Nova Máquina
-        </a>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>⚙️ Gestão de Máquinas</h1>
+    </div>
 
-        {% if dados_maquinas %}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Máquina ID</th>
-                            <th>Descrição</th>
-                            <th>Tipo</th>
-                            <th>Fábrica ID</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for maquina in dados_maquinas %}
-                            <tr>
-                                <td>{{ maquina[0] }}</td>
-                                <td>{{ maquina[1] }}</td>
-                                <td>{{ maquina[2] }}</td>
-                                <td>{{ maquina[3] }}</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-warning">Editar</a>
-                                    <a href="#" class="btn btn-sm btn-danger">Remover</a>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-        {% else %}
-            <div class="alert alert-info">
-                Nenhuma máquina encontrada. A tabela pode estar vazia.
-            </div>
-        {% endif %}
-        
-    {% else %}
-        <div class="alert alert-danger" role="alert">
-            <h4 class="alert-heading">🚨 Falha Crítica na Conexão ou Query</h4>
-            <p>A aplicação não conseguiu listar as máquinas. Verifique as credenciais ou a query SQL.</p>
-            <hr>
-            <p class="mb-0">Detalhes do Erro: {{ erro }}</p>
+    <!-- 🔍 BARRA DE PESQUISA -->
+    <div class="mb-4">
+        <div class="search-container">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   class="search-input" 
+                   placeholder="Pesquisar máquina..."
+                   onkeyup="filtrarTabela('searchInput', 'tabelaMaquinas', 'totalMaquinas', 'nenhumResultado')">
+            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+                <i class="bi bi-x"></i>
+            </button>
         </div>
-    {% endif %}
-    
+        <small class="text-muted">
+            <span id="totalMaquinas">{{ registos|length }}</span> máquina(s)
+        </small>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover" id="tabelaMaquinas">
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Descrição</th>
+                    <th>Tipo</th>
+                    <th>Fábrica</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if registos %}
+                    {% for maquina in registos %}
+                    <tr>
+                        <td>{{ maquina[0] }}</td>
+                        <td>{{ maquina[1] }}</td>
+                        <td>{{ maquina[2] }}</td>
+                        <td>{{ maquina[3] }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr id="semResultados">
+                        <td colspan="4" class="text-center text-muted">Nenhuma máquina registada</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
+        <i class="bi bi-exclamation-triangle"></i> Nenhuma máquina encontrada.
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        configurarAtalhos('searchInput');
+    });
+</script>
 {% endblock %}
