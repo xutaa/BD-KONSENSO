@@ -235,18 +235,46 @@ def lista_cargos():
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/cargos.html', erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/cargos.html', registos=[], erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM dbo.Cargo")
+        cursor.execute("SELECT Id, Nome, Descricao FROM dbo.Cargo ORDER BY Nome")
         cargos = cursor.fetchall()
         cursor.close()
-        return render_template('tabelas/cargos.html', dados_cargos=cargos, sucesso=True)
+        return render_template('tabelas/cargos.html', registos=cargos, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar cargos: {e}")
-        return render_template('tabelas/cargos.html', erro=str(e), sucesso=False)
+        return render_template('tabelas/cargos.html', registos=[], erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
+
+@app.route('/cargo/novo', methods=['POST'])
+def adicionar_cargo():
+    """Insere novo cargo usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        nome = request.form.get('nome')
+        descricao = request.form.get('descricao')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_cargos'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoCargo (?, ?)}", (nome, descricao))
+        conn.commit()
+        flash('✅ Cargo adicionado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar cargo: {str(e)}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    
+    return redirect(url_for('lista_cargos'))
 
 @app.route('/clientes')
 def lista_clientes():
@@ -319,18 +347,76 @@ def lista_contratos_vendedor():
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/contratos_vendedor.html', erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro="Erro de conexão", sucesso=False)
+        
         cursor = conn.cursor()
-        cursor.execute("SELECT DataIn, Empresa_Nif, Vendedor_Id FROM dbo.ContratoVendedor")
+        
+        # Buscar contratos
+        cursor.execute("""
+            SELECT cv.Vendedor_Id, p.Nome AS Vendedor, e.Nome AS Empresa, cv.DataIn
+            FROM ContratoVendedor cv
+            JOIN Vendedor v ON cv.Vendedor_Id = v.Id
+            JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
+            JOIN Empresa e ON cv.Empresa_Nif = e.Nif
+            ORDER BY cv.DataIn DESC
+        """)
         contratos = cursor.fetchall()
+        
+        # Buscar vendedores
+        cursor.execute("""
+            SELECT v.Id, p.Nome
+            FROM Vendedor v
+            JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
+            ORDER BY p.Nome
+        """)
+        vendedores = cursor.fetchall()
+        
+        # Buscar empresas
+        cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
+        empresas = cursor.fetchall()
+        
         cursor.close()
-        return render_template('tabelas/contratos_vendedor.html', dados_contratos=contratos, sucesso=True)
+        return render_template('tabelas/contratos_vendedor.html', 
+                             registos=contratos,
+                             vendedores=vendedores,
+                             empresas=empresas,
+                             sucesso=True)
     except Exception as e:
         print(f"Erro ao listar contratos vendedor: {e}")
-        return render_template('tabelas/contratos_vendedor.html', erro=str(e), sucesso=False)
+        return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
+
+@app.route('/contrato_vendedor/novo', methods=['POST'])
+def adicionar_contrato_vendedor():
+    """Insere novo contrato de vendedor usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        vendedor_id = request.form.get('vendedor_id')
+        empresa_nif = request.form.get('empresa_nif')
+        data_in = request.form.get('data_in')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_contratos_vendedor'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoContratoVendedor (?, ?, ?)}", 
+                       (vendedor_id, empresa_nif, data_in))
+        conn.commit()
+        flash('✅ Contrato de vendedor criado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao criar contrato: {str(e)}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    
+    return redirect(url_for('lista_contratos_vendedor'))
 
 @app.route('/distribuidoras')
 def lista_distribuidoras():
@@ -482,22 +568,90 @@ def lista_funcionarios():
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/funcionarios.html', erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/funcionarios.html', registos=[], pessoas=[], cargos=[], empresas=[], fabricas=[], erro="Erro de conexão", sucesso=False)
+        
         cursor = conn.cursor()
+        
+        # Buscar funcionários
         cursor.execute("""
-            SELECT Id, Pessoa_Cc, Nome, Email, DataNascimento, Morada, NumTelefone, Empresa_Nif, Cargo_Id
-            FROM Funcionario F
-            JOIN Pessoa P ON F.Pessoa_Cc = P.Cc
+            SELECT f.Pessoa_Cc, p.Nome, c.Nome AS Cargo, 
+                   e.Nome AS Empresa,
+                   COALESCE(fab.Nome, 'N/A') AS Fabrica
+            FROM Funcionario f
+            JOIN Pessoa p ON f.Pessoa_Cc = p.Cc
+            JOIN Cargo c ON f.Cargo_Id = c.Id
+            JOIN Empresa e ON f.Empresa_Nif = e.Nif
+            LEFT JOIN Fabrica fab ON f.Fabrica_Id = fab.Id
+            ORDER BY p.Nome
         """)
         funcionarios = cursor.fetchall()
+        
+        # Buscar pessoas disponíveis (não funcionários)
+        cursor.execute("""
+            SELECT p.Cc, p.Nome, p.Email
+            FROM Pessoa p
+            WHERE p.Cc NOT IN (SELECT Pessoa_Cc FROM Funcionario)
+            ORDER BY p.Nome
+        """)
+        pessoas = cursor.fetchall()
+        
+        # Buscar cargos
+        cursor.execute("SELECT Id, Nome FROM Cargo ORDER BY Nome")
+        cargos = cursor.fetchall()
+        
+        # Buscar empresas
+        cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
+        empresas = cursor.fetchall()
+        
+        # Buscar fábricas
+        cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
+        fabricas = cursor.fetchall()
+        
         cursor.close()
-        return render_template('tabelas/funcionarios.html', dados_funcionarios=funcionarios, sucesso=True)
+        return render_template('tabelas/funcionarios.html', 
+                             registos=funcionarios, 
+                             pessoas=pessoas,
+                             cargos=cargos,
+                             empresas=empresas,
+                             fabricas=fabricas,
+                             sucesso=True)
     except Exception as e:
         print(f"Erro ao listar funcionarios: {e}")
-        return render_template('tabelas/funcionarios.html', erro=str(e), sucesso=False)
+        return render_template('tabelas/funcionarios.html', registos=[], pessoas=[], cargos=[], empresas=[], fabricas=[], erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
+
+@app.route('/funcionario/novo', methods=['POST'])
+def adicionar_funcionario():
+    """Insere novo funcionário usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        pessoa_cc = request.form.get('pessoa_cc')
+        cargo_id = request.form.get('cargo_id')
+        empresa_nif = request.form.get('empresa_nif')
+        fabrica_id = request.form.get('fabrica_id') if request.form.get('fabrica_id') else None
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_funcionarios'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovoFuncionario (?, ?, ?, ?)}", 
+                       (pessoa_cc, cargo_id, empresa_nif, fabrica_id))
+        conn.commit()
+        flash('✅ Funcionário adicionado com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar funcionário: {str(e)}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    
+    return redirect(url_for('lista_funcionarios'))
 
 @app.route('/itens')
 def lista_itens():
