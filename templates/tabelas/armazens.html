@@ -9,7 +9,28 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>📦 Gestão de Armazéns</h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoArmazem">
+            <i class="bi bi-plus-circle"></i> Novo Armazém
+        </button>
     </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% elif category == 'error' %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <!-- 🔍 BARRA DE PESQUISA -->
     <div class="mb-4">
@@ -62,6 +83,39 @@
 
     <div class="mt-4">
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
+    </div>
+
+    <!-- Modal Novo Armazém -->
+    <div class="modal fade" id="modalNovoArmazem" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Novo Armazém
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('adicionar_armazem') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="localizacao" class="form-label">Localização *</label>
+                            <input type="text" class="form-control" id="localizacao" name="localizacao" 
+                                   required maxlength="200" placeholder="Rua, Cidade, Código Postal">
+                        </div>
+                        <div class="mb-3">
+                            <label for="capacidade" class="form-label">Capacidade *</label>
+                            <input type="number" class="form-control" id="capacidade" name="capacidade" 
+                                   min="1" required placeholder="1000">
+                            <small class="text-muted">Capacidade em unidades de armazenamento</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Adicionar Armazém</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 {% endblock %}
 

@@ -9,7 +9,28 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>🏢 Gestão de Empresas</h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaEmpresa">
+            <i class="bi bi-plus-circle"></i> Nova Empresa
+        </button>
     </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'success' %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% elif category == 'error' %}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <!-- 🔍 BARRA DE PESQUISA -->
     <div class="mb-4">
@@ -66,6 +87,57 @@
 
     <div class="mt-4">
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
+    </div>
+
+    <!-- Modal Nova Empresa -->
+    <div class="modal fade" id="modalNovaEmpresa" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle"></i> Nova Empresa
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('adicionar_empresa') }}">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nif" class="form-label">NIF *</label>
+                                <input type="text" class="form-control" id="nif" name="nif" 
+                                       required maxlength="20" placeholder="123456789">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="nome" class="form-label">Nome *</label>
+                                <input type="text" class="form-control" id="nome" name="nome" 
+                                       required maxlength="100" placeholder="Nome da Empresa">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="localizacao" class="form-label">Localização *</label>
+                            <input type="text" class="form-control" id="localizacao" name="localizacao" 
+                                   required maxlength="200" placeholder="Rua, Cidade, Código Postal">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="num_telefone" class="form-label">Telemóvel</label>
+                                <input type="tel" class="form-control" id="num_telefone" name="num_telefone" 
+                                       maxlength="20" placeholder="912345678">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       maxlength="100" placeholder="empresa@exemplo.pt">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Adicionar Empresa</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
