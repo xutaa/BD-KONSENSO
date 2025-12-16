@@ -1026,56 +1026,57 @@ def lista_pessoas():
 
 @app.route('/produtos')
 def lista_produtos():
-    """
-    Rota /produtos. 
-    1. Lista todos os produtos para a tabela.
-    2. Busca Máquinas e Distribuidoras para preencher os Selects do Modal.
-    """
+    """Lista todos os produtos com dados para o modal"""
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
     
     conn = None
-    dados_produtos = []
-    maquinas = []           # Lista para o Dropdown
-    distribuidoras = []     # Lista para o Dropdown
-    sucesso = False
-    erro = None
-
     try:
         conn = get_db_connection()
         if conn is None:
-             raise ConnectionError("Conexão com o banco de dados falhou.")
+            flash('Erro de conexão com a base de dados', 'error')
+            return render_template('tabelas/produtos.html', 
+                                 registos=[], 
+                                 maquinas=[], 
+                                 distribuidoras=[], 
+                                 sucesso=False)
 
         cursor = conn.cursor()
         
+        # Buscar produtos
         cursor.execute("""
-            SELECT Referencia, Descricao, Nome, Preco, Maquina_Id, Distribuidora_Id 
-            FROM dbo.Produto
+            SELECT Referencia, Nome, Descricao, Preco, Maquina_Id, Distribuidora_Id 
+            FROM Produto
+            ORDER BY Nome
         """) 
-        dados_produtos = cursor.fetchall()
+        produtos = cursor.fetchall()
         
-        cursor.execute("SELECT Id, Descricao FROM dbo.Maquina") 
+        # Buscar máquinas para o dropdown
+        cursor.execute("SELECT Id, Descricao FROM Maquina ORDER BY Descricao") 
         maquinas = cursor.fetchall()
 
-        cursor.execute("SELECT Id, Nome FROM dbo.Distribuidora")
+        # Buscar distribuidoras para o dropdown
+        cursor.execute("SELECT Id, Nome FROM Distribuidora ORDER BY Nome")
         distribuidoras = cursor.fetchall()
         
-        sucesso = True
+        cursor.close()
+        return render_template('tabelas/produtos.html', 
+                             registos=produtos,
+                             maquinas=maquinas,            
+                             distribuidoras=distribuidoras,
+                             sucesso=True)
 
     except Exception as e:
-        erro = f"Erro ao carregar dados: {str(e)}"
-        print(f"❌ {erro}")
-        
+        print(f"Erro ao listar produtos: {e}")
+        flash(f'Erro ao carregar produtos: {str(e)}', 'error')
+        return render_template('tabelas/produtos.html', 
+                             registos=[], 
+                             maquinas=[], 
+                             distribuidoras=[], 
+                             sucesso=False)
     finally:
         if conn:
             conn.close()
-
-    return render_template('tabelas/produtos.html', 
-                           dados_produtos=dados_produtos,
-                           maquinas=maquinas,            
-                           distribuidoras=distribuidoras,
-                           sucesso=sucesso,
-                           erro=erro)
 
 @app.route('/produto/novo', methods=['POST'])
 def adicionar_produto():
