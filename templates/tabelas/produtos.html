@@ -60,6 +60,7 @@
                     <th>Preço (€)</th>
                     <th>Máquina ID</th>
                     <th>Distribuidora ID</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -72,6 +73,14 @@
                         <td>{{ "%.2f"|format(produto[3]) }}</td>
                         <td>{{ produto[4] }}</td>
                         <td>{{ produto[5] }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}

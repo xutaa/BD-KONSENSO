@@ -8,7 +8,7 @@
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>🧪 Gestão de Matérias-Primas</h1>
+        <h1>🧶 Gestão de Matérias-Primas</h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaMateriaPrima">
             <i class="bi bi-plus-circle"></i> Nova Matéria-Prima
         </button>
@@ -57,6 +57,7 @@
                     <th>Referência</th>
                     <th>Descrição</th>
                     <th>Fornecedor</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -66,11 +67,18 @@
                         <td>{{ mp[0] }}</td>
                         <td>{{ mp[1] }}</td>
                         <td>{{ mp[2] }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                <i class="bi bi-trash3"></i>
+                            </a>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr id="semResultados">
-                        <td colspan="3" class="text-center text-muted">Nenhuma matéria-prima registada</td>
+                        <td colspan="4" class="text-center text-muted">Nenhuma matéria-prima registada</td>
                     </tr>
                 {% endif %}
             </tbody>

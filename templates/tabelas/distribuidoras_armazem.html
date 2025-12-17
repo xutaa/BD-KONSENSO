@@ -16,7 +16,7 @@
                         <tr>
                             <th>Distribuidora ID</th>
                             <th>Armazém ID</th>
-                            <th>Ações</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -24,8 +24,13 @@
                             <tr>
                                 <td>{{ item[0] }}</td>
                                 <td>{{ item[1] }}</td>
-                                <td>
-                                    <a href="#" class="btn btn-sm btn-danger">Remover</a>
+                                <td class="text-center">
+                                    <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                        <i class="bi bi-trash3"></i>
+                                    </a>
                                 </td>
                             </tr>
                         {% endfor %}

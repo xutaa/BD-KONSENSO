@@ -59,6 +59,7 @@
                     <th>Nome</th>
                     <th>Armazém Localização</th>
                     <th>Quantidade</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -70,11 +71,19 @@
                         <td>{{ stock[1] }}</td>
                         <td>{{ stock[2] }}</td>
                         <td>{{ stock[3] }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr id="semResultados">
-                        <td colspan="4" class="text-center text-muted">Nenhum stock registado</td>
+                        <td colspan="6" class="text-center text-muted">Nenhum stock registado</td>
                     </tr>
                 {% endif %}
             </tbody>

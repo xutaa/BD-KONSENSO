@@ -36,6 +36,7 @@
                     <th>ID</th>
                     <th>Nome</th>
                     <th>Localização</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -45,11 +46,19 @@
                         <td>{{ dist[0] }}</td>
                         <td>{{ dist[1] }}</td>
                         <td>{{ dist[2] }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr id="semResultados">
-                        <td colspan="3" class="text-center text-muted">Nenhuma distribuidora registada</td>
+                        <td colspan="4" class="text-center text-muted">Nenhuma distribuidora registada</td>
                     </tr>
                 {% endif %}
             </tbody>
