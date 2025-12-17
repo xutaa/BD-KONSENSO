@@ -25,7 +25,7 @@
             </button>
         </div>
         <small class="text-muted">
-            <span id="totalDistribuidoras">{{ registos|length }}</span> distribuidora(s)
+            <span id="totalDistribuidoras">{{ dados_distribuidoras|length }}</span> distribuidora(s)
         </small>
     </div>
 
@@ -39,8 +39,8 @@
                 </tr>
             </thead>
             <tbody>
-                {% if registos %}
-                    {% for dist in registos %}
+                {% if dados_distribuidoras %}
+                    {% for dist in dados_distribuidoras %}
                     <tr>
                         <td>{{ dist[0] }}</td>
                         <td>{{ dist[1] }}</td>

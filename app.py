@@ -274,7 +274,7 @@ def lista_cargos():
         if conn is None: 
             return render_template('tabelas/cargos.html', registos=[], erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("SELECT Id, Nome, Descricao FROM dbo.Cargo ORDER BY Nome")
+        cursor.execute("SELECT Id, Nome, Descricao FROM dbo.Cargo ORDER BY Id")
         cargos = cursor.fetchall()
         cursor.close()
         return render_template('tabelas/cargos.html', registos=cargos, sucesso=True)
@@ -715,7 +715,7 @@ def lista_funcionarios():
             JOIN Cargo c ON f.Cargo_Id = c.Id
             JOIN Empresa e ON f.Empresa_Nif = e.Nif
             LEFT JOIN Fabrica fab ON f.Fabrica_Id = fab.Id
-            ORDER BY p.Nome
+            ORDER BY f.Pessoa_Cc
         """)
         funcionarios = cursor.fetchall()
         
@@ -1012,7 +1012,7 @@ def lista_pessoas():
             return render_template('tabelas/pessoas.html', erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT Cc, Nome, Email, DataNascimento, Morada, NumTelefone FROM dbo.Pessoa
+            SELECT Cc, Nome, Email, DataNascimento, Morada, NumTelefone FROM dbo.Pessoa ORDER BY Nome
         """)
         pessoas = cursor.fetchall()
         cursor.close()
@@ -1045,7 +1045,7 @@ def lista_produtos():
         
         # Buscar produtos
         cursor.execute("""
-            SELECT Referencia, Nome, Descricao, Preco, Maquina_Id, Distribuidora_Id 
+            SELECT Nome, Referencia, Descricao, Preco, Maquina_Id, Distribuidora_Id 
             FROM Produto
             ORDER BY Nome
         """) 
@@ -1219,7 +1219,6 @@ def lista_vendas():
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
     
-    # 1. Obter contexto do administrador
     tipo_admin = session.get('tipo_admin')
     loja_id_sessao = session.get('loja_id') 
 
@@ -1253,7 +1252,6 @@ def lista_vendas():
         if conn:
             conn.close()
             
-    # 3. Usa o template 'vendas.html'
     return render_template('tabelas/vendas.html', 
                            dados_vendas=vendas, 
                            sucesso=sucesso, 
