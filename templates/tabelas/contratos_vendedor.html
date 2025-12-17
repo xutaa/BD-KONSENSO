@@ -32,7 +32,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- 🔍 BARRA DE PESQUISA -->
     <div class="mb-4">
         <div class="search-container">
             <i class="bi bi-search search-icon"></i>
@@ -58,6 +57,8 @@
                     <th>Vendedor</th>
                     <th>Empresa</th>
                     <th>Data Início</th>
+                    <th>Data Fim</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -68,11 +69,20 @@
                         <td>{{ contrato[1] }}</td>
                         <td>{{ contrato[2] }}</td>
                         <td>{{ contrato[3] }}</td>
+                        <td>{{ contrato[4] if contrato[4] else 'Ativo' }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr id="semResultados">
-                        <td colspan="4" class="text-center text-muted">Nenhum contrato registado</td>
+                        <td colspan="6" class="text-center text-muted">Nenhum contrato registado</td>
                     </tr>
                 {% endif %}
             </tbody>
@@ -87,7 +97,6 @@
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
     </div>
 
-    <!-- Modal Novo Contrato -->
     <div class="modal fade" id="modalNovoContrato" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

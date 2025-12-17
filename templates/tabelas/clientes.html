@@ -32,7 +32,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- 🔍 BARRA DE PESQUISA MINIMALISTA -->
     <div class="mb-4">
         <div class="search-container">
             <i class="bi bi-search search-icon"></i>
@@ -57,6 +56,7 @@
                     <th>CC</th>
                     <th>Nome</th>
                     <th>Email</th>
+                    <th>Data Nascimento</th>
                     <th>Telemóvel</th>
                     <th>NIF Cliente</th>
                 </tr>
@@ -70,6 +70,7 @@
                         <td>{{ registo[2] }}</td>
                         <td>{{ registo[3] }}</td>
                         <td>{{ registo[4] }}</td>
+                        <td>{{ registo[5] }}</td>
                     </tr>
                     {% endfor %}
                 {% else %}
@@ -81,7 +82,6 @@
         </table>
     </div>
 
-    <!-- Mensagem quando não há resultados da pesquisa -->
     <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
         <i class="bi bi-exclamation-triangle"></i> Nenhum cliente encontrado.
     </div>
@@ -90,43 +90,57 @@
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
     </div>
 
-    <!-- Modal Novo Cliente -->
     <div class="modal fade" id="modalNovoCliente" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle"></i> Novo Cliente
-                    </h5>
+                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Novo Cliente</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="{{ url_for('adicionar_cliente') }}">
-                    <div class="modal-body">
+                    <div class="modal-body px-4">
+                        
                         <div class="mb-3">
-                            <label for="pessoa_cc" class="form-label">Pessoa *</label>
-                            <select class="form-select" id="pessoa_cc" name="pessoa_cc" required>
-                                <option value="">-- Selecione a Pessoa --</option>
-                                {% for pessoa in pessoas %}
-                                    <option value="{{ pessoa[0] }}">
-                                        {{ pessoa[1] }} ({{ pessoa[2] }})
-                                    </option>
-                                {% endfor %}
-                            </select>
-                            <small class="text-muted">
-                                Apenas pessoas que ainda não são clientes aparecem na lista
-                            </small>
+                            <label class="form-label fw-bold">Nome Completo *</label>
+                            <input type="text" class="form-control" name="nome" required placeholder="Ex: Maria Rodrigues">
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">CC *</label>
+                                <input type="text" class="form-control" name="pessoa_cc" required placeholder="8 ou mais dígitos">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">NIF *</label>
+                                <input type="text" class="form-control" name="nif" required pattern="[0-9]{9}" placeholder="9 dígitos">
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label for="nif" class="form-label">NIF do Cliente *</label>
-                            <input type="text" class="form-control" id="nif" name="nif" 
-                                   required maxlength="20" pattern="[0-9]{9}" 
-                                   placeholder="123456789">
-                            <small class="text-muted">9 dígitos</small>
+                            <label class="form-label fw-bold">Morada *</label>
+                            <input type="text" class="form-control" name="morada" required maxlength="200" placeholder="Rua, Número, Andar, Código Postal...">
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Telemóvel *</label>
+                                <input type="tel" class="form-control" name="telemovel" required pattern="9[0-9]{8}" placeholder="9xxxxxxxx">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Data de Nascimento *</label>
+                                <input type="date" class="form-control" name="data_nasc" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email *</label>
+                            <input type="email" class="form-control" name="email" required placeholder="cliente@exemplo.com">
+                        </div>
+
                     </div>
-                    <div class="modal-footer">
+                    <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar Cliente</button>
+                        <button type="submit" class="btn btn-primary px-4">Guardar Cliente</button>
                     </div>
                 </form>
             </div>
@@ -137,7 +151,6 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/search.js') }}"></script>
 <script>
-    // Configurar atalhos ao carregar a página
     configurarAtalhos('searchInput');
 </script>
 {% endblock %}

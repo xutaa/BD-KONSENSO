@@ -326,7 +326,7 @@ def lista_clientes():
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT c.Pessoa_Cc, p.Nome, p.Email, p.NumTelefone, c.Nif
+            SELECT c.Pessoa_Cc, p.Nome, p.Email, p.DataNascimento , p.NumTelefone, c.Nif
             FROM Cliente c
             JOIN Pessoa p ON c.Pessoa_Cc = p.Cc
             ORDER BY p.Nome
@@ -350,30 +350,33 @@ def lista_clientes():
 
 @app.route('/cliente/novo', methods=['POST'])
 def adicionar_cliente():
-    """Insere novo cliente usando Stored Procedure"""
     if 'admin_logado' not in session:
         return redirect(url_for('login'))
-    
+        
     try:
-        pessoa_cc = request.form.get('pessoa_cc')
-        nif = request.form.get('nif')
+        dados = {
+            'cc': request.form.get('pessoa_cc'),
+            'nome': request.form.get('nome'),
+            'email': request.form.get('email'),
+            'data_nasc': request.form.get('data_nasc'),
+            'morada': request.form.get('morada'),
+            'telemovel': request.form.get('telemovel'),
+            'nif': request.form.get('nif')
+        }
 
         conn = get_db_connection()
-        if not conn:
-            flash('Erro de conexão com a base de dados', 'error')
-            return redirect(url_for('lista_clientes'))
-
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.InserirNovoCliente (?, ?)}", (pessoa_cc, nif))
-        conn.commit()
-        flash('✅ Cliente adicionado com sucesso!', 'success')
         
+        cursor.execute("{CALL dbo.InserirNovoCliente (?, ?, ?, ?, ?, ?, ?)}", 
+                       (dados['cc'], dados['nome'], dados['email'], 
+                        dados['data_nasc'], dados['morada'], dados['telemovel'], dados['nif']))
+        conn.commit()
+        flash('✅ Cliente e dados pessoais criados com sucesso!', 'success')
     except Exception as e:
-        flash(f'❌ Erro ao adicionar cliente: {str(e)}', 'error')
+        error_msg = str(e).split(']')[-1] 
+        flash(f'❌ Erro: {error_msg}', 'error')
     finally:
-        if conn:
-            conn.close()
-    
+        conn.close()
     return redirect(url_for('lista_clientes'))
 
 @app.route('/contratos_vendedor')
@@ -385,21 +388,18 @@ def lista_contratos_vendedor():
         conn = get_db_connection()
         if conn is None: 
             return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro="Erro de conexão", sucesso=False)
-        
         cursor = conn.cursor()
         
-        # Buscar contratos
         cursor.execute("""
-            SELECT cv.Vendedor_Id, p.Nome AS Vendedor, e.Nome AS Empresa, cv.DataIn
+            SELECT cv.Vendedor_Id, p.Nome AS Vendedor, e.Nome AS Empresa, cv.DataIn, cv.DataOut
             FROM ContratoVendedor cv
             JOIN Vendedor v ON cv.Vendedor_Id = v.Id
             JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
             JOIN Empresa e ON cv.Empresa_Nif = e.Nif
-            ORDER BY cv.DataIn DESC
+            ORDER BY p.Nome
         """)
         contratos = cursor.fetchall()
         
-        # Buscar vendedores
         cursor.execute("""
             SELECT v.Id, p.Nome
             FROM Vendedor v
@@ -408,7 +408,6 @@ def lista_contratos_vendedor():
         """)
         vendedores = cursor.fetchall()
         
-        # Buscar empresas
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
         
@@ -705,7 +704,6 @@ def lista_funcionarios():
         
         cursor = conn.cursor()
         
-        # Buscar funcionários
         cursor.execute("""
             SELECT f.Pessoa_Cc, p.Nome, c.Nome AS Cargo, 
                    e.Nome AS Empresa,
@@ -715,11 +713,10 @@ def lista_funcionarios():
             JOIN Cargo c ON f.Cargo_Id = c.Id
             JOIN Empresa e ON f.Empresa_Nif = e.Nif
             LEFT JOIN Fabrica fab ON f.Fabrica_Id = fab.Id
-            ORDER BY f.Pessoa_Cc
+            ORDER BY p.Nome
         """)
         funcionarios = cursor.fetchall()
         
-        # Buscar pessoas disponíveis (não funcionários)
         cursor.execute("""
             SELECT p.Cc, p.Nome, p.Email
             FROM Pessoa p
@@ -728,15 +725,12 @@ def lista_funcionarios():
         """)
         pessoas = cursor.fetchall()
         
-        # Buscar cargos
         cursor.execute("SELECT Id, Nome FROM Cargo ORDER BY Nome")
         cargos = cursor.fetchall()
         
-        # Buscar empresas
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
         
-        # Buscar fábricas
         cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
         fabricas = cursor.fetchall()
         
@@ -1274,47 +1268,49 @@ def lista_vendedores():
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/vendedores.html', registos=[], pessoas=[], cargos=[])
-    
+        return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[])
     try:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT v.Pessoa_Cc, p.Nome, c.Nome AS Cargo, v.NumVendas
+            SELECT v.Pessoa_Cc, p.Nome, c.Nome AS Cargo, v.NumVendas, p.NumTelefone
             FROM Vendedor v
             JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
             JOIN Cargo c ON v.Cargo_Id = c.Id
-            ORDER BY v.NumVendas DESC
+            ORDER BY p.Nome
         """)
         registos = cursor.fetchall()
         
-        cursor.execute("""
-            SELECT p.Cc, p.Nome, p.Email
-            FROM Pessoa p
-            WHERE p.Cc NOT IN (SELECT Pessoa_Cc FROM Vendedor)
-            ORDER BY p.Nome
-        """)
-        pessoas = cursor.fetchall()
-        
         cursor.execute("SELECT Id, Nome FROM Cargo ORDER BY Nome")
         cargos = cursor.fetchall()
-        
-        return render_template('tabelas/vendedores.html', registos=registos, pessoas=pessoas, cargos=cargos)
+
+        cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
+        empresas = cursor.fetchall()
+
+        return render_template('tabelas/vendedores.html', registos=registos, cargos=cargos, empresas=empresas)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/vendedores.html', registos=[], pessoas=[], cargos=[])
+        return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[])
     finally:
         conn.close()
 
 @app.route('/vendedor/novo', methods=['POST'])
 def adicionar_vendedor():
-    """Insere novo vendedor usando Stored Procedure"""
+    """Insere novo vendedor e contrato usando Stored Procedure completa"""
     if 'admin_logado' not in session:
         return redirect(url_for('login'))
     
+    conn = None
     try:
-        pessoa_cc = request.form.get('pessoa_cc')
+        cc = request.form.get('pessoa_cc')
+        nome = request.form.get('nome')
+        email = request.form.get('email') or None
+        data_nasc = request.form.get('data_nasc') or None
+        morada = request.form.get('morada') or None
+        telemovel = request.form.get('telemovel') or None
+
         cargo_id = request.form.get('cargo_id')
-        num_vendas = request.form.get('num_vendas', 0)
+        empresa_nif = request.form.get('empresa_nif')
+        data_fim = request.form.get('data_fim') or None
 
         conn = get_db_connection()
         if not conn:
@@ -1322,18 +1318,21 @@ def adicionar_vendedor():
             return redirect(url_for('lista_vendedores'))
 
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.InserirNovoVendedor (?, ?, ?)}", (pessoa_cc, cargo_id, num_vendas))
-        conn.commit()
-        flash('✅ Vendedor adicionado com sucesso!', 'success')
+
+        sql = "{CALL dbo.InserirNovoVendedor (?, ?, ?, ?, ?, ?, ?, ?, ?)}"
+        params = (cc, nome, email, data_nasc, morada, telemovel, cargo_id, empresa_nif, data_fim)
         
+        cursor.execute(sql, params)
+        conn.commit()
+        
+        flash('✅ Vendedor e Contrato registados com sucesso!', 'success')
     except Exception as e:
-        flash(f'❌ Erro ao adicionar vendedor: {str(e)}', 'error')
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao adicionar vendedor: {error_msg}', 'error')
     finally:
         if conn:
             conn.close()
-    
     return redirect(url_for('lista_vendedores'))
-
 
 if __name__ == '__main__':
     print("🚀 A iniciar servidor Flask...")

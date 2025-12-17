@@ -249,39 +249,47 @@ GO
 -- Descrição: Insere um novo cliente no sistema
 -- =============================================
 CREATE OR ALTER PROCEDURE dbo.InserirNovoCliente
-    @PessoaCc VARCHAR(20),
+    @Cc VARCHAR(20),
+    @Nome VARCHAR(100),
+    @Email VARCHAR(100),
+    @DataNasc DATE,
+    @Morada VARCHAR(200),
+    @Telemovel VARCHAR(20),
     @Nif VARCHAR(20)
 AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRANSACTION;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM dbo.Pessoa WHERE Cc = @PessoaCc)
+        IF NOT EXISTS (SELECT 1 FROM dbo.Pessoa WHERE Cc = @Cc)
         BEGIN
-            RAISERROR('Pessoa não encontrada.', 16, 1)
-            RETURN
+            INSERT INTO dbo.Pessoa (Cc, Nome, Email, DataNascimento, Morada, NumTelefone)
+            VALUES (@Cc, @Nome, @Email, @DataNasc, @Morada, @Telemovel);
         END
 
-        IF EXISTS (SELECT 1 FROM dbo.Cliente WHERE Pessoa_Cc = @PessoaCc)
+        IF EXISTS (SELECT 1 FROM dbo.Cliente WHERE Pessoa_Cc = @Cc)
         BEGIN
-            RAISERROR('Esta pessoa já está registada como cliente.', 16, 1)
-            RETURN
+            RAISERROR('Esta pessoa já está registada como cliente.', 16, 1);
+            ROLLBACK TRANSACTION; RETURN;
         END
 
         IF EXISTS (SELECT 1 FROM dbo.Cliente WHERE Nif = @Nif)
         BEGIN
-            RAISERROR('NIF já existe no sistema.', 16, 1)
-            RETURN
+            RAISERROR('Este NIF já está atribuído a outro cliente.', 16, 1);
+            ROLLBACK TRANSACTION; RETURN;
         END
 
         INSERT INTO dbo.Cliente (Pessoa_Cc, Nif)
-        VALUES (@PessoaCc, @Nif);
-        
-        SELECT @PessoaCc AS PessoaCc, 'INSERIDO' AS Acao;
+        VALUES (@Cc, @Nif);
+
+        COMMIT TRANSACTION;
+        SELECT @Cc AS PessoaCc, 'SUCESSO' AS Status;
     END TRY
     BEGIN CATCH
-        THROW;
-        RETURN;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
 GO
@@ -583,40 +591,47 @@ GO
 -- Descrição: Insere um novo vendedor no sistema
 -- =============================================
 CREATE OR ALTER PROCEDURE dbo.InserirNovoVendedor
-    @PessoaCc VARCHAR(20),
+    @Cc VARCHAR(20),
+    @Nome VARCHAR(100),
+    @Email VARCHAR(100),
+    @DataNasc DATE,
+    @Morada VARCHAR(200),
+    @Telemovel VARCHAR(20),
     @CargoId INT,
-    @NumVendas INT = 0
+    @EmpresaNif VARCHAR(20),
+    @DataFim DATE
 AS
 BEGIN
     SET NOCOUNT ON;
 
+    BEGIN TRANSACTION;
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM dbo.Pessoa WHERE Cc = @PessoaCc)
+        IF NOT EXISTS (SELECT 1 FROM dbo.Pessoa WHERE Cc = @Cc)
         BEGIN
-            RAISERROR('Pessoa não encontrada.', 16, 1)
-            RETURN
+            INSERT INTO dbo.Pessoa (Cc, Nome, Email, DataNascimento, Morada, NumTelefone)
+            VALUES (@Cc, @Nome, @Email, @DataNasc, @Morada, @Telemovel);
         END
 
-        IF NOT EXISTS (SELECT 1 FROM dbo.Cargo WHERE Id = @CargoId)
+        IF EXISTS (SELECT 1 FROM dbo.Vendedor WHERE Pessoa_Cc = @Cc)
         BEGIN
-            RAISERROR('Cargo não encontrado.', 16, 1)
-            RETURN
+            RAISERROR('Esta pessoa já está registada como vendedor.', 16, 1);
+            ROLLBACK TRANSACTION; RETURN;
         END
-
-        IF EXISTS (SELECT 1 FROM dbo.Vendedor WHERE Pessoa_Cc = @PessoaCc)
-        BEGIN
-            RAISERROR('Esta pessoa já está registada como vendedor.', 16, 1)
-            RETURN
-        END
-
+    
         INSERT INTO dbo.Vendedor (Pessoa_Cc, NumVendas, Cargo_Id)
-        VALUES (@PessoaCc, @NumVendas, @CargoId);
-        
-        SELECT @PessoaCc AS PessoaCc, 'INSERIDO' AS Acao;
+        VALUES (@Cc, 0, @CargoId);
+
+        DECLARE @NovoVendedorId INT = SCOPE_IDENTITY();
+        INSERT INTO dbo.ContratoVendedor (DataIn, Empresa_Nif, Vendedor_Id, DataFim)
+        VALUES (GETDATE(), @EmpresaNif, @NovoVendedorId, @DataFim);
+
+        COMMIT TRANSACTION;
+        SELECT @Cc AS PessoaCc, 'SUCESSO' AS Status;
     END TRY
     BEGIN CATCH
-        THROW;
-        RETURN;
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
 GO

@@ -32,7 +32,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- 🔍 BARRA DE PESQUISA -->
     <div class="mb-4">
         <div class="search-container">
             <i class="bi bi-search search-icon"></i>
@@ -54,11 +53,12 @@
         <table class="table table-striped table-hover" id="tabelaVendedores">
             <thead class="table-dark">
                 <tr>
-                    <th>ID</th>
+                    <th>CC</th>
                     <th>Nome</th>
-                    <th>Email</th>
-                    <th>Nº Vendas</th>
                     <th>Cargo</th>
+                    <th>Nº Vendas</th>
+                    <th>NumTelefone</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -70,6 +70,14 @@
                         <td>{{ vendedor[2] }}</td>
                         <td>{{ vendedor[3] }}</td>
                         <td>{{ vendedor[4] }}</td>
+                        <td class="text-center">
+                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
+                                <i class="bi bi-trash3"></i>
+                            </a>
+                        </td>
                     </tr>
                     {% endfor %}
                 {% else %}
@@ -89,45 +97,85 @@
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
     </div>
 
-    <!-- Modal Novo Vendedor -->
     <div class="modal fade" id="modalNovoVendedor" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="bi bi-plus-circle"></i> Novo Vendedor
+                        <i class="bi bi-person-plus-fill"></i> Novo Vendedor e Contrato
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="{{ url_for('adicionar_vendedor') }}">
-                    <div class="modal-body">
+                    <div class="modal-body px-4">
+                        
+                        <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
                         <div class="mb-3">
-                            <label for="pessoa_cc" class="form-label">Pessoa *</label>
-                            <select class="form-select" id="pessoa_cc" name="pessoa_cc" required>
-                                <option value="">-- Selecione a Pessoa --</option>
-                                {% if pessoas %}
-                                    {% for pessoa in pessoas %}
-                                        <option value="{{ pessoa[0] }}">{{ pessoa[1] }} ({{ pessoa[2] }})</option>
-                                    {% endfor %}
-                                {% endif %}
-                            </select>
-                            <small class="text-muted">Apenas pessoas que ainda não são vendedores</small>
+                            <label class="form-label fw-bold">Nome Completo *</label>
+                            <input type="text" class="form-control" name="nome" required placeholder="Ex: Carlos Alberto">
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">CC *</label>
+                                <input type="text" class="form-control" name="pessoa_cc" required pattern="[0-9]{8}" placeholder="Número do CC">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Data de Nascimento *</label>
+                                <input type="date" class="form-control" name="data_nasc" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Email *</label>
+                                <input type="email" class="form-control" name="email" required placeholder="vendedor@empresa.pt">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Telemóvel *</label>
+                                <input type="tel" class="form-control" name="telemovel" required pattern="9[0-9]{8}" placeholder="9xxxxxxxx">
+                            </div>
+                        </div>
+
                         <div class="mb-3">
-                            <label for="cargo_id" class="form-label">Cargo *</label>
-                            <select class="form-select" id="cargo_id" name="cargo_id" required>
-                                <option value="">-- Selecione o Cargo --</option>
-                                {% if cargos %}
+                            <label class="form-label fw-bold">Morada *</label>
+                            <input type="text" class="form-control" name="morada" required maxlength="200" placeholder="Rua, Código Postal, Cidade">
+                        </div>
+
+                        <p class="text-muted border-bottom pb-1 mt-4 mb-3">Informação Profissional</p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Cargo *</label>
+                                <select class="form-select" name="cargo_id" required>
+                                    <option value="">-- Selecione o Cargo --</option>
                                     {% for cargo in cargos %}
                                         <option value="{{ cargo[0] }}">{{ cargo[1] }}</option>
                                     {% endfor %}
-                                {% endif %}
-                            </select>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Empresa (Contrato) *</label>
+                                <select class="form-select" name="empresa_nif" required>
+                                    <option value="">-- Selecione a Empresa --</option>
+                                    {% for empresa in empresas %}
+                                        <option value="{{ empresa[0] }}">{{ empresa[1] }} ({{ empresa[0] }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Data Fim Contrato</label>
+                                <input type="date" class="form-control" name="data_fim">
+                                <div class="form-text">Deixe vazio para contratos sem termo.</div>
+                            </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
+
+                    <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar Vendedor</button>
+                        <button type="submit" class="btn btn-primary px-4">Criar Vendedor e Ativar Contrato</button>
                     </div>
                 </form>
             </div>
