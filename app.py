@@ -819,36 +819,6 @@ def lista_itens():
     finally:
         conn.close()
 
-@app.route('/item/novo', methods=['POST'])
-def adicionar_item():
-    """Insere novo item de venda usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
-    
-    try:
-        venda_id = request.form.get('venda_id')
-        produto_ref = request.form.get('produto_referencia')
-        quantidade = request.form.get('quantidade')
-        preco = request.form.get('preco')
-
-        conn = get_db_connection()
-        if not conn:
-            flash('Erro de conexão com a base de dados', 'error')
-            return redirect(url_for('lista_itens'))
-
-        cursor = conn.cursor()
-        cursor.execute("{CALL dbo.InserirNovoItem (?, ?, ?, ?)}", (venda_id, produto_ref, quantidade, preco))
-        conn.commit()
-        flash('✅ Item adicionado com sucesso!', 'success')
-        
-    except Exception as e:
-        flash(f'❌ Erro ao adicionar item: {str(e)}', 'error')
-    finally:
-        if conn:
-            conn.close()
-    
-    return redirect(url_for('lista_itens'))
-
 @app.route('/lojas')
 def lista_lojas():
     if 'admin_logado' not in session: 
@@ -1001,29 +971,6 @@ def adicionar_materia_prima():
     
     return redirect(url_for('lista_materias_primas'))
 
-@app.route('/pessoas')
-def lista_pessoas():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
-    conn = None
-    try:
-        conn = get_db_connection()
-        if conn is None: 
-            return render_template('tabelas/pessoas.html', erro="Erro de conexão", sucesso=False)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT Cc, Nome, Email, DataNascimento, Morada, NumTelefone FROM dbo.Pessoa ORDER BY Nome
-        """)
-        pessoas = cursor.fetchall()
-        cursor.close()
-        return render_template('tabelas/pessoas.html', dados_pessoas=pessoas, sucesso=True)
-    except Exception as e:
-        print(f"Erro ao listar pessoas: {e}")
-        return render_template('tabelas/pessoas.html', erro=str(e), sucesso=False)
-    finally:
-        if conn:
-            conn.close()
-
 @app.route('/produtos')
 def lista_produtos():
     """Lista todos os produtos com dados para o modal"""
@@ -1040,22 +987,18 @@ def lista_produtos():
                                  maquinas=[], 
                                  distribuidoras=[], 
                                  sucesso=False)
-
         cursor = conn.cursor()
-        
-        # Buscar produtos
         cursor.execute("""
             SELECT Nome, Referencia, Descricao, Preco, Maquina_Id, Distribuidora_Id 
             FROM Produto
             ORDER BY Nome
         """) 
+        
         produtos = cursor.fetchall()
         
-        # Buscar máquinas para o dropdown
         cursor.execute("SELECT Id, Descricao FROM Maquina ORDER BY Descricao") 
         maquinas = cursor.fetchall()
 
-        # Buscar distribuidoras para o dropdown
         cursor.execute("SELECT Id, Nome FROM Distribuidora ORDER BY Nome")
         distribuidoras = cursor.fetchall()
         
@@ -1065,7 +1008,6 @@ def lista_produtos():
                              maquinas=maquinas,            
                              distribuidoras=distribuidoras,
                              sucesso=True)
-
     except Exception as e:
         print(f"Erro ao listar produtos: {e}")
         flash(f'Erro ao carregar produtos: {str(e)}', 'error')
@@ -1265,28 +1207,31 @@ def lista_vendas():
 
 @app.route('/venda/nova', methods=['POST'])
 def adicionar_venda():
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
-
-    loja_id = request.form.get('loja_id')
-    produto_ref = request.form.get('produto_ref')
-    quantidade = request.form.get('quantidade')
-    metodo = request.form.get('metodo_pagamento')
-    nif = request.form.get('cliente_nif') or None
-
+    data = request.get_json()
+    
+    itens_para_sql = [(item['ref'], int(item['qtd'])) for item in data['itens']]
+    
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.RegistarVendaEAtualizarStock (?, ?, ?, ?, ?)}", 
-                       (loja_id, nif, produto_ref, metodo, quantidade))
+        
+        sql = "{CALL dbo.RegistarVendaCompleta (?, ?, ?, ?)}"
+        params = (
+            data['loja_id'],
+            data['nif'] if data['nif'] else None,
+            data['pagamento'],
+            itens_para_sql
+        )
+        
+        cursor.execute(sql, params)
         conn.commit()
-        flash('✅ Venda realizada com sucesso!', 'success')
+        
+        return jsonify({'sucesso': True, 'mensagem': 'Venda registada com sucesso!'})
     except Exception as e:
         error_msg = str(e).split(']')[-1]
-        flash(f'❌ Erro: {error_msg}', 'error')
+        return jsonify({'sucesso': False, 'erro': error_msg})
     finally:
         conn.close()
-    return redirect(url_for('lista_vendas'))
 
 @app.route('/api/venda/<int:venda_id>/itens')
 def obter_itens_venda(venda_id):

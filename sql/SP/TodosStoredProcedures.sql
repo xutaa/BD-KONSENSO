@@ -644,49 +644,84 @@ BEGIN
 END
 GO
 
+
+-- =============================================
+-- Tipo de Dados: ListaItensVenda
+-- Descrição: Tipo de tabela para passar listas de itens de venda
+-- =============================================
+CREATE TYPE dbo.ListaItensVenda AS TABLE (
+    ProdutoRef VARCHAR(20),
+    Quantidade INT
+);
+GO
+
 -- =============================================
 -- SP: RegistarVendaEAtualizarStock
 -- Descrição: Regista uma venda e atualiza o stock correspondente
 -- =============================================
-CREATE OR ALTER PROCEDURE dbo.RegistarVendaEAtualizarStock
+CREATE OR ALTER PROCEDURE dbo.RegistarVendaCompleta
     @LojaId INT,
     @ClienteNif VARCHAR(15),
-    @ProdutoRef VARCHAR(20),
     @MetodoPagamento VARCHAR(50),
-    @Quantidade INT
+    @Itens dbo.ListaItensVenda READONLY -- A nossa lista de produtos
 AS
 BEGIN
     SET NOCOUNT ON;
-    
-    DECLARE @PrecoNoMomento DECIMAL(10, 2);
+    DECLARE @VendaId INT;
 
     BEGIN TRANSACTION;
-
     BEGIN TRY
-        SELECT @PrecoNoMomento = Preco 
-        FROM dbo.Produto 
-        WHERE Referencia = @ProdutoRef;
-
-        DECLARE @VendaId INT;
         INSERT INTO dbo.Venda (DataHora, MetodoPagamento, Loja_Id, Cliente_Nif, ValorTotal)
         VALUES (GETDATE(), @MetodoPagamento, @LojaId, @ClienteNif, 0.00);
         
         SET @VendaId = SCOPE_IDENTITY();
 
         INSERT INTO dbo.Item (Venda_Id, Produto_Referencia, Quantidade, Preco)
-        VALUES (@VendaId, @ProdutoRef, @Quantidade, @PrecoNoMomento);
+        SELECT @VendaId, L.ProdutoRef, L.Quantidade, P.Preco
+        FROM @Itens L
+        JOIN dbo.Produto P ON L.ProdutoRef = P.Referencia;
 
-        UPDATE dbo.Stock
-        SET Quantidade = Quantidade - @Quantidade
-        WHERE Produto_Referencia = @ProdutoRef AND Armazem_Id = @LojaId;
+        UPDATE S
+        SET S.Quantidade = S.Quantidade - L.Quantidade
+        FROM dbo.Stock S
+        JOIN @Itens L ON S.Produto_Referencia = L.ProdutoRef
+        WHERE S.Armazem_Id = @LojaId;
 
         COMMIT TRANSACTION;
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END;
+GO
+
+-- =============================================
+-- SP: TransferirStock
+-- Descrição: Transfere stock entre dois armazéns
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.TransferirStock
+    @ProdutoRef VARCHAR(20),
+    @ArmazemOrigem INT,
+    @ArmazemDestino INT,
+    @Quantidade INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        UPDATE Stock SET Quantidade = Quantidade - @Quantidade 
+        WHERE Produto_Referencia = @ProdutoRef AND Armazem_Id = @ArmazemOrigem;
+        
+        UPDATE Stock SET Quantidade = Quantidade + @Quantidade 
+        WHERE Produto_Referencia = @ProdutoRef AND Armazem_Id = @ArmazemDestino;
+        
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        THROW;
+    END CATCH
+END
 GO

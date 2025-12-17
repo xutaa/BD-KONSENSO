@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - BD Konsenso</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
     <!-- Barra de Navegação -->
@@ -82,16 +82,6 @@
         {% if permissoes.pessoas_clientes %}
         <h2 class="section-title">👥 Pessoas e Clientes</h2>
         <div class="grid">
-            {% if tipo_admin == 'Geral' %}
-            <div class="card">
-                <a href="{{ url_for('lista_pessoas') }}">
-                    <div class="card-icon">👤</div>
-                    <h3>Pessoas</h3>
-                    <p>Registo de pessoas</p>
-                </a>
-            </div>
-            {% endif %}
-
             <div class="card">
                 <a href="{{ url_for('lista_clientes') }}">
                     <div class="card-icon">👥</div>

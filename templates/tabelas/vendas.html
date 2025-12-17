@@ -6,7 +6,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>💰 Histórico de Vendas</h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaVenda">
-            <i class="bi bi-plus-circle"></i> Registar Venda
+            <i class="bi bi-plus-circle"></i> Nova Venda
         </button>
     </div>
 
@@ -39,7 +39,7 @@
                     {% for venda in dados_vendas %}
                         <tr>
                             <td class="fw-bold">#{{ venda[0] }}</td>
-                            <td>{{ venda[1].strftime('%d/%m/%Y %H:%M') if venda[1] else 'N/A' }}</td>
+                            <td>{{ venda[1].strftime('%d/%m/%Y') if venda[1] else 'N/A' }}</td>
                             <td>{{ venda[4] if venda[4] else 'Consumidor Final' }}</td>
                             <td>{{ venda[5] }}</td>
                             <td><span class="badge bg-secondary">{{ venda[3] }}</span></td>
@@ -102,65 +102,83 @@
     </div>
 
     <div class="modal fade" id="modalNovaVenda" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="bi bi-cart-plus"></i> Registar Nova Venda</h5>
+                    <h5 class="modal-title"><i class="bi bi-cart-plus"></i> Nova Venda Multi-Item</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="POST" action="/venda/nova">
-                    <div class="modal-body">
-                        
-                        <div class="mb-3">
+                <div class="modal-body">
+                    <div class="row g-3 mb-4 p-3 bg-light rounded">
+                        <div class="col-md-4">
                             <label class="form-label fw-bold">Loja *</label>
                             {% if session['tipo_admin'] == 'Loja' %}
-                                <input type="text" class="form-control bg-light" value="Sua Loja (ID: {{ session['loja_id'] }})" readonly>
-                                <input type="hidden" name="loja_id" value="{{ session['loja_id'] }}">
+                                <input type="text" class="form-control" value="ID: {{ session['loja_id'] }}" readonly>
+                                <input type="hidden" id="venda_loja_id" value="{{ session['loja_id'] }}">
                             {% else %}
-                                <select class="form-select" name="loja_id" required>
-                                    <option value="">-- Selecione a Loja --</option>
+                                <select class="form-select" id="venda_lo_id" required>
+                                    <option value="">-- Selecionar --</option>
                                     {% for loja in dados_lojas %}
-                                        <option value="{{ loja[0] }}">{{ loja[1] }} (ID: {{ loja[0] }})</option>
+                                        <option value="{{ loja[0] }}">{{ loja[1] }}</option>
                                     {% endfor %}
                                 </select>
                             {% endif %}
                         </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">NIF Cliente</label>
+                            <input type="text" class="form-control" id="venda_nif" maxlength="9">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-bold">Pagamento *</label>
+                            <select class="form-select" id="venda_pagamento">
+                                <option value="Dinheiro">Dinheiro</option>
+                                <option value="Multibanco">Multibanco</option>
+                                <option value="MB Way">MB Way</option>
+                            </select>
+                        </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Produto *</label>
-                            <select class="form-select" name="produto_ref" required>
-                                <option value="">-- Selecione o Produto --</option>
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-md-7">
+                            <label class="form-label fw-bold">Adicionar Produto</label>
+                            <select class="form-select" id="add_produto">
+                                <option value="">-- Escolha um produto --</option>
                                 {% for prod in dados_produtos %}
-                                    <option value="{{ prod[0] }}">{{ prod[1] }} ({{ prod[0] }})</option>
+                                    <option value="{{ prod[0] }}" data-nome="{{ prod[1] }}">{{ prod[1] }} ({{ prod[0] }})</option>
                                 {% endfor %}
                             </select>
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Quantidade *</label>
-                                <input type="number" class="form-control" name="quantidade" min="1" value="1" required>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Pagamento *</label>
-                                <select class="form-select" name="metodo_pagamento" required>
-                                    <option value="Dinheiro">Dinheiro</option>
-                                    <option value="Multibanco">Multibanco</option>
-                                    <option value="MB Way">MB Way</option>
-                                </select>
-                            </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Qtd</label>
+                            <input type="number" class="form-control" id="add_qtd" value="1" min="1">
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">NIF do Cliente</label>
-                            <input type="text" class="form-control" name="cliente_nif" maxlength="9" placeholder="Opcional">
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-dark w-100" onclick="adicionarAoCarrinho()">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success px-4">Concluir Venda</button>
+
+                    <div class="table-responsive" style="max-height: 200px;">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Produto</th>
+                                    <th class="text-center">Qtd</th>
+                                    <th class="text-center">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpoCarrinho">
+                                </tbody>
+                        </table>
                     </div>
-                </form>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-4" onclick="finalizarVenda()">
+                        Finalizar Venda (<span id="countItens">0</span> itens)
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -169,6 +187,77 @@
 
 {% block extra_js %}
 <script>
+    let carrinho = [];
+
+    function adicionarAoCarrinho() {
+        const select = document.getElementById('add_produto');
+        const ref = select.value;
+        const nome = select.options[select.selectedIndex].getAttribute('data-nome');
+        const qtd = parseInt(document.getElementById('add_qtd').value);
+
+        if (!ref || qtd <= 0) return alert("Selecione um produto válido.");
+
+        const existente = carrinho.find(item => item.ref === ref);
+        if (existente) {
+            existente.qtd += qtd;
+        } else {
+            carrinho.push({ ref, nome, qtd });
+        }
+
+        renderizarCarrinho();
+    }
+
+    function renderizarCarrinho() {
+        const tbody = document.getElementById('corpoCarrinho');
+        tbody.innerHTML = '';
+        carrinho.forEach((item, index) => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.nome}</td>
+                    <td class="text-center">${item.qtd}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-danger border-0" onclick="removerDoCarrinho(${index})">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        });
+        document.getElementById('countItens').textContent = carrinho.length;
+    }
+
+    function removerDoCarrinho(index) {
+        carrinho.splice(index, 1);
+        renderizarCarrinho();
+    }
+
+    async function finalizarVenda() {
+        if (carrinho.length === 0) return alert("O carrinho está vazio!");
+
+        const dados = {
+            loja_id: document.getElementById('venda_loja_id')?.value || document.getElementById('venda_lo_id')?.value,
+            nif: document.getElementById('venda_nif').value,
+            pagamento: document.getElementById('venda_pagamento').value,
+            itens: carrinho
+        };
+
+        try {
+            const response = await fetch('/venda/nova', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            const res = await response.json();
+            if (res.sucesso) {
+                window.location.reload();
+            } else {
+                alert("Erro: " + res.erro);
+            }
+        } catch (err) {
+            alert("Falha na comunicação com o servidor.");
+        }
+    }
+
     async function carregarDetalhesVenda(vendaId) {
         document.getElementById('modalVendaId').textContent = vendaId;
         const tbody = document.getElementById('listaItensVenda');
@@ -206,12 +295,4 @@
         }
     }
 </script>
-
-<style>
-    .hover-primary:hover {
-        color: #0d6efd !important;
-        transform: scale(1.2);
-        transition: all 0.2s ease-in-out;
-    }
-</style>
 {% endblock %}

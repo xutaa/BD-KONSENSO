@@ -141,3 +141,21 @@ main {
 .modal-dialog {
     z-index: 1056 !important;
 }
+
+/* ====================================
+   MODAIS - HEADER VERDE
+   ==================================== */
+.modal-header {
+    background-color: #28a745 !important;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+}
+
+.modal-header .modal-title {
+    color: white !important;
+}
+
+.modal-header .btn-close,
+.modal-header .btn-close-white {
+    filter: brightness(0) invert(1);
+}
