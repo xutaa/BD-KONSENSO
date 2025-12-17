@@ -643,3 +643,50 @@ BEGIN
         V.DataHora DESC;
 END
 GO
+
+-- =============================================
+-- SP: RegistarVendaEAtualizarStock
+-- Descrição: Regista uma venda e atualiza o stock correspondente
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RegistarVendaEAtualizarStock
+    @LojaId INT,
+    @ClienteNif VARCHAR(15),
+    @ProdutoRef VARCHAR(20),
+    @MetodoPagamento VARCHAR(50),
+    @Quantidade INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    DECLARE @PrecoNoMomento DECIMAL(10, 2);
+
+    BEGIN TRANSACTION;
+
+    BEGIN TRY
+        SELECT @PrecoNoMomento = Preco 
+        FROM dbo.Produto 
+        WHERE Referencia = @ProdutoRef;
+
+        DECLARE @VendaId INT;
+        INSERT INTO dbo.Venda (DataHora, MetodoPagamento, Loja_Id, Cliente_Nif, ValorTotal)
+        VALUES (GETDATE(), @MetodoPagamento, @LojaId, @ClienteNif, 0.00);
+        
+        SET @VendaId = SCOPE_IDENTITY();
+
+        INSERT INTO dbo.Item (Venda_Id, Produto_Referencia, Quantidade, Preco)
+        VALUES (@VendaId, @ProdutoRef, @Quantidade, @PrecoNoMomento);
+
+        UPDATE dbo.Stock
+        SET Quantidade = Quantidade - @Quantidade
+        WHERE Produto_Referencia = @ProdutoRef AND Armazem_Id = @LojaId;
+
+        COMMIT TRANSACTION;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END;
+GO

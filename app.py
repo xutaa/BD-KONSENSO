@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from database import get_db_connection
 
 app = Flask(__name__)
@@ -1235,28 +1235,91 @@ def lista_vendas():
         conn = get_db_connection()
         if conn is None: 
             return render_template('tabelas/vendas.html', erro="Erro de conexão", sucesso=False)
-        
         cursor = conn.cursor()
-        
         cursor.execute("{CALL dbo.ObterVendasPorLoja (?)}", parametro_loja_id)
-        
         vendas = cursor.fetchall()
-        sucesso = True
+
+        cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
+        produtos = cursor.fetchall()
+
+        lojas = []
+        if session.get('tipo_admin') == 'Geral':
+            cursor.execute("SELECT Id, Nome FROM Loja")
+        lojas = cursor.fetchall()
         
+        sucesso = True
     except Exception as e:
         erro = f"Erro ao listar vendas: {e}"
         print(f"❌ {erro}")
         vendas = []
-        
     finally:
         if conn:
             conn.close()
-            
     return render_template('tabelas/vendas.html', 
-                           dados_vendas=vendas, 
-                           sucesso=sucesso, 
-                           erro=erro,
-                           filtro_ativo=True if parametro_loja_id is not None else False)
+                            dados_vendas=vendas, 
+                            dados_produtos=produtos,
+                            dados_lojas=lojas,
+                            sucesso=sucesso, 
+                            erro=erro,
+                            filtro_ativo=True if parametro_loja_id is not None else False)
+
+@app.route('/venda/nova', methods=['POST'])
+def adicionar_venda():
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+
+    loja_id = request.form.get('loja_id')
+    produto_ref = request.form.get('produto_ref')
+    quantidade = request.form.get('quantidade')
+    metodo = request.form.get('metodo_pagamento')
+    nif = request.form.get('cliente_nif') or None
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RegistarVendaEAtualizarStock (?, ?, ?, ?, ?)}", 
+                       (loja_id, nif, produto_ref, metodo, quantidade))
+        conn.commit()
+        flash('✅ Venda realizada com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1]
+        flash(f'❌ Erro: {error_msg}', 'error')
+    finally:
+        conn.close()
+    return redirect(url_for('lista_vendas'))
+
+@app.route('/api/venda/<int:venda_id>/itens')
+def obter_itens_venda(venda_id):
+    """API que retorna os itens de uma venda específica em formato JSON"""
+    if 'admin_logado' not in session:
+        return jsonify({'erro': 'Não autorizado'}), 401
+
+    conn = get_db_connection()
+    itens = []
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT P.Nome, I.Quantidade, I.Preco, (I.Quantidade * I.Preco) as Total
+            FROM Item I
+            JOIN Produto P ON I.Produto_Referencia = P.Referencia
+            WHERE I.Venda_Id = ?
+        """, (venda_id,))
+
+        #TODO: Mudar isto para uma SP
+
+        for row in cursor.fetchall():
+            itens.append({
+                'produto': row[0],
+                'quantidade': row[1],
+                'preco_unit': row[2],
+                'subtotal': row[3]
+            })
+            
+        return jsonify(itens)
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
+    finally:
+        conn.close()
 
 @app.route('/vendedores')
 def lista_vendedores():

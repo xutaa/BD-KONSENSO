@@ -32,7 +32,6 @@
         {% endif %}
     {% endwith %}
 
-    <!-- 🔍 BARRA DE PESQUISA -->
     <div class="mb-4">
         <div class="search-container">
             <i class="bi bi-search search-icon"></i>
@@ -65,7 +64,7 @@
                 {% if registos %}
                     {% for registo in registos %}
                     <tr>
-                        <td>#{{ registo[0] }}</td>
+                        <td>{{ registo[0] }}</td>
                         <td>{{ registo[1] }}</td>
                         <td>{{ registo[2] }}</td>
                         <td>{{ "%.2f"|format(registo[3]) }}€</td>
@@ -89,7 +88,6 @@
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
     </div>
 
-    <!-- Modal Novo Item -->
     <div class="modal fade" id="modalNovoItem" data-bs-backdrop="static" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

@@ -3,52 +3,215 @@
 {% block title %}Lista de Vendas{% endblock %}
 
 {% block content %}
-    <h1 class="mb-4">💰 Histórico de Vendas</h1>
-    
-    {% if sucesso %}
-        {% if dados_vendas %}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Data/Hora</th>
-                            <th>ID Venda</th>
-                            <th>Valor Total (€)</th>
-                            <th>Método Pagamento</th>
-                            <th>Cliente Nif</th>
-                            <th>Loja ID</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for venda in dados_vendas %}
-                            <tr>
-                                <td>{{ venda[1].strftime('%d/%m/%Y') if venda[1] else 'N/A' }}</td>
-                                <td>{{ venda[0] }}</td>
-                                <td>{{ "%.2f"|format(venda[2]) }}</td>
-                                <td>{{ venda[3] }}</td>
-                                <td>{{ venda[4] }}</td>
-                                <td>{{ venda[5] }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>💰 Histórico de Vendas</h1>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaVenda">
+            <i class="bi bi-plus-circle"></i> Registar Venda
+        </button>
+    </div>
 
-        {% else %}
-            <div class="alert alert-info">
-                ℹ️ Nenhuma venda encontrada.
-            </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
         {% endif %}
-        
-    {% else %}
-        <div class="alert alert-danger" role="alert">
-            <h4 class="alert-heading">🚨 Erro</h4>
-            <p class="mb-0"><strong>Detalhes:</strong> {{ erro }}</p>
+    {% endwith %}
+
+    {% if sucesso and dados_vendas %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Data</th>
+                        <th>Cliente (NIF)</th>
+                        <th>Loja</th>
+                        <th>Pagamento</th>
+                        <th class="text-end">Total (€)</th>
+                        <th class="text-center">Detalhes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venda in dados_vendas %}
+                        <tr>
+                            <td class="fw-bold">#{{ venda[0] }}</td>
+                            <td>{{ venda[1].strftime('%d/%m/%Y %H:%M') if venda[1] else 'N/A' }}</td>
+                            <td>{{ venda[4] if venda[4] else 'Consumidor Final' }}</td>
+                            <td>{{ venda[5] }}</td>
+                            <td><span class="badge bg-secondary">{{ venda[3] }}</span></td>
+                            <td class="text-end fw-bold text-success">{{ "%.2f"|format(venda[2]) }} €</td>
+                            
+                            <td class="text-center">
+                                <button class="btn btn-link btn-sm text-secondary p-1 border-0 hover-primary" 
+                                        onclick="carregarDetalhesVenda('{{ venda[0] }}')"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalDetalhesVenda"
+                                        title="Ver Detalhes">
+                                    <i class="bi bi-eye fs-5"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+    {% else %}
+        <div class="alert alert-info">ℹ️ Nenhuma venda encontrada para esta loja.</div>
     {% endif %}
 
     <div class="mt-4">
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
     </div>
-    
+
+    <div class="modal fade" id="modalDetalhesVenda" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title">🧾 Detalhes da Venda #<span id="modalVendaId"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Produto</th>
+                                    <th class="text-center">Qtd</th>
+                                    <th class="text-end">Preço Unit.</th>
+                                    <th class="text-end">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listaItensVenda">
+                                </tbody>
+                        </table>
+                    </div>
+                    <div id="loadingSpinner" class="text-center py-3">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2">A carregar produtos...</p>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalNovaVenda" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-cart-plus"></i> Registar Nova Venda</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="/venda/nova">
+                    <div class="modal-body">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Loja *</label>
+                            {% if session['tipo_admin'] == 'Loja' %}
+                                <input type="text" class="form-control bg-light" value="Sua Loja (ID: {{ session['loja_id'] }})" readonly>
+                                <input type="hidden" name="loja_id" value="{{ session['loja_id'] }}">
+                            {% else %}
+                                <select class="form-select" name="loja_id" required>
+                                    <option value="">-- Selecione a Loja --</option>
+                                    {% for loja in dados_lojas %}
+                                        <option value="{{ loja[0] }}">{{ loja[1] }} (ID: {{ loja[0] }})</option>
+                                    {% endfor %}
+                                </select>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Produto *</label>
+                            <select class="form-select" name="produto_ref" required>
+                                <option value="">-- Selecione o Produto --</option>
+                                {% for prod in dados_produtos %}
+                                    <option value="{{ prod[0] }}">{{ prod[1] }} ({{ prod[0] }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Quantidade *</label>
+                                <input type="number" class="form-control" name="quantidade" min="1" value="1" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Pagamento *</label>
+                                <select class="form-select" name="metodo_pagamento" required>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                    <option value="Multibanco">Multibanco</option>
+                                    <option value="MB Way">MB Way</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">NIF do Cliente</label>
+                            <input type="text" class="form-control" name="cliente_nif" maxlength="9" placeholder="Opcional">
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success px-4">Concluir Venda</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    async function carregarDetalhesVenda(vendaId) {
+        document.getElementById('modalVendaId').textContent = vendaId;
+        const tbody = document.getElementById('listaItensVenda');
+        const spinner = document.getElementById('loadingSpinner');
+        
+        tbody.innerHTML = ''; 
+        spinner.style.display = 'block';
+
+        try {
+            const response = await fetch(`/api/venda/${vendaId}/itens`);
+            const itens = await response.json();
+
+            spinner.style.display = 'none';
+
+            if (itens.length > 0) {
+                itens.forEach(item => {
+                    const preco = parseFloat(item.preco_unit) || 0;
+                    const subtotal = parseFloat(item.subtotal) || 0;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${item.produto}</td>
+                        <td class="text-center">${item.quantidade}</td>
+                        <td class="text-end">${preco.toFixed(2)} €</td>
+                        <td class="text-end fw-bold">${subtotal.toFixed(2)} €</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Sem itens registados.</td></tr>';
+            }
+        } catch (erro) {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar itens.</td></tr>';
+            spinner.style.display = 'none';
+        }
+    }
+</script>
+
+<style>
+    .hover-primary:hover {
+        color: #0d6efd !important;
+        transform: scale(1.2);
+        transition: all 0.2s ease-in-out;
+    }
+</style>
 {% endblock %}
