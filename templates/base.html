@@ -68,13 +68,13 @@
                     class="nav-link {% if request.endpoint == 'lista_funcionarios' %}active{% endif %}">
                     <i class="fa-solid fa-user-tie"></i> Funcionários
                 </a>
-                <a href="{{ url_for('lista_vendedores') }}"
-                    class="nav-link {% if request.endpoint == 'lista_vendedores' %}active{% endif %}">
-                    <i class="fa-solid fa-briefcase"></i> Vendedores
-                </a>
                 <a href="{{ url_for('lista_clientes') }}"
                     class="nav-link {% if request.endpoint == 'lista_clientes' %}active{% endif %}">
                     <i class="fa-solid fa-users"></i> Clientes
+                </a>
+                <a href="{{ url_for('lista_vendedores') }}"
+                    class="nav-link {% if request.endpoint == 'lista_vendedores' %}active{% endif %}">
+                    <i class="fa-solid fa-briefcase"></i> Vendedores
                 </a>
                 <a href="{{ url_for('lista_contratos_vendedor') }}"
                     class="nav-link {% if request.endpoint == 'lista_contratos_vendedor' %}active{% endif %}">
@@ -164,21 +164,6 @@
                     {% endif %}
                 </div>
             </header>
-
-            <!-- Flash Messages -->
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                    <i
-                        class="fa-solid {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-                    {{ message }}
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-            {% endwith %}
 
             <!-- Page Content -->
             <div class="content-wrapper">

@@ -4,7 +4,6 @@
 {% block header_title %}Painel de Controle{% endblock %}
 
 {% block content %}
-<!-- Card de Status do Projeto -->
 <div class="card mb-4" style="border-left: 5px solid var(--secondary-color);">
     <div class="card-header border-0 pb-0">
         <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Estado do Projeto</h3>
@@ -23,7 +22,6 @@
     </div>
 </div>
 
-<!-- Gestão Principal -->
 {% if permissoes.gestao_principal %}
 <h3 class="section-title text-muted text-uppercase fs-6 fw-bold mt-5 mb-3">Gestão Comercial</h3>
 <div class="grid">
@@ -65,7 +63,6 @@
 </div>
 {% endif %}
 
-<!-- Pessoas e Clientes -->
 {% if permissoes.pessoas_clientes %}
 <h3 class="section-title text-muted text-uppercase fs-6 fw-bold mt-5 mb-3">Pessoas & Entidades</h3>
 <div class="grid">

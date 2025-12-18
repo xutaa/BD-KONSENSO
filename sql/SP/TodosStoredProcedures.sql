@@ -799,7 +799,7 @@ BEGIN
     WHERE
         (@LojaID IS NULL OR V.Loja_Id = @LojaID)
     ORDER BY
-        V.DataHora DESC;
+        V.Id DESC;
 END
 GO
 
@@ -822,38 +822,85 @@ CREATE OR ALTER PROCEDURE dbo.RegistarVendaCompleta
     @LojaId INT,
     @ClienteNif VARCHAR(15),
     @MetodoPagamento VARCHAR(50),
-    @Itens dbo.ListaItensVenda READONLY -- A nossa lista de produtos
+    @Itens dbo.ListaItensVenda READONLY
 AS
 BEGIN
     SET NOCOUNT ON;
+    SET XACT_ABORT ON; -- Cancela tudo imediatamente em caso de erro fatal
+
+    DECLARE @RealArmazemId INT;
     DECLARE @VendaId INT;
+    DECLARE @ValorTotalVenda DECIMAL(18,2);
+
+    -- 1. MAPEAMENTO: Descobrir o ID do Armazém associado a esta Loja
+    SELECT @RealArmazemId = Armazem_Id FROM dbo.Loja WHERE Id = @LojaId;
+
+    -- Validação de segurança: Se a loja não existir ou não tiver armazém associado
+    IF @RealArmazemId IS NULL
+    BEGIN
+        RAISERROR('Erro: Não foi encontrado um armazém válido para a Loja selecionada.', 16, 1);
+        RETURN;
+    END
 
     BEGIN TRANSACTION;
     BEGIN TRY
+        -- 2. VALIDAÇÃO DE STOCK AGREGADA
+        -- Usamos um CTE para somar quantidades se o mesmo produto aparecer 2 vezes no carrinho
+        IF EXISTS (
+            SELECT 1 
+            FROM (
+                SELECT ProdutoRef, SUM(Quantidade) as QtdTotalPedida
+                FROM @Itens 
+                GROUP BY ProdutoRef
+            ) AS CarrinhoAgregado
+            LEFT JOIN dbo.Stock S ON CarrinhoAgregado.ProdutoRef = S.Produto_Referencia 
+                AND S.Armazem_Id = @RealArmazemId
+            WHERE ISNULL(S.Quantidade, 0) < CarrinhoAgregado.QtdTotalPedida
+        )
+        BEGIN
+            THROW 50005, 'Venda Recusada: Um ou mais produtos não possuem stock suficiente nesta loja.', 1; --
+        END
+
+        -- 3. CÁLCULO DO VALOR TOTAL
+        -- Não podemos deixar o valor a 0.00; calculamos com base nos preços da tabela Produto
+        SELECT @ValorTotalVenda = SUM(L.Quantidade * P.Preco)
+        FROM @Itens L
+        JOIN dbo.Produto P ON L.ProdutoRef = P.Referencia;
+
+        -- 4. INSERIR CABEÇALHO DA VENDA
         INSERT INTO dbo.Venda (DataHora, MetodoPagamento, Loja_Id, Cliente_Nif, ValorTotal)
-        VALUES (GETDATE(), @MetodoPagamento, @LojaId, @ClienteNif, 0.00);
+        VALUES (GETDATE(), @MetodoPagamento, @LojaId, @ClienteNif, @ValorTotalVenda);
         
         SET @VendaId = SCOPE_IDENTITY();
 
+        -- 5. INSERIR ITENS DA VENDA
         INSERT INTO dbo.Item (Venda_Id, Produto_Referencia, Quantidade, Preco)
         SELECT @VendaId, L.ProdutoRef, L.Quantidade, P.Preco
         FROM @Itens L
         JOIN dbo.Produto P ON L.ProdutoRef = P.Referencia;
 
+        -- 6. ATUALIZAR STOCK NO ARMAZÉM CORRETO
         UPDATE S
-        SET S.Quantidade = S.Quantidade - L.Quantidade
+        SET S.Quantidade = S.Quantidade - L.QtdAgregada
         FROM dbo.Stock S
-        JOIN @Itens L ON S.Produto_Referencia = L.ProdutoRef
-        WHERE S.Armazem_Id = @LojaId;
+        JOIN (
+            SELECT ProdutoRef, SUM(Quantidade) as QtdAgregada 
+            FROM @Itens GROUP BY ProdutoRef
+        ) L ON S.Produto_Referencia = L.ProdutoRef
+        WHERE S.Armazem_Id = @RealArmazemId;
 
         COMMIT TRANSACTION;
+        SELECT @VendaId AS VendaId, 'SUCESSO' AS Status;
+
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
+        
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        -- Re-lança o erro para o Flask capturar e mostrar no modal
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
-END;
+END
 GO
 
 -- =============================================
@@ -911,3 +958,4 @@ BEGIN
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
+GO

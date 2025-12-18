@@ -1,26 +1,24 @@
 -- =============================================
--- Trigger: VerificarStockVenda
--- Descrição: Verifica se há stock suficiente antes de inserir um item numa venda.
+-- Trigger: GarantirStockPositivo (nao usado)
+-- Descrição: Verifica se há stock suficiente após atualização.
 -- =============================================
-CREATE OR ALTER TRIGGER VerificarStockVenda
-ON dbo.Item
-AFTER INSERT
+CREATE OR ALTER TRIGGER GarantirStockPositivo
+ON dbo.Stock
+AFTER UPDATE
 AS
 BEGIN
     SET NOCOUNT ON;
 
     IF EXISTS (
         SELECT 1 
-        FROM dbo.Stock s
-        JOIN inserted i ON s.Produto_Referencia = i.Produto_Referencia
-        JOIN dbo.Venda v ON i.Venda_Id = v.Id
-        WHERE s.Armazem_Id = v.Loja_Id AND s.Quantidade < 0
+        FROM inserted 
+        WHERE Quantidade < 0
     )
     BEGIN
-        RAISERROR('Operação Cancelada: Stock insuficiente para concluir a venda.', 16, 1);
+        RAISERROR('Operação Abortada: Stock insuficiente para concluir a ação.', 16, 1);
         ROLLBACK TRANSACTION;
     END
-END;
+END
 GO
 
 -- =============================================
@@ -40,7 +38,7 @@ BEGIN
                                WHERE I.Venda_Id = V.Id), 0)
     FROM dbo.Venda V
     WHERE V.Id IN (SELECT Venda_Id FROM inserted UNION SELECT Venda_Id FROM deleted);
-END;
+END
 GO
 
 -- =============================================

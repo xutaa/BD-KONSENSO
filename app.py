@@ -170,12 +170,11 @@ def dashboard():
     
     roadmap_status = {
         "Fase 1: Leitura (Listagem)": "✅ Concluída",
-        "Fase 2: Inserção": "Produtos Done, Outros a Fazer",
-        "Fase 3: Edição e Remoção": "Não Iniciada",
+        "Fase 2: Inserção": "✅ Concluída",
+        "Fase 3: Edição e Remoção": "Em Progresso (falta só verificação)",
         "Fase 4: Relatórios": "Não Iniciada",
     }
     
-    # Definir permissões por tipo
     permissoes = {
         'Geral': {
             'gestao_principal': True,
@@ -1250,7 +1249,6 @@ def adicionar_stock():
     finally:
         if conn:
             conn.close()
-    
     return redirect(url_for('lista_stock'))
 
 @app.route('/vendas')
@@ -1322,13 +1320,14 @@ def adicionar_venda():
             data['pagamento'],
             itens_para_sql
         )
-        
         cursor.execute(sql, params)
         conn.commit()
-        
+
+        flash('✅ Venda registada com sucesso!', 'success')
         return jsonify({'sucesso': True, 'mensagem': 'Venda registada com sucesso!'})
     except Exception as e:
         error_msg = str(e).split(']')[-1]
+        flash(f'❌ Erro ao adicionar venda: {error_msg}', 'error')
         return jsonify({'sucesso': False, 'erro': error_msg})
     finally:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
         conn.close()

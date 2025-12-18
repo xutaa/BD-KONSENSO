@@ -14,24 +14,6 @@
     </button>
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-{% if category == 'success' %}
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% elif category == 'error' %}
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endif %}
-{% endfor %}
-{% endif %}
-{% endwith %}
-
 <!-- 🔍 BARRA DE PESQUISA -->
 <div class="mb-4">
     <div class="search-container">
@@ -133,8 +115,8 @@
 
                     <div class="mb-4">
                         <label for="descricao"
-                            class="form-label small text-uppercase fw-bold text-muted">Descrição</label>
-                        <textarea class="form-control" id="descricao" name="descricao" rows="2" maxlength="200"
+                            class="form-label small text-uppercase fw-bold text-muted">Descrição *</label>
+                        <textarea class="form-control" id="descricao" name="descricao" required rows="2" maxlength="200"
                             placeholder="Detalhes técnicos do produto..."></textarea>
                     </div>
 
@@ -147,18 +129,16 @@
                                     required placeholder="0.00">
                             </div>
                             <div class="col-md-4">
-                                <label for="maquina_id" class="form-label small fw-bold">Máquina de Produção</label>
-                                <select class="form-select form-control" id="maquina_id" name="maquina_id">
-                                    <option value="">-- Nenhuma --</option>
+                                <label for="maquina_id" class="form-label small fw-bold">Máquina de Produção *</label>
+                                <select class="form-select form-control" id="maquina_id" name="maquina_id" required>
                                     {% for maquina in maquinas %}
                                     <option value="{{ maquina[0] }}">{{ maquina[1] }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label for="distribuidora_id" class="form-label small fw-bold">Distribuidora</label>
-                                <select class="form-select form-control" id="distribuidora_id" name="distribuidora_id">
-                                    <option value="">-- Nenhuma --</option>
+                                <label for="distribuidora_id" class="form-label small fw-bold">Distribuidora *</label>
+                                <select class="form-select form-control" id="distribuidora_id" name="distribuidora_id" required>
                                     {% for dist in distribuidoras %}
                                     <option value="{{ dist[0] }}">{{ dist[1] }}</option>
                                     {% endfor %}
