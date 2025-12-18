@@ -1,63 +1,78 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - BD Konsenso</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+    <title>Login | Konsenso</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
 </head>
-<body>
-    <div class="container">
-        <div class="login-box">
-            <div class="logo-section">
-                <h1>BD Konsenso</h1>
-                <p>Sistema de Gestão Empresarial</p>
+
+<body class="bg-gray-100"> <!-- Body styles handled by main CSS but ensuring cleaner slate -->
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="brand mb-4 text-center">
+                    <i class="fa-solid fa-cube fa-3x" style="color: var(--secondary-color);"></i>
+                </div>
+                <h1 class="login-title">Bem-vindo</h1>
+                <p class="text-muted">Aceda à sua conta de administrador</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <i class="fa-solid fa-circle-info"></i> {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
             {% endwith %}
 
             {% if success %}
-                <div class="alert alert-success">{{ success }}</div>
+            <div class="alert alert-success">
+                <i class="fa-solid fa-check-circle"></i> {{ success }}
+            </div>
             {% endif %}
 
             <form method="POST">
                 <div class="form-group">
-                    <label for="nome">Nome de Utilizador</label>
-                    <input 
-                        type="text" 
-                        id="nome" 
-                        name="nome" 
-                        required 
-                        placeholder="Insira o seu nome de utilizador"
-                        autocomplete="username"
-                    >
+                    <label for="nome" class="form-label">Nome de Utilizador</label>
+                    <div style="position: relative;">
+                        <input type="text" id="nome" name="nome" class="form-control" required
+                            placeholder="Ex: admin.geral" autocomplete="username">
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="password">Palavra-passe</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        placeholder="Insira a sua palavra-passe"
-                        autocomplete="current-password"
-                    >
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="password" class="form-label">Palavra-passe</label>
+                    <input type="password" id="password" name="password" class="form-control" required
+                        placeholder="••••••••" autocomplete="current-password">
                 </div>
 
-                <button type="submit" class="btn-login">Iniciar Sessão</button>
+                <button type="submit" class="btn btn-primary"
+                    style="width: 100%; justify-content: center; padding: 0.875rem;">
+                    Entrar na Plataforma
+                </button>
             </form>
 
-            <div class="register-link">
-                <p>Ainda não tem conta? <a href="{{ url_for('registo') }}">Criar nova conta</a></p>
+            <div class="text-center mt-4">
+                <p class="text-muted text-sm" style="font-size: 0.9rem;">
+                    Não tem conta? <a href="{{ url_for('registo') }}"
+                        style="color: var(--secondary-color); text-decoration: none; font-weight: 500;">Criar nova
+                        conta</a>
+                </p>
             </div>
         </div>
     </div>
+
 </body>
+
 </html>

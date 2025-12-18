@@ -1,226 +1,157 @@
-<!DOCTYPE html>
-<html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - BD Konsenso</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-</head>
-<body>
-    <!-- Barra de Navegação -->
-    <div class="navbar">
-        <h1>🏢 BD Konsenso - Sistema de Gestão</h1>
-        <div class="navbar-right">
-            <span>👤 Olá, <strong>{{ usuario }}</strong> 
-                {% if tipo_admin == 'Loja' %}
-                    <span style="background: #2196F3; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">🏪 Loja</span>
-                {% elif tipo_admin == 'Fabrica' %}
-                    <span style="background: #FF9800; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">🏭 Fábrica</span>
-                {% else %}
-                    <span style="background: #4CAF50; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">⚙️ Geral</span>
-                {% endif %}
-            </span>
-            <a href="{{ url_for('logout') }}" class="btn-logout">Sair</a>
-        </div>
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | Konsenso{% endblock %}
+{% block header_title %}Painel de Controle{% endblock %}
+
+{% block content %}
+<!-- Card de Status do Projeto -->
+<div class="card mb-4" style="border-left: 5px solid var(--secondary-color);">
+    <div class="card-header border-0 pb-0">
+        <h3 class="card-title"><i class="fa-solid fa-list-check"></i> Estado do Projeto</h3>
+    </div>
+    <div class="card-body pt-3">
+        <ul class="status-list">
+            {% for fase, status in roadmap.items() %}
+            <li>
+                <span class="text-muted">{{ fase }}</span>
+                <span class="fw-bold {% if 'Concluída' in status %}text-success{% else %}text-warning{% endif %}">
+                    {{ status }}
+                </span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<!-- Gestão Principal -->
+{% if permissoes.gestao_principal %}
+<h3 class="section-title text-muted text-uppercase fs-6 fw-bold mt-5 mb-3">Gestão Comercial</h3>
+<div class="grid">
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_produtos') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-box"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Produtos</h3>
+            <p class="text-muted small m-0">Catálogo e Preços</p>
+        </a>
     </div>
 
-    <!-- Conteúdo Principal -->
-    <div class="container">
-        <!-- Card de Boas-Vindas -->
-        <div class="welcome-card">
-            <h2>📊 Estado do Projeto</h2>
-            <ul class="status-list">
-                {% for fase, status in roadmap.items() %}
-                    <li><strong>{{ fase }}:</strong> {{ status }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        <!-- Gestão Principal -->
-        {% if permissoes.gestao_principal %}
-        <h2 class="section-title">📦 Gestão Principal</h2>
-        <div class="grid">
-            <div class="card">
-                <a href="{{ url_for('lista_produtos') }}">
-                    <div class="card-icon">📦</div>
-                    <h3>Produtos</h3>
-                    <p>Gerir catálogo de produtos</p>
-                </a>
-            </div>
-
-            {% if tipo_admin != 'Fabrica' %}
-            <div class="card">
-                <a href="{{ url_for('lista_vendas') }}">
-                    <div class="card-icon">💰</div>
-                    <h3>Vendas</h3>
-                    <p>Histórico de vendas</p>
-                </a>
-            </div>
-            {% endif %}
-
-            <div class="card">
-                <a href="{{ url_for('lista_stock') }}">
-                    <div class="card-icon">📊</div>
-                    <h3>Stock</h3>
-                    <p>Controlo de inventário</p>
-                </a>
-            </div>
-
-            {% if tipo_admin != 'Fabrica' %}
-            <div class="card">
-                <a href="{{ url_for('lista_itens') }}">
-                    <div class="card-icon">🧾</div>
-                    <h3>Itens de Venda</h3>
-                    <p>Detalhes de vendas</p>
-                </a>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Pessoas e Clientes -->
-        {% if permissoes.pessoas_clientes %}
-        <h2 class="section-title">👥 Pessoas e Clientes</h2>
-        <div class="grid">
-            <div class="card">
-                <a href="{{ url_for('lista_clientes') }}">
-                    <div class="card-icon">👥</div>
-                    <h3>Clientes</h3>
-                    <p>Base de dados de clientes</p>
-                </a>
-            </div>
-
-            <div class="card">
-                <a href="{{ url_for('lista_vendedores') }}">
-                    <div class="card-icon">💼</div>
-                    <h3>Vendedores</h3>
-                    <p>Equipa de vendas</p>
-                </a>
-            </div>
-
-            {% if tipo_admin == 'Geral' %}
-            <div class="card">
-                <a href="{{ url_for('lista_funcionarios') }}">
-                    <div class="card-icon">👔</div>
-                    <h3>Funcionários</h3>
-                    <p>Recursos humanos</p>
-                </a>
-            </div>
-
-            <div class="card">
-                <a href="{{ url_for('lista_cargos') }}">
-                    <div class="card-icon">🎖️</div>
-                    <h3>Cargos</h3>
-                    <p>Funções e cargos</p>
-                </a>
-            </div>
-
-            <div class="card">
-                <a href="{{ url_for('lista_contratos_vendedor') }}">
-                    <div class="card-icon">📝</div>
-                    <h3>Contratos Vendedor</h3>
-                    <p>Contratos de vendedores</p>
-                </a>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Empresas e Organizações -->
-        {% if permissoes.empresas %}
-        <h2 class="section-title">🏢 Empresas e Organizações</h2>
-        <div class="grid">
-            {% if tipo_admin == 'Geral' %}
-            <div class="card">
-                <a href="{{ url_for('lista_empresas') }}">
-                    <div class="card-icon">🏢</div>
-                    <h3>Empresas</h3>
-                    <p>Empresas registadas</p>
-                </a>
-            </div>
-            {% endif %}
-
-            <div class="card">
-                <a href="{{ url_for('lista_fornecedores') }}">
-                    <div class="card-icon">🚚</div>
-                    <h3>Fornecedores</h3>
-                    <p>Rede de fornecedores</p>
-                </a>
-            </div>
-
-            {% if tipo_admin == 'Geral' %}
-            <div class="card">
-                <a href="{{ url_for('lista_distribuidoras') }}">
-                    <div class="card-icon">🚛</div>
-                    <h3>Distribuidoras</h3>
-                    <p>Centros de distribuição</p>
-                </a>
-            </div>
-
-            <div class="card">
-                <a href="{{ url_for('lista_distribuidoras_armazem') }}">
-                    <div class="card-icon">🔗</div>
-                    <h3>Distribuidoras-Armazém</h3>
-                    <p>Relação dist./armazém</p>
-                </a>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <!-- Infraestrutura -->
-        {% if permissoes.infraestrutura %}
-        <h2 class="section-title">🏭 Infraestrutura</h2>
-        <div class="grid">
-            <div class="card">
-                <a href="{{ url_for('lista_armazens') }}">
-                    <div class="card-icon">🏭</div>
-                    <h3>Armazéns</h3>
-                    <p>Gestão de armazéns</p>
-                </a>
-            </div>
-
-            {% if tipo_admin == 'Geral' %}
-            <div class="card">
-                <a href="{{ url_for('lista_lojas') }}">
-                    <div class="card-icon">🏪</div>
-                    <h3>Lojas</h3>
-                    <p>Pontos de venda</p>
-                </a>
-            </div>
-
-            <div class="card">
-                <a href="{{ url_for('lista_fabricas') }}">
-                    <div class="card-icon">🏗️</div>
-                    <h3>Fábricas</h3>
-                    <p>Unidades de produção</p>
-                </a>
-            </div>
-            {% endif %}
-
-            <div class="card">
-                <a href="{{ url_for('lista_maquinas') }}">
-                    <div class="card-icon">⚙️</div>
-                    <h3>Máquinas</h3>
-                    <p>Equipamentos industriais</p>
-                </a>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Produção -->
-        {% if permissoes.producao %}
-        <h2 class="section-title">🔧 Produção e Materiais</h2>
-        <div class="grid">
-            <div class="card">
-                <a href="{{ url_for('lista_materias_primas') }}">
-                    <div class="card-icon">🧱</div>
-                    <h3>Matérias-Primas</h3>
-                    <p>Materiais de produção</p>
-                </a>
-            </div>
-        </div>
-        {% endif %}
+    {% if tipo_admin != 'Fabrica' %}
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_vendas') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Vendas</h3>
+            <p class="text-muted small m-0">Registo e Histórico</p>
+        </a>
     </div>
-</body>
-</html>
+    {% endif %}
+
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_stock') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Stock</h3>
+            <p class="text-muted small m-0">Inventário</p>
+        </a>
+    </div>
+
+    {% if tipo_admin != 'Fabrica' %}
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_itens') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-receipt"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Itens Vendidos</h3>
+            <p class="text-muted small m-0">Detalhe de Faturas</p>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Pessoas e Clientes -->
+{% if permissoes.pessoas_clientes %}
+<h3 class="section-title text-muted text-uppercase fs-6 fw-bold mt-5 mb-3">Pessoas & Entidades</h3>
+<div class="grid">
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_clientes') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-users"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Clientes</h3>
+            <p class="text-muted small m-0">Gestão de Clientes</p>
+        </a>
+    </div>
+
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_vendedores') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-briefcase"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Vendedores</h3>
+            <p class="text-muted small m-0">Equipa Comercial</p>
+        </a>
+    </div>
+
+    {% if tipo_admin == 'Geral' %}
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_funcionarios') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-user-tie"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Funcionários</h3>
+            <p class="text-muted small m-0">Recursos Humanos</p>
+        </a>
+    </div>
+
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_cargos') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-id-badge"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Cargos</h3>
+            <p class="text-muted small m-0">Definição de Funções</p>
+        </a>
+    </div>
+
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_contratos_vendedor') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-file-contract"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Contratos</h3>
+            <p class="text-muted small m-0">Vínculos Laborais</p>
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Empresas e Logística -->
+{% if permissoes.empresas or permissoes.infraestrutura %}
+<h3 class="section-title text-muted text-uppercase fs-6 fw-bold mt-5 mb-3">Infraestrutura & Parceiros</h3>
+<div class="grid">
+    {% if tipo_admin == 'Geral' %}
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_empresas') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-building"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Empresas</h3>
+            <p class="text-muted small m-0">Parceiros B2B</p>
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_fornecedores') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-truck-field"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Fornecedores</h3>
+            <p class="text-muted small m-0">Abastecimento</p>
+        </a>
+    </div>
+
+    {% if tipo_admin == 'Geral' %}
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_distribuidoras') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-truck"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Distribuidoras</h3>
+            <p class="text-muted small m-0">Logística Externa</p>
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="card p-0 hover-shadow">
+        <a href="{{ url_for('lista_armazens') }}" class="card-link p-4">
+            <div class="card-icon"><i class="fa-solid fa-warehouse"></i></div>
+            <h3 class="fs-5 fw-bold mb-1">Armazéns</h3>
+            <p class="text-muted small m-0">Gestão de Espaços</p>
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

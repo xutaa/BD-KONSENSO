@@ -1,111 +1,112 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registo - BD Konsenso</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/registo.css') }}">
+    <title>Registo | Konsenso</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Modern CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modern.css') }}">
 </head>
-<body>
-    <div class="container">
-        <div class="register-box">
-            <div class="logo-section">
-                <h1>BD Konsenso</h1>
-                <p>Criar Nova Conta de Administrador</p>
+
+<body class="bg-gray-100">
+
+    <div class="login-container">
+        <div class="login-card" style="max-width: 500px;">
+            <div class="login-header">
+                <div class="brand mb-4 text-center">
+                    <i class="fa-solid fa-cube fa-3x" style="color: var(--secondary-color);"></i>
+                </div>
+                <h1 class="login-title">Criar Conta</h1>
+                <p class="text-muted">Junte-se à equipa de gestão</p>
             </div>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <i class="fa-solid fa-circle-info"></i> {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
             {% endwith %}
 
             <form method="POST">
                 <div class="form-group">
-                    <label for="nome">Nome de Utilizador</label>
-                    <input 
-                        type="text" 
-                        id="nome" 
-                        name="nome" 
-                        required 
-                        placeholder="Nome único no sistema"
-                        autocomplete="username"
-                    >
+                    <label for="nome" class="form-label">Nome de Utilizador</label>
+                    <input type="text" id="nome" name="nome" class="form-control" required
+                        placeholder="Nome único no sistema" autocomplete="username">
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Endereço de Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        required 
-                        placeholder="exemplo@empresa.com"
-                        autocomplete="email"
-                    >
+                    <label for="email" class="form-label">Endereço de Email</label>
+                    <input type="email" id="email" name="email" class="form-control" required
+                        placeholder="exemplo@empresa.com" autocomplete="email">
+                </div>
+
+                <div class="row" style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="password" class="form-label">Palavra-passe</label>
+                        <input type="password" id="password" name="password" class="form-control" required
+                            placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+                    </div>
+
+                    <div class="form-group" style="flex: 1;">
+                        <label for="confirm_password" class="form-label">Confirmar</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                            required placeholder="Repita a palavra-passe" autocomplete="new-password">
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Palavra-passe</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        placeholder="Mínimo 4 caracteres"
-                        autocomplete="new-password"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="confirm_password">Confirmar Palavra-passe</label>
-                    <input 
-                        type="password" 
-                        id="confirm_password" 
-                        name="confirm_password" 
-                        required 
-                        placeholder="Repita a palavra-passe"
-                        autocomplete="new-password"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label for="tipo_admin">Tipo de Administrador</label>
-                    <select id="tipo_admin" name="tipo_admin" required onchange="toggleSelects()">
+                    <label for="tipo_admin" class="form-label">Tipo de Administrador</label>
+                    <select id="tipo_admin" name="tipo_admin" class="form-control" required onchange="toggleSelects()">
                         <option value="Geral">Geral - Acesso Total ao Sistema</option>
                         <option value="Loja">Loja - Gestão de Vendas e Clientes</option>
                         <option value="Fabrica">Fábrica - Gestão de Produção</option>
                     </select>
-                    <p class="info-text" id="tipo-info">Acesso completo a todas as funcionalidades</p>
+                    <p class="text-muted text-sm mt-2" id="tipo-info" style="font-size: 0.85rem; margin-top: 0.5rem;">
+                        <i class="fa-solid fa-info-circle"></i> Acesso completo a todas as funcionalidades
+                    </p>
                 </div>
 
                 <div class="form-group" id="loja-group" style="display: none;">
-                    <label for="loja_id">Loja Associada</label>
-                    <select id="loja_id" name="loja_id">
+                    <label for="loja_id" class="form-label">Loja Associada</label>
+                    <select id="loja_id" name="loja_id" class="form-control">
                         <option value="">-- Selecione uma loja --</option>
                         {% for loja in lojas %}
-                            <option value="{{ loja[0] }}">{{ loja[1] }}</option>
+                        <option value="{{ loja[0] }}">{{ loja[1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div class="form-group" id="fabrica-group" style="display: none;">
-                    <label for="fabrica_id">Fábrica Associada</label>
-                    <select id="fabrica_id" name="fabrica_id">
+                    <label for="fabrica_id" class="form-label">Fábrica Associada</label>
+                    <select id="fabrica_id" name="fabrica_id" class="form-control">
                         <option value="">-- Selecione uma fábrica --</option>
                         {% for fabrica in fabricas %}
-                            <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
+                        <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
-                <button type="submit" class="btn-register">Criar Conta</button>
+                <button type="submit" class="btn btn-primary mt-4"
+                    style="width: 100%; justify-content: center; padding: 0.875rem;">
+                    Criar Conta
+                </button>
             </form>
 
-            <div class="login-link">
-                <p>Já tem conta? <a href="{{ url_for('login') }}">Iniciar sessão</a></p>
+            <div class="text-center mt-4">
+                <p class="text-muted text-sm" style="font-size: 0.9rem;">
+                    Já tem conta? <a href="{{ url_for('login') }}"
+                        style="color: var(--secondary-color); text-decoration: none; font-weight: 500;">Iniciar
+                        sessão</a>
+                </p>
             </div>
         </div>
     </div>
@@ -129,15 +130,16 @@
             if (tipoAdmin === 'Loja') {
                 lojaGroup.style.display = 'block';
                 lojaSelect.setAttribute('required', 'required');
-                tipoInfo.textContent = 'Acesso a vendas, clientes e stock da loja';
+                tipoInfo.innerHTML = '<i class="fa-solid fa-store"></i> Acesso a vendas, clientes e stock da loja';
             } else if (tipoAdmin === 'Fabrica') {
                 fabricaGroup.style.display = 'block';
                 fabricaSelect.setAttribute('required', 'required');
-                tipoInfo.textContent = 'Acesso a produção, fornecedores e matérias-primas';
+                tipoInfo.innerHTML = '<i class="fa-solid fa-industry"></i> Acesso a produção, fornecedores e matérias-primas';
             } else {
-                tipoInfo.textContent = 'Acesso completo a todas as funcionalidades';
+                tipoInfo.innerHTML = '<i class="fa-solid fa-info-circle"></i> Acesso completo a todas as funcionalidades';
             }
         }
     </script>
 </body>
+
 </html>
