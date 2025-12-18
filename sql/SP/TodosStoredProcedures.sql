@@ -826,16 +826,14 @@ CREATE OR ALTER PROCEDURE dbo.RegistarVendaCompleta
 AS
 BEGIN
     SET NOCOUNT ON;
-    SET XACT_ABORT ON; -- Cancela tudo imediatamente em caso de erro fatal
+    SET XACT_ABORT ON;
 
     DECLARE @RealArmazemId INT;
     DECLARE @VendaId INT;
     DECLARE @ValorTotalVenda DECIMAL(18,2);
 
-    -- 1. MAPEAMENTO: Descobrir o ID do Armazém associado a esta Loja
     SELECT @RealArmazemId = Armazem_Id FROM dbo.Loja WHERE Id = @LojaId;
 
-    -- Validação de segurança: Se a loja não existir ou não tiver armazém associado
     IF @RealArmazemId IS NULL
     BEGIN
         RAISERROR('Erro: Não foi encontrado um armazém válido para a Loja selecionada.', 16, 1);
@@ -844,8 +842,6 @@ BEGIN
 
     BEGIN TRANSACTION;
     BEGIN TRY
-        -- 2. VALIDAÇÃO DE STOCK AGREGADA
-        -- Usamos um CTE para somar quantidades se o mesmo produto aparecer 2 vezes no carrinho
         IF EXISTS (
             SELECT 1 
             FROM (
@@ -861,25 +857,20 @@ BEGIN
             THROW 50005, 'Venda Recusada: Um ou mais produtos não possuem stock suficiente nesta loja.', 1; --
         END
 
-        -- 3. CÁLCULO DO VALOR TOTAL
-        -- Não podemos deixar o valor a 0.00; calculamos com base nos preços da tabela Produto
         SELECT @ValorTotalVenda = SUM(L.Quantidade * P.Preco)
         FROM @Itens L
         JOIN dbo.Produto P ON L.ProdutoRef = P.Referencia;
 
-        -- 4. INSERIR CABEÇALHO DA VENDA
         INSERT INTO dbo.Venda (DataHora, MetodoPagamento, Loja_Id, Cliente_Nif, ValorTotal)
         VALUES (GETDATE(), @MetodoPagamento, @LojaId, @ClienteNif, @ValorTotalVenda);
         
         SET @VendaId = SCOPE_IDENTITY();
 
-        -- 5. INSERIR ITENS DA VENDA
         INSERT INTO dbo.Item (Venda_Id, Produto_Referencia, Quantidade, Preco)
         SELECT @VendaId, L.ProdutoRef, L.Quantidade, P.Preco
         FROM @Itens L
         JOIN dbo.Produto P ON L.ProdutoRef = P.Referencia;
 
-        -- 6. ATUALIZAR STOCK NO ARMAZÉM CORRETO
         UPDATE S
         SET S.Quantidade = S.Quantidade - L.QtdAgregada
         FROM dbo.Stock S
@@ -891,13 +882,11 @@ BEGIN
 
         COMMIT TRANSACTION;
         SELECT @VendaId AS VendaId, 'SUCESSO' AS Status;
-
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
         
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        -- Re-lança o erro para o Flask capturar e mostrar no modal
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END

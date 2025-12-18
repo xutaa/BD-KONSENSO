@@ -8,54 +8,57 @@ app.secret_key = 'bd_konsenso_secret_key_2024'
 # --- FUNÇÕES DE AUTENTICAÇÃO ---
 
 def validar_administrador(nome, password):
-    """Verifica login na tabela Administradores e retorna dados do admin"""
+    """Valida as credenciais comparando o Hash da password no SQL"""
     conn = get_db_connection()
-    if not conn: 
+    if not conn:
         print("❌ Erro: Sem conexão à base de dados")
         return None
     try:
         cursor = conn.cursor()
-        cursor.execute("""
+        query = """
             SELECT Nome, Tipo_Admin, Loja_Id, Fabrica_Id 
             FROM Administradores 
-            WHERE Nome = ? AND Password = ?
-        """, (nome, password))
-        #mudar para SP e para hash depois
-        admin = cursor.fetchone()
-        if admin:
-            print(f"✅ Login bem-sucedido: {nome} ({admin[1]})")
+            WHERE Nome = ? AND Password = dbo.HashPassword(?)
+        """
+        cursor.execute(query, (nome, password))
+        row = cursor.fetchone()
+        
+        if row:
+            print(f"✅ Login bem-sucedido: {nome} ({row[1]})")
             return {
-                'nome': admin[0],
-                'tipo_admin': admin[1],
-                'loja_id': admin[2],
-                'fabrica_id': admin[3]
+                'nome': row[0],
+                'tipo_admin': row[1],
+                'loja_id': row[2],
+                'fabrica_id': row[3]
             }
         else:
             print(f"❌ Login falhou: {nome}")
             return None
     except Exception as e:
-        print(f"❌ Erro ao validar login: {e}")
+        print(f"❌ Erro na validação: {e}")
         return None
     finally:
         conn.close()
 
 def criar_novo_administrador(nome, email, password, tipo_admin, loja_id=None, fabrica_id=None):
-    """Cria novo registo na tabela Administradores"""
+    """Verifica existência e insere novo admin com password encriptada"""
     conn = get_db_connection()
-    if not conn: 
+    if not conn:
         print("❌ Erro: Sem conexão à base de dados")
         return False
     try:
         cursor = conn.cursor()
+        
         cursor.execute("SELECT Nome FROM Administradores WHERE Nome = ?", (nome,))
         if cursor.fetchone():
             print(f"❌ Nome '{nome}' já existe na base de dados")
             return False
         
-        cursor.execute("""
-            INSERT INTO Administradores (Nome, Email, Password, Tipo_Admin, Loja_Id, Fabrica_Id) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (nome, email, password, tipo_admin, loja_id, fabrica_id))
+        query = """
+            INSERT INTO Administradores (Nome, Email, Password, Tipo_Admin, Loja_Id, Fabrica_Id)
+            VALUES (?, ?, dbo.HashPassword(?), ?, ?, ?)
+        """
+        cursor.execute(query, (nome, email, password, tipo_admin, loja_id, fabrica_id))
         conn.commit()
         print(f"✅ Administrador '{nome}' criado com sucesso!")
         return True
@@ -77,7 +80,7 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    """Página de login - valida e cria sessão"""
+    """Gere o acesso ao sistema"""
     if request.method == 'POST':
         nome = request.form.get('nome', '').strip()
         password = request.form.get('password', '').strip()
@@ -92,18 +95,16 @@ def login():
             session['tipo_admin'] = admin_data['tipo_admin']
             session['loja_id'] = admin_data['loja_id']
             session['fabrica_id'] = admin_data['fabrica_id']
-            print(f"✅ Sessão criada para {nome} ({admin_data['tipo_admin']})")
             return redirect(url_for('dashboard'))
         else:
             flash('❌ Nome ou password incorretos!', 'error')
-            return render_template('login.html')
-    
+            
     success_msg = request.args.get('success')
     return render_template('login.html', success=success_msg)
 
 @app.route('/registo', methods=['GET', 'POST'])
 def registo():
-    """Página de registo - cria novo administrador na BD"""
+    """Gere a criação de novas contas"""
     lojas = []
     fabricas = []
     
@@ -111,12 +112,8 @@ def registo():
     if conn:
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT Id, Localizacao FROM Loja ORDER BY Localizacao")
-            lojas = cursor.fetchall()
-            cursor.execute("SELECT Id, Localizacao FROM Fabrica ORDER BY Localizacao")
-            fabricas = cursor.fetchall()
-        except Exception as e:
-            print(f"❌ Erro ao buscar lojas/fábricas: {e}")
+            lojas = cursor.execute("SELECT Id, Localizacao FROM Loja ORDER BY Localizacao").fetchall()
+            fabricas = cursor.execute("SELECT Id, Localizacao FROM Fabrica ORDER BY Localizacao").fetchall()
         finally:
             conn.close()
     
@@ -126,28 +123,21 @@ def registo():
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
         tipo_admin = request.form.get('tipo_admin', 'Geral')
+        
         loja_id = request.form.get('loja_id') if tipo_admin == 'Loja' else None
         fabrica_id = request.form.get('fabrica_id') if tipo_admin == 'Fabrica' else None
         
-        # Validações
         if not nome or not email or not password:
             flash('❌ Preencha todos os campos obrigatórios!', 'error')
-            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
-        
-        if password != confirm_password:
+        elif password != confirm_password:
             flash('❌ As passwords não coincidem!', 'error')
-            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
-        
-        if len(password) < 4:
-            flash('❌ Password deve ter pelo menos 4 caracteres!', 'error')
-            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
-        
-        if criar_novo_administrador(nome, email, password, tipo_admin, loja_id, fabrica_id):
-            return redirect(url_for('login', success='Registo bem-sucedido! Faça login.'))
+        elif len(password) < 4:
+            flash('❌ Password demasiado curta!', 'error')
         else:
-            flash('❌ Nome já existe ou erro ao criar conta!', 'error')
-            return render_template('registo.html', lojas=lojas, fabricas=fabricas)
-    
+            if criar_novo_administrador(nome, email, password, tipo_admin, loja_id, fabrica_id):
+                return redirect(url_for('login', success='Registo bem-sucedido! Faça login.'))
+            else:
+                flash('❌ Erro: Nome de utilizador já existe ou falha na BD.', 'error')
     return render_template('registo.html', lojas=lojas, fabricas=fabricas)
 
 @app.route('/logout')
