@@ -817,24 +817,66 @@ def lista_itens():
 def lista_lojas():
     if 'admin_logado' not in session: 
         return redirect(url_for('login'))
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/lojas.html', erro="Erro de conexão", sucesso=False)
+            flash('Erro de conexão com a base de dados', 'error')
+            return render_template('tabelas/lojas.html', registos=[], armazens=[], sucesso=False)
+        
         cursor = conn.cursor()
         cursor.execute("""
-                SELECT Id, Nome, Localizacao, Armazem_Id FROM dbo.Loja
-            """)
+            SELECT l.Id, l.Nome, l.Localizacao, a.Localizacao AS Armazem
+            FROM dbo.Loja l
+            LEFT JOIN dbo.Armazem a ON l.Armazem_Id = a.Id
+            ORDER BY l.Nome
+        """)
         lojas = cursor.fetchall()
+        
+        cursor.execute("SELECT Id, Localizacao FROM dbo.Armazem ORDER BY Localizacao")
+        armazens = cursor.fetchall()
+        
         cursor.close()
-        return render_template('tabelas/lojas.html', dados_lojas=lojas, sucesso=True)
+        return render_template('tabelas/lojas.html', registos=lojas, armazens=armazens, sucesso=True)
+        
     except Exception as e:
         print(f"Erro ao listar lojas: {e}")
-        return render_template('tabelas/lojas.html', erro=str(e), sucesso=False)
+        flash(f'Erro ao carregar lojas: {str(e)}', 'error')
+        return render_template('tabelas/lojas.html', registos=[], armazens=[], sucesso=False)
     finally:
         if conn:
             conn.close()
+
+@app.route('/loja/nova', methods=['POST'])
+def adicionar_loja():
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        nome = request.form.get('nome')
+        localizacao = request.form.get('localizacao')
+        armazem_id = request.form.get('armazem_id')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_lojas'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovaLoja (?, ?, ?)}", (nome, localizacao, armazem_id))
+        conn.commit()
+        cursor.close()
+        flash('✅ Loja adicionada com sucesso!', 'success')
+        
+    except Exception as e:
+        print(f"Erro ao adicionar loja: {e}")
+        flash(f'❌ Erro ao adicionar loja: {str(e)}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    
+    return redirect(url_for('lista_lojas'))
 
 @app.route('/maquinas')
 def lista_maquinas():
