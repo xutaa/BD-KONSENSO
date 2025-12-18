@@ -19,6 +19,7 @@ def validar_administrador(nome, password):
             FROM Administradores 
             WHERE Nome = ? AND Password = ?
         """, (nome, password))
+        #mudar para SP e para hash depois
         admin = cursor.fetchone()
         if admin:
             print(f"✅ Login bem-sucedido: {nome} ({admin[1]})")
@@ -782,12 +783,18 @@ def lista_funcionarios():
 
 @app.route('/funcionario/novo', methods=['POST'])
 def adicionar_funcionario():
-    """Insere novo funcionário usando Stored Procedure"""
+    """Insere novo funcionário e dados pessoais usando Stored Procedure"""
     if 'admin_logado' not in session:
         return redirect(url_for('login'))
     
+    conn = None
     try:
-        pessoa_cc = request.form.get('pessoa_cc')
+        cc = request.form.get('pessoa_cc')
+        nome = request.form.get('nome')
+        email = request.form.get('email')
+        data_nasc = request.form.get('data_nasc')
+        morada = request.form.get('morada')
+        telemovel = request.form.get('telemovel')
         cargo_id = request.form.get('cargo_id')
         empresa_nif = request.form.get('empresa_nif')
         fabrica_id = request.form.get('fabrica_id') if request.form.get('fabrica_id') else None
@@ -798,17 +805,20 @@ def adicionar_funcionario():
             return redirect(url_for('lista_funcionarios'))
 
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.InserirNovoFuncionario (?, ?, ?, ?)}", 
-                       (pessoa_cc, cargo_id, empresa_nif, fabrica_id))
-        conn.commit()
-        flash('✅ Funcionário adicionado com sucesso!', 'success')
+
+        sql = "{CALL dbo.InserirNovoFuncionario (?, ?, ?, ?, ?, ?, ?, ?, ?)}"
+        params = (cc, nome, email, data_nasc, morada, telemovel, cargo_id, empresa_nif, fabrica_id)
         
+        cursor.execute(sql, params)
+        conn.commit()
+        
+        flash('✅ Funcionário registado com sucesso!', 'success')
     except Exception as e:
-        flash(f'❌ Erro ao adicionar funcionário: {str(e)}', 'error')
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao adicionar funcionário: {error_msg}', 'error')
     finally:
         if conn:
             conn.close()
-    
     return redirect(url_for('lista_funcionarios'))
 
 @app.route('/itens')

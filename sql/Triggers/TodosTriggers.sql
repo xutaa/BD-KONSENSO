@@ -42,3 +42,9 @@ BEGIN
     WHERE V.Id IN (SELECT Venda_Id FROM inserted UNION SELECT Venda_Id FROM deleted);
 END;
 GO
+
+-- =============================================
+-- Trigger: MudarStockArmazemEliminado
+-- Descrição: Muda o stock existente num armazem eliminado para o primeiro armazem.
+-- =============================================
+-- por implementar

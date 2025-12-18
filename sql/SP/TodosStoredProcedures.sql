@@ -44,7 +44,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -89,7 +89,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -127,7 +127,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -201,7 +201,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -238,7 +238,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -288,7 +288,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -343,7 +343,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -390,53 +390,40 @@ GO
 -- Descrição: Insere um novo funcionário no sistema
 -- =============================================
 CREATE OR ALTER PROCEDURE dbo.InserirNovoFuncionario
-    @PessoaCc VARCHAR(20),
+    @Cc VARCHAR(20),
+    @Nome VARCHAR(100),
+    @Email VARCHAR(100),
+    @DataNasc DATE,
+    @Morada VARCHAR(200),
+    @Telemovel VARCHAR(20),
     @CargoId INT,
     @EmpresaNif VARCHAR(20),
     @FabricaId INT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
-    
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM dbo.Pessoa WHERE Cc = @PessoaCc)
+        BEGIN TRANSACTION;
+        IF NOT EXISTS (SELECT 1 FROM dbo.Pessoa WHERE Cc = @Cc)
         BEGIN
-            RAISERROR('Pessoa com este CC não existe.', 16, 1);
-            RETURN;
+            INSERT INTO dbo.Pessoa (Cc, Nome, Email, DataNascimento, Morada, NumTelefone)
+            VALUES (@Cc, @Nome, @Email, @DataNasc, @Morada, @Telemovel);
         END
-        
-        IF NOT EXISTS (SELECT 1 FROM dbo.Cargo WHERE Id = @CargoId)
+
+        IF EXISTS (SELECT 1 FROM dbo.Funcionario WHERE Pessoa_Cc = @Cc)
         BEGIN
-            RAISERROR('Cargo não existe.', 16, 1);
-            RETURN;
+            RAISERROR('Esta pessoa já está registada como funcionário.', 16, 1);
+            ROLLBACK TRANSACTION; RETURN;
         END
-        
-        IF NOT EXISTS (SELECT 1 FROM dbo.Empresa WHERE Nif = @EmpresaNif)
-        BEGIN
-            RAISERROR('Empresa não existe.', 16, 1);
-            RETURN;
-        END
-        
-        IF EXISTS (SELECT 1 FROM dbo.Funcionario WHERE Pessoa_Cc = @PessoaCc)
-        BEGIN
-            RAISERROR('Esta pessoa já é um funcionário.', 16, 1);
-            RETURN;
-        END
-        
-        IF @FabricaId IS NOT NULL AND NOT EXISTS (SELECT 1 FROM dbo.Fabrica WHERE Id = @FabricaId)
-        BEGIN
-            RAISERROR('Fábrica não existe.', 16, 1);
-            RETURN;
-        END
-        
+    
         INSERT INTO dbo.Funcionario (Pessoa_Cc, Cargo_Id, Empresa_Nif, Fabrica_Id)
-        VALUES (@PessoaCc, @CargoId, @EmpresaNif, @FabricaId);
-        
-        PRINT 'Funcionário inserido com sucesso!';
-        
+        VALUES (@Cc, @CargoId, @EmpresaNif, @FabricaId);
+
+        COMMIT TRANSACTION;
+        SELECT @Cc AS PessoaCc, 'SUCESSO' AS Status;
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -630,7 +617,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -675,7 +662,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -713,7 +700,7 @@ BEGIN
         
     END TRY
     BEGIN CATCH
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END
@@ -789,7 +776,7 @@ BEGIN
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorMessage NVARCHAR(2056) = ERROR_MESSAGE();
         RAISERROR(@ErrorMessage, 16, 1);
     END CATCH
 END;
