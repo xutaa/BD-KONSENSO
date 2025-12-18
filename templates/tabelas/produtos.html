@@ -4,7 +4,6 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/action-buttons.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -75,22 +74,22 @@
                         <td>{{ produto[4] if produto[4] else 'N/A' }}</td>
                         <td>{{ produto[5] if produto[5] else 'N/A' }}</td>
                         <td class="text-center">
-                            <div class="btn-action-group">
-                                <button type="button" 
-                                        class="btn btn-edit btn-action-sm" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#modalEditarProduto"
-                                        onclick="preencherModalEdicao('{{ produto[1] }}', '{{ produto[0] }}', '{{ produto[2] }}', '{{ produto[3] }}', '{{ produto[4] }}', '{{ produto[5] }}')">
-                                    <i class="bi bi-pencil-square"></i> Editar
-                                </button>
-                                <button type="button" 
-                                        class="btn btn-remove btn-action-sm" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#modalRemoverProduto"
-                                        onclick="prepararRemocao('{{ produto[1] }}', '{{ produto[0] }}')">
-                                    <i class="bi bi-trash-fill"></i> Remover
-                                </button>
-                            </div>
+                            <button type="button" 
+                                    class="btn btn-link btn-sm text-secondary p-1" 
+                                    title="Editar"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalEditarProduto"
+                                    onclick="preencherModalEdicao('{{ produto[1] }}', '{{ produto[0] }}', '{{ produto[2] }}', '{{ produto[3] }}', '{{ produto[4] }}', '{{ produto[5] }}')">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button type="button" 
+                                    class="btn btn-link btn-sm text-danger p-1 hover-danger" 
+                                    title="Remover"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#modalRemoverProduto"
+                                    onclick="prepararRemocao('{{ produto[1] }}', '{{ produto[0] }}')">
+                                <i class="bi bi-trash3"></i>
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
