@@ -462,18 +462,49 @@ def lista_distribuidoras():
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/distribuidoras.html', erro="Erro de conexão", sucesso=False)
+            flash('Erro de conexão com a base de dados', 'error')
+            return render_template('tabelas/distribuidoras.html', registos=[], sucesso=False)
+        
         cursor = conn.cursor()
-        cursor.execute("SELECT Id, Nome, Localizacao FROM dbo.Distribuidora")
+        cursor.execute("SELECT Id, Nome, Localizacao FROM dbo.Distribuidora ORDER BY Nome")
         distribuidoras = cursor.fetchall()
         cursor.close()
-        return render_template('tabelas/distribuidoras.html', dados_distribuidoras=distribuidoras, sucesso=True)
+        return render_template('tabelas/distribuidoras.html', registos=distribuidoras, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar distribuidoras: {e}")
-        return render_template('tabelas/distribuidoras.html', erro=str(e), sucesso=False)
+        flash(f'Erro ao carregar distribuidoras: {str(e)}', 'error')
+        return render_template('tabelas/distribuidoras.html', registos=[], sucesso=False)
     finally:
         if conn:
             conn.close()
+
+@app.route('/distribuidora/nova', methods=['POST'])
+def adicionar_distribuidora():
+    """Insere nova distribuidora usando Stored Procedure"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    
+    try:
+        nome = request.form.get('nome')
+        localizacao = request.form.get('localizacao')
+
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_distribuidoras'))
+
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.InserirNovaDistribuidora (?, ?)}", (nome, localizacao))
+        conn.commit()
+        flash('✅ Distribuidora adicionada com sucesso!', 'success')
+        
+    except Exception as e:
+        flash(f'❌ Erro ao adicionar distribuidora: {str(e)}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    
+    return redirect(url_for('lista_distribuidoras'))
 
 @app.route('/distribuidoras_armazem')
 def lista_distribuidoras_armazem():
