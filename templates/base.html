@@ -20,24 +20,6 @@
     
     <!-- Estilos Base -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
-
-    <style>
-        .btn-link {
-            text-decoration: none;
-            transition: all 0.2s ease-in-out;
-            background: transparent;
-        }
-
-        .hover-primary:hover {
-            color: #0d6efd !important;
-            transform: scale(1.15);
-        }
-
-        .btn:focus, .btn:active {
-            outline: none !important;
-            box-shadow: none !important;
-        }
-    </style>
     
     <!-- CSS Extra (para páginas específicas) -->
     {% block extra_css %}{% endblock %}

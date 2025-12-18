@@ -159,3 +159,22 @@ main {
 .modal-header .btn-close-white {
     filter: brightness(0) invert(1);
 }
+
+/* ====================================
+   BUTTON STYLES
+   ==================================== */
+.btn-link {
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    background: transparent;
+}
+
+.hover-primary:hover {
+    color: #0d6efd !important;
+    transform: scale(1.15);
+}
+
+.btn:focus, .btn:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
