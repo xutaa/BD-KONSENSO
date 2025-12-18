@@ -1367,9 +1367,8 @@ def adicionar_venda():
     except Exception as e:
         error_msg = str(e).split(']')[-1]
         return jsonify({'sucesso': False, 'erro': error_msg})
-    finally:
+    finally:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
         conn.close()
-
 @app.route('/api/venda/<int:venda_id>/itens')
 def obter_itens_venda(venda_id):
     """API que retorna os itens de uma venda específica em formato JSON"""
@@ -1380,14 +1379,7 @@ def obter_itens_venda(venda_id):
     itens = []
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT P.Nome, I.Quantidade, I.Preco, (I.Quantidade * I.Preco) as Total
-            FROM Item I
-            JOIN Produto P ON I.Produto_Referencia = P.Referencia
-            WHERE I.Venda_Id = ?
-        """, (venda_id,))
-
-        #TODO: Mudar isto para uma SP
+        cursor.execute("{CALL dbo.ObterItensVenda (?)}", venda_id)
 
         for row in cursor.fetchall():
             itens.append({
@@ -1396,7 +1388,6 @@ def obter_itens_venda(venda_id):
                 'preco_unit': row[2],
                 'subtotal': row[3]
             })
-            
         return jsonify(itens)
     except Exception as e:
         return jsonify({'erro': str(e)}), 500

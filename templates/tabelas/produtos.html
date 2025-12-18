@@ -101,7 +101,6 @@
     <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
 </div>
 
-<!-- Modal Novo Produto -->
 <div class="modal fade" id="modalNovoProduto" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -180,7 +179,6 @@
     </div>
 </div>
 
-<!-- Modal Editar Produto -->
 <div class="modal fade" id="modalEditarProduto" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
@@ -262,7 +260,6 @@
     </div>
 </div>
 
-<!-- Modal Remover Produto -->
 <div class="modal fade" id="modalRemoverProduto" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -301,7 +298,6 @@
         configurarAtalhos('searchInput');
     });
 
-    // Função para preencher o modal de edição
     function preencherModalEdicao(referencia, nome, descricao, preco, maquinaId, distribuidoraId) {
         document.getElementById('edit_referencia_atual').value = referencia;
         document.getElementById('edit_referencia').value = referencia;
@@ -309,16 +305,13 @@
         document.getElementById('edit_descricao').value = descricao;
         document.getElementById('edit_preco').value = preco;
 
-        // Selecionar máquina
         const selectMaquina = document.getElementById('edit_maquina_id');
         selectMaquina.value = maquinaId !== 'None' && maquinaId !== '' ? maquinaId : '';
 
-        // Selecionar distribuidora
         const selectDist = document.getElementById('edit_distribuidora_id');
         selectDist.value = distribuidoraId !== 'None' && distribuidoraId !== '' ? distribuidoraId : '';
     }
 
-    // Função para preparar a remoção
     function prepararRemocao(referencia, nome) {
         document.getElementById('produtoRemoverRef').textContent = referencia;
         document.getElementById('produtoRemoverNome').textContent = nome;
