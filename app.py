@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from database import get_db_connection
+from utils import login_required, admin_tipo_required, execute_query, execute_sp
 
 app = Flask(__name__)
 app.secret_key = 'bd_konsenso_secret_key_2024'
@@ -161,11 +162,9 @@ def logout():
     return redirect(url_for('login'))
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
     """Página principal - só acessível após login"""
-    if 'admin_logado' not in session:
-        print("⚠️ Tentativa de acesso sem login")
-        return redirect(url_for('login'))
     
     tipo_admin = session.get('tipo_admin', 'Geral')
     
@@ -208,10 +207,9 @@ def dashboard():
                          permissoes=permissoes.get(tipo_admin, permissoes['Geral']))
 
 @app.route('/armazens')
+@login_required
 def lista_armazens():
     """Lista todos os armazéns"""
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -237,10 +235,9 @@ def lista_armazens():
             conn.close()
 
 @app.route('/armazem/novo', methods=['POST'])
+@login_required
 def adicionar_armazem():
     """Insere novo armazém usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         localizacao = request.form.get('localizacao')
@@ -266,9 +263,8 @@ def adicionar_armazem():
     return redirect(url_for('lista_armazens'))   
 
 @app.route('/cargos')
+@login_required
 def lista_cargos():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -287,10 +283,9 @@ def lista_cargos():
             conn.close()
 
 @app.route('/cargo/novo', methods=['POST'])
+@login_required
 def adicionar_cargo():
     """Insere novo cargo usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         nome = request.form.get('nome')
@@ -315,10 +310,9 @@ def adicionar_cargo():
     return redirect(url_for('lista_cargos'))
 
 @app.route('/clientes')
+@login_required
 def lista_clientes():
     """Lista todos os clientes com opção de adicionar"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = get_db_connection()
     if not conn:
@@ -350,10 +344,8 @@ def lista_clientes():
         conn.close()
 
 @app.route('/cliente/novo', methods=['POST'])
+@login_required
 def adicionar_cliente():
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
-        
     try:
         dados = {
             'cc': request.form.get('pessoa_cc'),
@@ -381,9 +373,8 @@ def adicionar_cliente():
     return redirect(url_for('lista_clientes'))
 
 @app.route('/contratos_vendedor')
+@login_required
 def lista_contratos_vendedor():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -426,10 +417,9 @@ def lista_contratos_vendedor():
             conn.close()
 
 @app.route('/contrato_vendedor/novo', methods=['POST'])
+@login_required
 def adicionar_contrato_vendedor():
     """Insere novo contrato de vendedor usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         vendedor_id = request.form.get('vendedor_id')
@@ -456,9 +446,8 @@ def adicionar_contrato_vendedor():
     return redirect(url_for('lista_contratos_vendedor'))
 
 @app.route('/distribuidoras')
+@login_required
 def lista_distribuidoras():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -480,10 +469,9 @@ def lista_distribuidoras():
             conn.close()
 
 @app.route('/distribuidora/nova', methods=['POST'])
+@login_required
 def adicionar_distribuidora():
     """Insere nova distribuidora usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         nome = request.form.get('nome')
@@ -508,9 +496,8 @@ def adicionar_distribuidora():
     return redirect(url_for('lista_distribuidoras'))
 
 @app.route('/distribuidoras_armazem')
+@login_required
 def lista_distribuidoras_armazem():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -529,10 +516,9 @@ def lista_distribuidoras_armazem():
             conn.close()
 
 @app.route('/empresas')
+@login_required
 def lista_empresas():
     """Lista todas as empresas"""
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -558,10 +544,9 @@ def lista_empresas():
             conn.close()
 
 @app.route('/empresa/novo', methods=['POST'])
+@login_required
 def adicionar_empresa():
     """Insere nova empresa usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         nif = request.form.get('nif')
@@ -590,10 +575,9 @@ def adicionar_empresa():
     return redirect(url_for('lista_empresas'))
 
 @app.route('/fabricas')
+@login_required
 def lista_fabricas():
     """Lista todas as fábricas"""
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -636,10 +620,9 @@ def lista_fabricas():
             conn.close()
 
 @app.route('/fabrica/novo', methods=['POST'])
+@login_required
 def adicionar_fabrica():
     """Insere nova fábrica usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         nome = request.form.get('nome')
@@ -667,10 +650,9 @@ def adicionar_fabrica():
     return redirect(url_for('lista_fabricas'))
 
 @app.route('/fornecedores')
+@login_required
 def lista_fornecedores():
     """Lista todos os fornecedores com opção de adicionar"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = get_db_connection()
     if not conn:
@@ -697,10 +679,9 @@ def lista_fornecedores():
         conn.close()
 
 @app.route('/fornecedor/novo', methods=['POST'])
+@login_required
 def adicionar_fornecedor():
     """Insere novo fornecedor usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         nome = request.form.get('nome')
@@ -725,9 +706,8 @@ def adicionar_fornecedor():
     return redirect(url_for('lista_fornecedores'))
 
 @app.route('/funcionarios')
+@login_required
 def lista_funcionarios():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -782,10 +762,9 @@ def lista_funcionarios():
             conn.close()
 
 @app.route('/funcionario/novo', methods=['POST'])
+@login_required
 def adicionar_funcionario():
     """Insere novo funcionário e dados pessoais usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = None
     try:
@@ -822,10 +801,9 @@ def adicionar_funcionario():
     return redirect(url_for('lista_funcionarios'))
 
 @app.route('/itens')
+@login_required
 def lista_itens():
     """Lista todos os itens de venda com opção de adicionar"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = get_db_connection()
     if not conn:
@@ -855,9 +833,8 @@ def lista_itens():
         conn.close()
 
 @app.route('/lojas')
+@login_required
 def lista_lojas():
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     
     conn = None
     try:
@@ -890,9 +867,8 @@ def lista_lojas():
             conn.close()
 
 @app.route('/loja/nova', methods=['POST'])
+@login_required
 def adicionar_loja():
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         nome = request.form.get('nome')
@@ -920,10 +896,9 @@ def adicionar_loja():
     return redirect(url_for('lista_lojas'))
 
 @app.route('/maquinas')
+@login_required
 def lista_maquinas():
     """Lista todas as máquinas"""
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     conn = None
     try:
         conn = get_db_connection()
@@ -960,10 +935,9 @@ def lista_maquinas():
             conn.close()
 
 @app.route('/maquina/novo', methods=['POST'])
+@login_required
 def adicionar_maquina():
     """Insere nova máquina usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         descricao = request.form.get('descricao')
@@ -990,10 +964,9 @@ def adicionar_maquina():
     return redirect(url_for('lista_maquinas'))
 
 @app.route('/materias_primas')
+@login_required
 def lista_materias_primas():
     """Lista todas as matérias-primas com opção de adicionar"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = get_db_connection()
     if not conn:
@@ -1020,10 +993,9 @@ def lista_materias_primas():
         conn.close()
 
 @app.route('/materia_prima/nova', methods=['POST'])
+@login_required
 def adicionar_materia_prima():
     """Insere nova matéria-prima usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         referencia = request.form.get('referencia')
@@ -1049,10 +1021,9 @@ def adicionar_materia_prima():
     return redirect(url_for('lista_materias_primas'))
 
 @app.route('/produtos')
+@login_required
 def lista_produtos():
     """Lista todos os produtos com dados para o modal"""
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     
     conn = None
     try:
@@ -1098,14 +1069,11 @@ def lista_produtos():
             conn.close()
 
 @app.route('/produto/novo', methods=['POST'])
+@login_required
 def adicionar_produto():
     """
     Processa a submissão do Modal e insere um novo produto no BD através de uma SP.
     """
-    if 'admin_logado' not in session: 
-        flash('Sessão expirada. Faça login novamente.', 'error')
-        return redirect(url_for('login'))
-
     referencia = request.form.get('referencia', '').strip()
     descricao = request.form.get('descricao', '').strip()
     nome = request.form.get('nome', '').strip()
@@ -1168,10 +1136,9 @@ def adicionar_produto():
 
 
 @app.route('/produto/editar', methods=['POST'])
+@login_required
 def editar_produto():
     """Edita um produto existente"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     try:
         # Dados do formulário
         referencia_atual = request.form.get('referencia_atual')
@@ -1202,10 +1169,9 @@ def editar_produto():
 
 
 @app.route('/produto/remover/<path:referencia>', methods=['POST'])
+@login_required
 def remover_produto(referencia):
     """Remove um produto"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     try:
         conn = get_db_connection()
         if not conn:
@@ -1227,10 +1193,9 @@ def remover_produto(referencia):
 
 
 @app.route('/stock')
+@login_required
 def lista_stock():
     """Lista todo o stock com opção de adicionar"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = get_db_connection()
     if not conn:
@@ -1261,10 +1226,9 @@ def lista_stock():
         conn.close()
 
 @app.route('/stock/novo', methods=['POST'])
+@login_required
 def adicionar_stock():
     """Insere nova entrada de stock usando Stored Procedure"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     try:
         produto_ref = request.form.get('produto_referencia')
@@ -1290,13 +1254,12 @@ def adicionar_stock():
     return redirect(url_for('lista_stock'))
 
 @app.route('/vendas')
+@login_required
 def lista_vendas():
     """
     Lista as vendas. Filtra automaticamente por Loja_Id se o admin for 'Loja'.
     Se for 'Geral', lista todas as vendas.
     """
-    if 'admin_logado' not in session: 
-        return redirect(url_for('login'))
     
     tipo_admin = session.get('tipo_admin')
     loja_id_sessao = session.get('loja_id') 
@@ -1370,11 +1333,10 @@ def adicionar_venda():
     finally:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
         conn.close()
 @app.route('/api/venda/<int:venda_id>/itens')
+@login_required
 def obter_itens_venda(venda_id):
     """API que retorna os itens de uma venda específica em formato JSON"""
-    if 'admin_logado' not in session:
-        return jsonify({'erro': 'Não autorizado'}), 401
-
+    
     conn = get_db_connection()
     itens = []
     try:
@@ -1395,10 +1357,9 @@ def obter_itens_venda(venda_id):
         conn.close()
 
 @app.route('/vendedores')
+@login_required
 def lista_vendedores():
     """Lista todos os vendedores com opção de adicionar"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = get_db_connection()
     if not conn:
@@ -1428,10 +1389,9 @@ def lista_vendedores():
         conn.close()
 
 @app.route('/vendedor/novo', methods=['POST'])
+@login_required
 def adicionar_vendedor():
     """Insere novo vendedor e contrato usando Stored Procedure completa"""
-    if 'admin_logado' not in session:
-        return redirect(url_for('login'))
     
     conn = None
     try:

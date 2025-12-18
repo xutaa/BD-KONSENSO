@@ -1,0 +1,202 @@
+{# ====================================================================
+MACROS JINJA2 - Componentes Reutilizáveis para BD-KONSENSO
+Uso: {% from 'macros.html' import nome_macro %}
+==================================================================== #}
+
+
+{# --------------------------------------------------------------------
+FLASH MESSAGES - Mensagens de alerta (sucesso/erro)
+Uso: {{ flash_messages() }}
+-------------------------------------------------------------------- #}
+{% macro flash_messages() %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+{% if category == 'success' %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-check-circle me-2"></i>{{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% elif category == 'error' %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-exclamation-circle me-2"></i>{{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% else %}
+<div class="alert alert-info alert-dismissible fade show" role="alert">
+    <i class="fa-solid fa-info-circle me-2"></i>{{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endwith %}
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+PAGE HEADER - Cabeçalho de página com título e botão
+Uso: {{ page_header('📦 Gestão de Produtos', 'Novo Produto', 'modalNovoProduto') }}
+-------------------------------------------------------------------- #}
+{% macro page_header(title, button_text=None, modal_id=None) %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ title }}</h1>
+    {% if button_text and modal_id %}
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">
+        <i class="bi bi-plus-circle"></i> {{ button_text }}
+    </button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+SEARCH BAR - Barra de pesquisa com contador
+Uso: {{ search_bar('produto', 'tabelaProdutos', 'totalProdutos', registos|length) }}
+-------------------------------------------------------------------- #}
+{% macro search_bar(entity_name, table_id, counter_id, total_count, entity_plural=None) %}
+<div class="mb-4">
+    <div class="search-container">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar {{ entity_name }}..."
+            onkeyup="filtrarTabela('searchInput', '{{ table_id }}', '{{ counter_id }}', 'nenhumResultado')">
+        <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+            <i class="bi bi-x"></i>
+        </button>
+    </div>
+    <small class="text-muted">
+        <span id="{{ counter_id }}">{{ total_count }}</span> {{ entity_plural or entity_name + '(s)' }}
+    </small>
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+NO RESULTS ALERT - Alerta quando não há resultados de pesquisa
+Uso: {{ no_results_alert('produto') }}
+-------------------------------------------------------------------- #}
+{% macro no_results_alert(entity_name) %}
+<div id="nenhumResultado" class="alert alert-warning" style="display: none;">
+    <i class="bi bi-exclamation-triangle"></i> Nenhum {{ entity_name }} encontrado.
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+BACK BUTTON - Botão de voltar ao dashboard
+Uso: {{ back_button() }}
+-------------------------------------------------------------------- #}
+{% macro back_button(url=None, text='← Voltar ao Dashboard') %}
+<div class="mt-4">
+    <a href="{{ url or url_for('dashboard') }}" class="btn btn-secondary">{{ text }}</a>
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+ACTION BUTTONS - Botões de ação (Editar/Remover) para tabelas
+Uso: {{ action_buttons(edit_onclick='...', remove_onclick='...') }}
+-------------------------------------------------------------------- #}
+{% macro action_buttons(edit_onclick=None, remove_onclick=None, edit_modal=None, remove_modal=None, show_edit=true,
+show_remove=true) %}
+<td class="text-center text-nowrap">
+    {% if show_edit %}
+    <button type="button" class="btn btn-soft-warning btn-sm" title="Editar" {% if edit_modal %}data-bs-toggle="modal"
+        data-bs-target="#{{ edit_modal }}" {% endif %} {% if edit_onclick %}onclick="{{ edit_onclick }}" {% endif %}>
+        <i class="bi bi-pencil-square"></i> Editar
+    </button>
+    {% endif %}
+    {% if show_remove %}
+    <button type="button" class="btn btn-soft-danger btn-sm ms-1" title="Remover" {% if remove_modal
+        %}data-bs-toggle="modal" data-bs-target="#{{ remove_modal }}" {% endif %} {% if remove_onclick
+        %}onclick="{{ remove_onclick }}" {% endif %}>
+        <i class="bi bi-trash3"></i> Remover
+    </button>
+    {% endif %}
+</td>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+EMPTY TABLE ROW - Linha mostrada quando tabela está vazia
+Uso: {{ empty_row(6, 'Nenhum produto registado') }}
+-------------------------------------------------------------------- #}
+{% macro empty_row(colspan, message) %}
+<tr id="semResultados">
+    <td colspan="{{ colspan }}" class="text-center text-muted">{{ message }}</td>
+</tr>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+MODAL HEADER - Cabeçalho de modal com título e botão fechar
+Uso: {{ modal_header('Novo Produto', 'primary') }}
+-------------------------------------------------------------------- #}
+{% macro modal_header(title, color='primary', icon=None) %}
+<div class="modal-header bg-{{ color }} text-white">
+    <h5 class="modal-title">
+        {% if icon %}<i class="{{ icon }}"></i> {% endif %}{{ title }}
+    </h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+MODAL FOOTER - Rodapé de modal com botões
+Uso: {{ modal_footer('Guardar', 'primary') }}
+-------------------------------------------------------------------- #}
+{% macro modal_footer(submit_text='Guardar', submit_color='primary', cancel_text='Cancelar') %}
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ cancel_text }}</button>
+    <button type="submit" class="btn btn-{{ submit_color }}">{{ submit_text }}</button>
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+FORM INPUT - Campo de formulário com label
+Uso: {{ form_input('nome', 'Nome *', required=true, placeholder='Ex: João') }}
+-------------------------------------------------------------------- #}
+{% macro form_input(name, label, type='text', required=false, placeholder='', value='', maxlength='', min='', step='',
+readonly=false) %}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label fw-bold">{{ label }}</label>
+    <input type="{{ type }}" class="form-control" id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %}
+        {% if placeholder %}placeholder="{{ placeholder }}" {% endif %} {% if value %}value="{{ value }}" {% endif %} {%
+        if maxlength %}maxlength="{{ maxlength }}" {% endif %} {% if min %}min="{{ min }}" {% endif %} {% if step
+        %}step="{{ step }}" {% endif %} {% if readonly %}readonly{% endif %}>
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+FORM SELECT - Campo select com options
+Uso: {{ form_select('cargo_id', 'Cargo *', cargos, true) }}
+-------------------------------------------------------------------- #}
+{% macro form_select(name, label, options, required=false, empty_option='-- Selecione --', value_field=0, text_field=1)
+%}
+<div class="mb-3">
+    <label for="{{ name }}" class="form-label fw-bold">{{ label }}</label>
+    <select class="form-select" id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %}>
+        <option value="">{{ empty_option }}</option>
+        {% for opt in options %}
+        <option value="{{ opt[value_field] }}">{{ opt[text_field] }}</option>
+        {% endfor %}
+    </select>
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
+SEARCH SCRIPT INIT - Script de inicialização da pesquisa
+Uso: {{ search_script_init() }}
+-------------------------------------------------------------------- #}
+{% macro search_script_init() %}
+<script src="{{ url_for('static', filename='js/search.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        configurarAtalhos('searchInput');
+    });
+</script>
+{% endmacro %}
