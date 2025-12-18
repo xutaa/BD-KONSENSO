@@ -1166,6 +1166,66 @@ def adicionar_produto():
         if conn:
             conn.close()
 
+
+@app.route('/produto/editar', methods=['POST'])
+def editar_produto():
+    """Edita um produto existente"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    try:
+        # Dados do formulário
+        referencia_atual = request.form.get('referencia_atual')
+        nova_referencia = request.form.get('referencia')
+        nome = request.form.get('nome')
+        descricao = request.form.get('descricao')
+        preco = float(request.form.get('preco').replace(',', '.'))
+        maquina_id = int(request.form.get('maquina_id'))
+        distribuidora_id = int(request.form.get('distribuidora_id'))
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão com a base de dados', 'error')
+            return redirect(url_for('lista_produtos'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.AtualizarProduto (?, ?, ?, ?, ?, ?, ?)}",
+                       (referencia_atual, nova_referencia, nome, descricao, preco, maquina_id, distribuidora_id))
+        conn.commit()
+        flash('✅ Produto atualizado com sucesso!', 'success')
+    except ValueError:
+         flash('❌ Erro: Verifique se os valores numéricos estão corretos.', 'error')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao atualizar: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_produtos'))
+
+
+@app.route('/produto/remover/<path:referencia>', methods=['POST'])
+def remover_produto(referencia):
+    """Remove um produto"""
+    if 'admin_logado' not in session:
+        return redirect(url_for('login'))
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_produtos'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverProduto (?)}", (referencia,))
+        conn.commit()
+        flash('✅ Produto removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_produtos'))
+
+
+
+
 @app.route('/stock')
 def lista_stock():
     """Lista todo o stock com opção de adicionar"""

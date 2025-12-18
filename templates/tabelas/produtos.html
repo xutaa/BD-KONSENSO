@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/action-buttons.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -71,21 +72,31 @@
                         <td>{{ produto[1] }}</td>
                         <td>{{ produto[2] }}</td>
                         <td>{{ "%.2f"|format(produto[3]) }}</td>
-                        <td>{{ produto[4] }}</td>
-                        <td>{{ produto[5] }}</td>
+                        <td>{{ produto[4] if produto[4] else 'N/A' }}</td>
+                        <td>{{ produto[5] if produto[5] else 'N/A' }}</td>
                         <td class="text-center">
-                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
-                                <i class="bi bi-trash3"></i>
-                            </a>
+                            <div class="btn-action-group">
+                                <button type="button" 
+                                        class="btn btn-edit btn-action-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalEditarProduto"
+                                        onclick="preencherModalEdicao('{{ produto[1] }}', '{{ produto[0] }}', '{{ produto[2] }}', '{{ produto[3] }}', '{{ produto[4] }}', '{{ produto[5] }}')">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-remove btn-action-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalRemoverProduto"
+                                        onclick="prepararRemocao('{{ produto[1] }}', '{{ produto[0] }}')">
+                                    <i class="bi bi-trash-fill"></i> Remover
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
                 {% else %}
                     <tr id="semResultados">
-                        <td colspan="6" class="text-center text-muted">Nenhum produto registado</td>
+                        <td colspan="7" class="text-center text-muted">Nenhum produto registado</td>
                     </tr>
                 {% endif %}
             </tbody>
@@ -114,47 +125,39 @@
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="referencia" class="form-label">Referência *</label>
-                                <input type="text" class="form-control" id="referencia" name="referencia" 
-                                       required maxlength="20" placeholder="PROD001">
+                                <label for="nome" class="form-label">Nome *</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required maxlength="100">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="nome" class="form-label">Nome *</label>
-                                <input type="text" class="form-control" id="nome" name="nome" 
-                                       required maxlength="100" placeholder="Nome do Produto">
+                                <label for="referencia" class="form-label">Referência *</label>
+                                <input type="text" class="form-control" id="referencia" name="referencia" required maxlength="20">
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="descricao" class="form-label">Descrição *</label>
-                            <textarea class="form-control" id="descricao" name="descricao" 
-                                      rows="2" required maxlength="200"></textarea>
+                            <label for="descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="descricao" name="descricao" rows="2" maxlength="200"></textarea>
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label for="preco" class="form-label">Preço (€) *</label>
-                                <input type="number" class="form-control" id="preco" name="preco" 
-                                       step="0.01" min="0" required>
+                                <input type="number" class="form-control" id="preco" name="preco" step="0.01" min="0.01" required>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="maquina_id" class="form-label">Máquina *</label>
-                                <select class="form-select" id="maquina_id" name="maquina_id" required>
+                                <label for="maquina_id" class="form-label">Máquina</label>
+                                <select class="form-select" id="maquina_id" name="maquina_id">
                                     <option value="">-- Selecione --</option>
-                                    {% if maquinas %}
-                                        {% for maquina in maquinas %}
-                                            <option value="{{ maquina[0] }}">{{ maquina[1] }}</option>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for maquina in maquinas %}
+                                        <option value="{{ maquina[0] }}">{{ maquina[1] }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="distribuidora_id" class="form-label">Distribuidora *</label>
-                                <select class="form-select" id="distribuidora_id" name="distribuidora_id" required>
+                                <label for="distribuidora_id" class="form-label">Distribuidora</label>
+                                <select class="form-select" id="distribuidora_id" name="distribuidora_id">
                                     <option value="">-- Selecione --</option>
-                                    {% if distribuidoras %}
-                                        {% for dist in distribuidoras %}
-                                            <option value="{{ dist[0] }}">{{ dist[1] }}</option>
-                                        {% endfor %}
-                                    {% endif %}
+                                    {% for dist in distribuidoras %}
+                                        <option value="{{ dist[0] }}">{{ dist[1] }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
                         </div>
@@ -167,6 +170,98 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Editar Produto -->
+    <div class="modal fade" id="modalEditarProduto" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i> Editar Produto
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('editar_produto') }}">
+                    <input type="hidden" id="edit_referencia_atual" name="referencia_atual">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_nome" class="form-label">Nome *</label>
+                                <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="edit_referencia" class="form-label">Referência *</label>
+                                <input type="text" class="form-control" id="edit_referencia" name="referencia" required maxlength="20">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_descricao" class="form-label">Descrição</label>
+                            <textarea class="form-control" id="edit_descricao" name="descricao" rows="2" maxlength="200"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="edit_preco" class="form-label">Preço (€) *</label>
+                                <input type="number" class="form-control" id="edit_preco" name="preco" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit_maquina_id" class="form-label">Máquina</label>
+                                <select class="form-select" id="edit_maquina_id" name="maquina_id">
+                                    <option value="">-- Selecione --</option>
+                                    {% for maquina in maquinas %}
+                                        <option value="{{ maquina[0] }}">{{ maquina[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="edit_distribuidora_id" class="form-label">Distribuidora</label>
+                                <select class="form-select" id="edit_distribuidora_id" name="distribuidora_id">
+                                    <option value="">-- Selecione --</option>
+                                    {% for dist in distribuidoras %}
+                                        <option value="{{ dist[0] }}">{{ dist[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning">Atualizar Produto</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Remover Produto -->
+    <div class="modal fade" id="modalRemoverProduto" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem a certeza que deseja remover o produto:</p>
+                    <p class="fw-bold" id="produtoRemoverNome"></p>
+                    <p class="text-muted small">Referência: <span id="produtoRemoverRef"></span></p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Esta ação não pode ser desfeita!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <form method="POST" id="formRemoverProduto" action="">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash-fill"></i> Remover Produto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -175,5 +270,29 @@
     document.addEventListener('DOMContentLoaded', function() {
         configurarAtalhos('searchInput');
     });
+
+    // Função para preencher o modal de edição
+    function preencherModalEdicao(referencia, nome, descricao, preco, maquinaId, distribuidoraId) {
+        document.getElementById('edit_referencia_atual').value = referencia;
+        document.getElementById('edit_referencia').value = referencia;
+        document.getElementById('edit_nome').value = nome;
+        document.getElementById('edit_descricao').value = descricao;
+        document.getElementById('edit_preco').value = preco;
+        
+        // Selecionar máquina
+        const selectMaquina = document.getElementById('edit_maquina_id');
+        selectMaquina.value = maquinaId !== 'None' && maquinaId !== '' ? maquinaId : '';
+        
+        // Selecionar distribuidora
+        const selectDist = document.getElementById('edit_distribuidora_id');
+        selectDist.value = distribuidoraId !== 'None' && distribuidoraId !== '' ? distribuidoraId : '';
+    }
+
+    // Função para preparar a remoção
+    function prepararRemocao(referencia, nome) {
+        document.getElementById('produtoRemoverRef').textContent = referencia;
+        document.getElementById('produtoRemoverNome').textContent = nome;
+        document.getElementById('formRemoverProduto').action = "{{ url_for('remover_produto', referencia='PLACEHOLDER') }}".replace('PLACEHOLDER', encodeURIComponent(referencia));
+    }
 </script>
 {% endblock %}
