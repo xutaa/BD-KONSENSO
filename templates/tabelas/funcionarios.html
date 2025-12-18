@@ -7,188 +7,189 @@
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>👔 Gestão de Funcionários</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoFuncionario">
-            <i class="bi bi-plus-circle"></i> Novo Funcionário
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>👔 Gestão de Funcionários</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoFuncionario">
+        <i class="bi bi-plus-circle"></i> Novo Funcionário
+    </button>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+{% if category == 'success' %}
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% elif category == 'error' %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="mb-4">
+    <div class="search-container">
+        <i class="bi bi-search search-icon"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar funcionário..."
+            onkeyup="filtrarTabela('searchInput', 'tabelaFuncionarios', 'totalFuncionarios', 'nenhumResultado')">
+        <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+            <i class="bi bi-x"></i>
         </button>
     </div>
+    <small class="text-muted">
+        <span id="totalFuncionarios">{{ registos|length }}</span> funcionário(s)
+    </small>
+</div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                {% if category == 'success' %}
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% elif category == 'error' %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endif %}
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="tabelaFuncionarios">
+        <thead class="table-dark">
+            <tr>
+                <th>CC</th>
+                <th>Nome</th>
+                <th>Cargo</th>
+                <th>Empresa</th>
+                <th>Fábrica</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if registos %}
+            {% for func in registos %}
+            <tr>
+                <td>{{ func[0] }}</td>
+                <td>{{ func[1] }}</td>
+                <td>{{ func[2] }}</td>
+                <td>{{ func[3] }}</td>
+                <td>{{ func[4] }}</td>
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm" title="Editar">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1" title="Remover">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
+            </tr>
             {% endfor %}
-        {% endif %}
-    {% endwith %}
+            {% else %}
+            <tr id="semResultados">
+                <td colspan="6" class="text-center text-muted">Nenhum funcionário registado</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 
-    <div class="mb-4">
-        <div class="search-container">
-            <i class="bi bi-search search-icon"></i>
-            <input type="text" 
-                   id="searchInput" 
-                   class="search-input" 
-                   placeholder="Pesquisar funcionário..."
-                   onkeyup="filtrarTabela('searchInput', 'tabelaFuncionarios', 'totalFuncionarios', 'nenhumResultado')">
-            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-        <small class="text-muted">
-            <span id="totalFuncionarios">{{ registos|length }}</span> funcionário(s)
-        </small>
-    </div>
+<div id="nenhumResultado" class="alert alert-warning" style="display: none;">
+    <i class="bi bi-exclamation-triangle"></i> Nenhum funcionário encontrado.
+</div>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover" id="tabelaFuncionarios">
-            <thead class="table-dark">
-                <tr>
-                    <th>CC</th>
-                    <th>Nome</th>
-                    <th>Cargo</th>
-                    <th>Empresa</th>
-                    <th>Fábrica</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if registos %}
-                    {% for func in registos %}
-                    <tr>
-                        <td>{{ func[0] }}</td>
-                        <td>{{ func[1] }}</td>
-                        <td>{{ func[2] }}</td>
-                        <td>{{ func[3] }}</td>
-                        <td>{{ func[4] }}</td>
-                        <td class="text-center">
-                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
-                                <i class="bi bi-trash3"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr id="semResultados">
-                        <td colspan="6" class="text-center text-muted">Nenhum funcionário registado</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+<div class="mt-4">
+    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
+</div>
 
-    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
-        <i class="bi bi-exclamation-triangle"></i> Nenhum funcionário encontrado.
-    </div>
+<div class="modal fade" id="modalNovoFuncionario" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-badge-fill"></i> Novo Funcionário
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('adicionar_funcionario') }}">
+                <div class="modal-body px-4">
 
-    <div class="mt-4">
-        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
-    </div>
+                    <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome Completo *</label>
+                        <input type="text" class="form-control" name="nome" required placeholder="Ex: Alberto João">
+                    </div>
 
-    <div class="modal fade" id="modalNovoFuncionario" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-person-badge-fill"></i> Novo Funcionário
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form method="POST" action="{{ url_for('adicionar_funcionario') }}">
-                    <div class="modal-body px-4">
-                        
-                        <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nome Completo *</label>
-                            <input type="text" class="form-control" name="nome" required placeholder="Ex: Alberto João">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">CC *</label>
+                            <input type="text" class="form-control" name="pessoa_cc" required
+                                placeholder="Número do CC">
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">CC *</label>
-                                <input type="text" class="form-control" name="pessoa_cc" required placeholder="Número do CC">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Data de Nascimento *</label>
-                                <input type="date" class="form-control" name="data_nasc" required>
-                            </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Data de Nascimento *</label>
+                            <input type="date" class="form-control" name="data_nasc" required>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Email *</label>
-                                <input type="email" class="form-control" name="email" required placeholder="func@empresa.pt">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Telemóvel *</label>
-                                <input type="tel" class="form-control" name="telemovel" required pattern="9[0-9]{8}" placeholder="9xxxxxxxx">
-                            </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Email *</label>
+                            <input type="email" class="form-control" name="email" required
+                                placeholder="func@empresa.pt">
                         </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Morada *</label>
-                            <input type="text" class="form-control" name="morada" required maxlength="200" placeholder="Rua, Código Postal, Cidade">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Telemóvel *</label>
+                            <input type="tel" class="form-control" name="telemovel" required pattern="9[0-9]{8}"
+                                placeholder="9xxxxxxxx">
                         </div>
+                    </div>
 
-                        <p class="text-muted border-bottom pb-1 mt-4 mb-3">Vínculo Profissional</p>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Cargo *</label>
-                                <select class="form-select" name="cargo_id" required>
-                                    <option value="">-- Selecione o Cargo --</option>
-                                    {% for cargo in cargos %}
-                                        <option value="{{ cargo[0] }}">{{ cargo[1] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Empresa *</label>
-                                <select class="form-select" name="empresa_nif" required>
-                                    <option value="">-- Selecione a Empresa --</option>
-                                    {% for empresa in empresas %}
-                                        <option value="{{ empresa[0] }}">{{ empresa[1] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Morada *</label>
+                        <input type="text" class="form-control" name="morada" required maxlength="200"
+                            placeholder="Rua, Código Postal, Cidade">
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Fábrica (Opcional)</label>
-                            <select class="form-select" name="fabrica_id">
-                                <option value="">-- Sem Fábrica (Escritório/Outro) --</option>
-                                {% for fabrica in fabricas %}
-                                    <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
+                    <p class="text-muted border-bottom pb-1 mt-4 mb-3">Vínculo Profissional</p>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Cargo *</label>
+                            <select class="form-select" name="cargo_id" required>
+                                <option value="">-- Selecione o Cargo --</option>
+                                {% for cargo in cargos %}
+                                <option value="{{ cargo[0] }}">{{ cargo[1] }}</option>
                                 {% endfor %}
                             </select>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Empresa *</label>
+                            <select class="form-select" name="empresa_nif" required>
+                                <option value="">-- Selecione a Empresa --</option>
+                                {% for empresa in empresas %}
+                                <option value="{{ empresa[0] }}">{{ empresa[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fábrica (Opcional)</label>
+                        <select class="form-select" name="fabrica_id">
+                            <option value="">-- Sem Fábrica (Escritório/Outro) --</option>
+                            {% for fabrica in fabricas %}
+                            <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">Registar Funcionário</button>
-                    </div>
-                </form>
-            </div>
+
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4">Registar Funcionário</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/search.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         configurarAtalhos('searchInput');
     });
 </script>
