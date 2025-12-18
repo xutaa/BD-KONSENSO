@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+modal_header, modal_footer, form_input, search_script_init %}
 
 {% block title %}Gestão de Clientes{% endblock %}
 
@@ -7,150 +9,98 @@
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>👥 Gestão de Clientes</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoCliente">
-            <i class="bi bi-plus-circle"></i> Novo Cliente
-        </button>
-    </div>
+{# Cabeçalho da página com botão de adicionar #}
+{{ page_header('👥 Gestão de Clientes', 'Novo Cliente', 'modalNovoCliente') }}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                {% if category == 'success' %}
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% elif category == 'error' %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endif %}
+{# Mensagens flash #}
+{{ flash_messages() }}
+
+{# Barra de pesquisa #}
+{{ search_bar('cliente', 'tabelaClientes', 'totalClientes', registos|length, 'cliente(s)') }}
+
+{# Tabela de dados #}
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="tabelaClientes">
+        <thead class="table-dark">
+            <tr>
+                <th>CC</th>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Data Nascimento</th>
+                <th>Telemóvel</th>
+                <th>NIF Cliente</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if registos %}
+            {% for registo in registos %}
+            <tr>
+                <td>{{ registo[0] }}</td>
+                <td>{{ registo[1] }}</td>
+                <td>{{ registo[2] }}</td>
+                <td>{{ registo[3] }}</td>
+                <td>{{ registo[4] }}</td>
+                <td>{{ registo[5] }}</td>
+            </tr>
             {% endfor %}
-        {% endif %}
-    {% endwith %}
+            {% else %}
+            {{ empty_row(6, 'Nenhum cliente registado') }}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 
-    <div class="mb-4">
-        <div class="search-container">
-            <i class="bi bi-search search-icon"></i>
-            <input type="text" 
-                   id="searchInput" 
-                   class="search-input" 
-                   placeholder="Pesquisar cliente..."
-                   onkeyup="filtrarTabela('searchInput', 'tabelaClientes', 'totalClientes', 'nenhumResultado')">
-            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-        <small class="text-muted">
-            <span id="totalClientes">{{ registos|length }}</span> cliente(s)
-        </small>
-    </div>
+{# Alerta de nenhum resultado #}
+{{ no_results_alert('cliente') }}
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover" id="tabelaClientes">
-            <thead class="table-dark">
-                <tr>
-                    <th>CC</th>
-                    <th>Nome</th>
-                    <th>Email</th>
-                    <th>Data Nascimento</th>
-                    <th>Telemóvel</th>
-                    <th>NIF Cliente</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if registos %}
-                    {% for registo in registos %}
-                    <tr>
-                        <td>{{ registo[0] }}</td>
-                        <td>{{ registo[1] }}</td>
-                        <td>{{ registo[2] }}</td>
-                        <td>{{ registo[3] }}</td>
-                        <td>{{ registo[4] }}</td>
-                        <td>{{ registo[5] }}</td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr id="semResultados">
-                        <td colspan="5" class="text-center text-muted">Nenhum cliente registado</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+{# Botão voltar #}
+{{ back_button() }}
 
-    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
-        <i class="bi bi-exclamation-triangle"></i> Nenhum cliente encontrado.
-    </div>
+{# Modal Novo Cliente #}
+<div class="modal fade" id="modalNovoCliente" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            {{ modal_header('Novo Cliente', 'primary', 'bi bi-person-plus') }}
+            <form method="POST" action="{{ url_for('adicionar_cliente') }}">
+                <div class="modal-body px-4">
 
-    <div class="mt-4">
-        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
-    </div>
+                    {{ form_input('nome', 'Nome Completo *', required=true, placeholder='Ex: Maria Rodrigues') }}
 
-    <div class="modal fade" id="modalNovoCliente" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-person-plus"></i> Novo Cliente</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form_input('pessoa_cc', 'CC *', required=true, placeholder='8 ou mais dígitos') }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_input('nif', 'NIF *', required=true, placeholder='9 dígitos') }}
+                        </div>
+                    </div>
+
+                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar,
+                    Código Postal...') }}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form_input('telemovel', 'Telemóvel *', type='tel', required=true,
+                            placeholder='9xxxxxxxx') }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_input('data_nasc', 'Data de Nascimento *', type='date', required=true) }}
+                        </div>
+                    </div>
+
+                    {{ form_input('email', 'Email *', type='email', required=true, placeholder='cliente@exemplo.com') }}
+
                 </div>
-                <form method="POST" action="{{ url_for('adicionar_cliente') }}">
-                    <div class="modal-body px-4">
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nome Completo *</label>
-                            <input type="text" class="form-control" name="nome" required placeholder="Ex: Maria Rodrigues">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">CC *</label>
-                                <input type="text" class="form-control" name="pessoa_cc" required placeholder="8 ou mais dígitos">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">NIF *</label>
-                                <input type="text" class="form-control" name="nif" required pattern="[0-9]{9}" placeholder="9 dígitos">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Morada *</label>
-                            <input type="text" class="form-control" name="morada" required maxlength="200" placeholder="Rua, Número, Andar, Código Postal...">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Telemóvel *</label>
-                                <input type="tel" class="form-control" name="telemovel" required pattern="9[0-9]{8}" placeholder="9xxxxxxxx">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">Data de Nascimento *</label>
-                                <input type="date" class="form-control" name="data_nasc" required>
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email *</label>
-                            <input type="email" class="form-control" name="email" required placeholder="cliente@exemplo.com">
-                        </div>
-
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">Guardar Cliente</button>
-                    </div>
-                </form>
-            </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary px-4">Guardar Cliente</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/search.js') }}"></script>
-<script>
-    configurarAtalhos('searchInput');
-</script>
+{{ search_script_init() }}
 {% endblock %}

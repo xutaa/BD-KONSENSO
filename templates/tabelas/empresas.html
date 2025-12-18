@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
+empty_row, modal_header, modal_footer, form_input, search_script_init %}
 
 {% block title %}Gestão de Empresas{% endblock %}
 
@@ -7,154 +9,89 @@
 {% endblock %}
 
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>🏢 Gestão de Empresas</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovaEmpresa">
-            <i class="bi bi-plus-circle"></i> Nova Empresa
-        </button>
-    </div>
+{# Cabeçalho da página com botão de adicionar #}
+{{ page_header('🏢 Gestão de Empresas', 'Nova Empresa', 'modalNovaEmpresa') }}
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                {% if category == 'success' %}
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% elif category == 'error' %}
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endif %}
+{# Mensagens flash #}
+{{ flash_messages() }}
+
+{# Barra de pesquisa #}
+{{ search_bar('empresa', 'tabelaEmpresas', 'totalEmpresas', registos|length, 'empresa(s)') }}
+
+{# Tabela de dados #}
+<div class="table-responsive">
+    <table class="table table-striped table-hover" id="tabelaEmpresas">
+        <thead class="table-dark">
+            <tr>
+                <th>NIF</th>
+                <th>Nome</th>
+                <th>Localização</th>
+                <th>Telemóvel</th>
+                <th>Email</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if registos %}
+            {% for empresa in registos %}
+            <tr>
+                <td>{{ empresa[0] }}</td>
+                <td>{{ empresa[1] }}</td>
+                <td>{{ empresa[2] }}</td>
+                <td>{{ empresa[3] }}</td>
+                <td>{{ empresa[4] }}</td>
+                {{ action_buttons() }}
+            </tr>
             {% endfor %}
-        {% endif %}
-    {% endwith %}
+            {% else %}
+            {{ empty_row(6, 'Nenhuma empresa registada') }}
+            {% endif %}
+        </tbody>
+    </table>
+</div>
 
-    <!-- 🔍 BARRA DE PESQUISA -->
-    <div class="mb-4">
-        <div class="search-container">
-            <i class="bi bi-search search-icon"></i>
-            <input type="text" 
-                   id="searchInput" 
-                   class="search-input" 
-                   placeholder="Pesquisar empresa..."
-                   onkeyup="filtrarTabela('searchInput', 'tabelaEmpresas', 'totalEmpresas', 'nenhumResultado')">
-            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
-                <i class="bi bi-x"></i>
-            </button>
-        </div>
-        <small class="text-muted">
-            <span id="totalEmpresas">{{ registos|length }}</span> empresa(s)
-        </small>
-    </div>
+{# Alerta de nenhum resultado #}
+{{ no_results_alert('empresa') }}
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover" id="tabelaEmpresas">
-            <thead class="table-dark">
-                <tr>
-                    <th>NIF</th>
-                    <th>Nome</th>
-                    <th>Localização</th>
-                    <th>Telemóvel</th>
-                    <th>Email</th>
-                    <th class="text-center">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if registos %}
-                    {% for empresa in registos %}
-                    <tr>
-                        <td>{{ empresa[0] }}</td>
-                        <td>{{ empresa[1] }}</td>
-                        <td>{{ empresa[2] }}</td>
-                        <td>{{ empresa[3] }}</td>
-                        <td>{{ empresa[4] }}</td>
-                        <td class="text-center">
-                            <a href="#" class="btn btn-link btn-sm text-secondary p-1" title="Editar">
-                                <i class="bi bi-pencil-square"></i>
-                            </a>
-                            <a href="#" class="btn btn-link btn-sm text-danger p-1 hover-danger" title="Remover">
-                                <i class="bi bi-trash3"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr id="semResultados">
-                        <td colspan="6" class="text-center text-muted">Nenhuma empresa registada</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+{# Botão voltar #}
+{{ back_button() }}
 
-    <div id="nenhumResultado" class="alert alert-warning" style="display: none;">
-        <i class="bi bi-exclamation-triangle"></i> Nenhuma empresa encontrada.
-    </div>
-
-    <div class="mt-4">
-        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
-    </div>
-
-    <!-- Modal Nova Empresa -->
-    <div class="modal fade" id="modalNovaEmpresa" data-bs-backdrop="static" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-plus-circle"></i> Nova Empresa
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+{# Modal Nova Empresa #}
+<div class="modal fade" id="modalNovaEmpresa" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Nova Empresa', 'primary', 'bi bi-plus-circle') }}
+            <form method="POST" action="{{ url_for('adicionar_empresa') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form_input('nif', 'NIF *', required=true, maxlength='20', placeholder='123456789') }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_input('nome', 'Nome *', required=true, maxlength='100', placeholder='Nome da
+                            Empresa') }}
+                        </div>
+                    </div>
+                    {{ form_input('localizacao', 'Localização *', required=true, maxlength='200', placeholder='Rua,
+                    Cidade, Código Postal') }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form_input('num_telefone', 'Telemóvel', type='tel', maxlength='20',
+                            placeholder='912345678') }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_input('email', 'Email', type='email', maxlength='100',
+                            placeholder='empresa@exemplo.pt') }}
+                        </div>
+                    </div>
                 </div>
-                <form method="POST" action="{{ url_for('adicionar_empresa') }}">
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="nif" class="form-label">NIF *</label>
-                                <input type="text" class="form-control" id="nif" name="nif" 
-                                       required maxlength="20" placeholder="123456789">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="nome" class="form-label">Nome *</label>
-                                <input type="text" class="form-control" id="nome" name="nome" 
-                                       required maxlength="100" placeholder="Nome da Empresa">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="localizacao" class="form-label">Localização *</label>
-                            <input type="text" class="form-control" id="localizacao" name="localizacao" 
-                                   required maxlength="200" placeholder="Rua, Cidade, Código Postal">
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="num_telefone" class="form-label">Telemóvel</label>
-                                <input type="tel" class="form-control" id="num_telefone" name="num_telefone" 
-                                       maxlength="20" placeholder="912345678">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" 
-                                       maxlength="100" placeholder="empresa@exemplo.pt">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Adicionar Empresa</button>
-                    </div>
-                </form>
-            </div>
+                {{ modal_footer('Adicionar Empresa', 'primary') }}
+            </form>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/search.js') }}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        configurarAtalhos('searchInput');
-    });
-</script>
+{{ search_script_init() }}
 {% endblock %}
