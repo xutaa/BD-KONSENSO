@@ -158,12 +158,7 @@ def dashboard():
     
     tipo_admin = session.get('tipo_admin', 'Geral')
     
-    roadmap_status = {
-        "Fase 1: Leitura (Listagem)": "✅ Concluída",
-        "Fase 2: Inserção": "✅ Concluída",
-        "Fase 3: Edição e Remoção": "Em Progresso (falta só verificação)",
-        "Fase 4: Relatórios": "Não Iniciada",
-    }
+
     
     permissoes = {
         'Geral': {
@@ -188,12 +183,36 @@ def dashboard():
             'producao': True  # Matérias-Primas
         }
     }
+
+    # Fetch Dashboard Stats
+    stats = {
+        'produtos': 0,
+        'clientes': 0,
+        'vendas': 0,
+        'funcionarios': 0
+    }
+    
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            # Only fetch if permissions allow (optional optimization, but simple is fine)
+            stats['produtos'] = cursor.execute("SELECT COUNT(*) FROM Produto").fetchone()[0]
+            stats['clientes'] = cursor.execute("SELECT COUNT(*) FROM Cliente").fetchone()[0]
+            
+            # Tables might not be created yet if fresh install, wrap in try/except if needed but assuming schema exists
+            stats['vendas'] = cursor.execute("SELECT COUNT(*) FROM Venda").fetchone()[0]
+            stats['funcionarios'] = cursor.execute("SELECT COUNT(*) FROM Funcionario").fetchone()[0]
+        except Exception as e:
+            print(f"Erro ao carregar stats do dashboard: {e}")
+        finally:
+            conn.close()
     
     return render_template('dashboard.html', 
-                         roadmap=roadmap_status, 
                          usuario=session['admin_logado'],
                          tipo_admin=tipo_admin,
-                         permissoes=permissoes.get(tipo_admin, permissoes['Geral']))
+                         permissoes=permissoes.get(tipo_admin, permissoes['Geral']),
+                         stats=stats)
 
 @app.route('/armazens')
 @login_required

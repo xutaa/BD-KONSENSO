@@ -99,7 +99,174 @@ body {
     color: var(--text-muted);
     font-weight: 600;
     padding: 0 0.75rem;
+
     margin-bottom: 0.5rem;
+}
+
+/* --- Dashboard Moderno (Redesign) --- */
+
+/* Hero Section */
+.dashboard-hero {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #1e293b 100%);
+    color: white;
+    padding: 2.5rem 2rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.dashboard-hero h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-hero p {
+    color: #94a3b8;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--secondary-color);
+}
+
+.stat-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.bg-soft-blue {
+    background-color: #eff6ff;
+    color: #3b82f6;
+}
+
+.bg-soft-green {
+    background-color: #ecfdf5;
+    color: #10b981;
+}
+
+.bg-soft-purple {
+    background-color: #f3e8ff;
+    color: #a855f7;
+}
+
+.bg-soft-orange {
+    background-color: #fff7ed;
+    color: #f97316;
+}
+
+.stat-details {
+    flex-grow: 1;
+}
+
+.stat-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.2;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Section Headers */
+.section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+/* Action Tiles (Grid) */
+.action-tile {
+    background: white;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.2s;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.action-tile:hover {
+    border-color: var(--secondary-color);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-5px);
+}
+
+.action-tile .tile-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--text-muted);
+    transition: color 0.2s;
+}
+
+.action-tile:hover .tile-icon {
+    color: var(--secondary-color);
+}
+
+.action-tile .tile-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.action-tile .tile-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
 }
 
 .nav-link {
