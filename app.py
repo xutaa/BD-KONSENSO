@@ -24,10 +24,11 @@ def validar_administrador(nome, password):
         row = cursor.fetchone()
         
         if row:
-            print(f"✅ Login bem-sucedido: {nome} ({row[1]})")
+            tipo_admin = str(row[1]).strip() if row[1] else 'Geral'
+            print(f"✅ Login bem-sucedido: {nome} (Tipo: '{tipo_admin}', Loja: {row[2]}, Fabrica: {row[3]})")
             return {
                 'nome': row[0],
-                'tipo_admin': row[1],
+                'tipo_admin': tipo_admin,
                 'loja_id': row[2],
                 'fabrica_id': row[3]
             }
@@ -95,6 +96,9 @@ def login():
             session['tipo_admin'] = admin_data['tipo_admin']
             session['loja_id'] = admin_data['loja_id']
             session['fabrica_id'] = admin_data['fabrica_id']
+            
+            print(f"✅ LOGIN - Nome: {admin_data['nome']}, Tipo: {admin_data['tipo_admin']}, Loja: {admin_data['loja_id']}, Fábrica: {admin_data['fabrica_id']}")
+            
             return redirect(url_for('dashboard'))
         else:
             flash('❌ Nome ou password incorretos!', 'error')
@@ -235,12 +239,26 @@ def lista_armazens():
             return render_template('tabelas/armazens.html', registos=[], sucesso=False)
         
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT ArmazemId, Localizacao, Capacidade, StockAtual, EspacoLivre, PercentagemOcupada
-            FROM vw_StockPorArmazem 
-            ORDER BY Localizacao
-        """)
-        armazens = cursor.fetchall()
+        
+        if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            cursor.execute("""
+                SELECT v.ArmazemId, v.Localizacao, v.Capacidade, v.StockAtual, v.EspacoLivre, v.PercentagemOcupada
+                FROM vw_StockPorArmazem v
+                INNER JOIN DistribuidoraArmazem da ON v.ArmazemId = da.Armazem_Id
+                INNER JOIN Fabrica f ON da.Distribuidora_Id = f.Distribuidora_Id
+                WHERE f.Id = ?
+                ORDER BY v.Localizacao
+            """, (fabrica_id,))
+            armazens = cursor.fetchall()
+        else:
+            cursor.execute("""
+                SELECT ArmazemId, Localizacao, Capacidade, StockAtual, EspacoLivre, PercentagemOcupada
+                FROM vw_StockPorArmazem 
+                ORDER BY Localizacao
+            """)
+            armazens = cursor.fetchall()
+        
         cursor.close()
         return render_template('tabelas/armazens.html', registos=armazens, sucesso=True)
     except Exception as e:
@@ -560,8 +578,20 @@ def lista_distribuidoras():
             return render_template('tabelas/distribuidoras.html', registos=[], sucesso=False)
         
         cursor = conn.cursor()
-        cursor.execute("SELECT Id, Nome, Localizacao FROM dbo.Distribuidora ORDER BY Nome")
-        distribuidoras = cursor.fetchall()
+        
+        if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            cursor.execute("""
+                SELECT d.Id, d.Nome, d.Localizacao
+                FROM Distribuidora d
+                INNER JOIN Fabrica f ON f.Distribuidora_Id = d.Id
+                WHERE f.Id = ?
+            """, (fabrica_id,))
+            distribuidoras = cursor.fetchall()
+        else:
+            cursor.execute("SELECT Id, Nome, Localizacao FROM dbo.Distribuidora ORDER BY Nome")
+            distribuidoras = cursor.fetchall()
+        
         cursor.close()
         return render_template('tabelas/distribuidoras.html', registos=distribuidoras, sucesso=True)
     except Exception as e:
@@ -731,8 +761,19 @@ def lista_fabricas():
         
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM vw_Fabricas ORDER BY Nome")
-        fabricas = cursor.fetchall()
+        if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            cursor.execute("""
+                SELECT f.Id, f.Nome, f.Localizacao, e.Nome AS Empresa, d.Nome AS Distribuidora
+                FROM Fabrica f
+                JOIN Empresa e ON f.Empresa_Nif = e.Nif
+                JOIN Distribuidora d ON f.Distribuidora_Id = d.Id
+                WHERE f.Id = ?
+            """, (fabrica_id,))
+            fabricas = cursor.fetchall()
+        else:
+            cursor.execute("SELECT * FROM vw_Fabricas ORDER BY Nome")
+            fabricas = cursor.fetchall()
         
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
@@ -816,8 +857,21 @@ def lista_fornecedores():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM vw_Fornecedores ORDER BY Nome")
-        registos = cursor.fetchall()
+        
+        if session.get('tipo_admin') == 'Fabrica':
+            cursor.execute("""
+                SELECT DISTINCT f.Id, f.Nome, e.Nome AS Empresa
+                FROM Fornecedor f
+                LEFT JOIN Empresa e ON f.Empresa_Nif = e.Nif
+                WHERE EXISTS (
+                    SELECT 1 FROM MateriaPrima mp WHERE mp.Fornecedor_Id = f.Id
+                )
+                ORDER BY f.Nome
+            """)
+            registos = cursor.fetchall()
+        else:
+            cursor.execute("SELECT * FROM vw_Fornecedores ORDER BY Nome")
+            registos = cursor.fetchall()
         
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
@@ -887,8 +941,30 @@ def lista_funcionarios():
         
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM vw_Funcionarios ORDER BY Nome")
-        funcionarios = cursor.fetchall()
+        if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            cursor.execute("""
+                SELECT f.Pessoa_Cc, p.Nome, c.Nome AS Cargo, e.Nome AS Empresa, fab.Nome AS Fabrica
+                FROM Funcionario f
+                INNER JOIN Pessoa p ON f.Pessoa_Cc = p.Cc
+                LEFT JOIN Cargo c ON f.Cargo_Id = c.Id
+                LEFT JOIN Empresa e ON f.Empresa_Nif = e.Nif
+                LEFT JOIN Fabrica fab ON f.Fabrica_Id = fab.Id
+                WHERE f.Fabrica_Id = ?
+                ORDER BY p.Nome
+            """, (fabrica_id,))
+            funcionarios = cursor.fetchall()
+            
+            cursor.execute("SELECT Id, Nome FROM Fabrica WHERE Id = ?", (fabrica_id,))
+            fabricas = cursor.fetchall()
+        else:
+            cursor.execute("SELECT * FROM vw_Funcionarios ORDER BY Nome")
+            funcionarios = cursor.fetchall()
+            
+            print(f"📊 TODOS os funcionários (sem filtro): {len(funcionarios)} registos")
+            
+            cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
+            fabricas = cursor.fetchall()
         
         cursor.execute("""
             SELECT p.Cc, p.Nome, p.Email
@@ -903,9 +979,6 @@ def lista_funcionarios():
         
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
-        
-        cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
-        fabricas = cursor.fetchall()
         
         cursor.close()
         return render_template('tabelas/funcionarios.html', 
@@ -1118,11 +1191,25 @@ def lista_maquinas():
         
         cursor = conn.cursor()
         
-        cursor.execute("SELECT * FROM vw_Maquinas ORDER BY Descricao")
-        maquinas = cursor.fetchall()
-        
-        cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
-        fabricas = cursor.fetchall()
+        if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            cursor.execute("""
+                SELECT m.Id, m.Descricao, m.Tipo, f.Nome AS Fabrica
+                FROM Maquina m
+                INNER JOIN Fabrica f ON m.Fabrica_Id = f.Id
+                WHERE m.Fabrica_Id = ?
+                ORDER BY m.Descricao
+            """, (fabrica_id,))
+            maquinas = cursor.fetchall()
+            
+            cursor.execute("SELECT Id, Nome FROM Fabrica WHERE Id = ?", (fabrica_id,))
+            fabricas = cursor.fetchall()
+        else:
+            cursor.execute("SELECT * FROM vw_Maquinas ORDER BY Descricao")
+            maquinas = cursor.fetchall()
+            
+            cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
+            fabricas = cursor.fetchall()
         
         cursor.close()
         return render_template('tabelas/maquinas.html', 
@@ -1276,19 +1363,43 @@ def lista_produtos():
                                  distribuidoras=[], 
                                  sucesso=False)
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT Nome, Referencia, Descricao, Preco, Maquina_Id, Distribuidora_Id 
-            FROM Produto
-            ORDER BY Nome
-        """) 
         
-        produtos = cursor.fetchall()
-        
-        cursor.execute("SELECT Id, Descricao FROM Maquina ORDER BY Descricao") 
-        maquinas = cursor.fetchall()
+        if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            cursor.execute("""
+                SELECT p.Nome, p.Referencia, p.Descricao, p.Preco, p.Maquina_Id, p.Distribuidora_Id 
+                FROM Produto p
+                INNER JOIN Maquina m ON p.Maquina_Id = m.Id
+                WHERE m.Fabrica_Id = ?
+                ORDER BY p.Nome
+            """, (fabrica_id,)) #substituir por SP
+            produtos = cursor.fetchall()
+            
+            cursor.execute("SELECT Id, Descricao FROM Maquina WHERE Fabrica_Id = ? ORDER BY Descricao", (fabrica_id,))
+            maquinas = cursor.fetchall()
+            
+            cursor.execute("""
+                SELECT d.Id, d.Nome 
+                FROM Distribuidora d
+                INNER JOIN Fabrica f ON f.Distribuidora_Id = d.Id
+                WHERE f.Id = ?
+            """, (fabrica_id,))
+            distribuidoras = cursor.fetchall()
+        else:
+            cursor.execute("""
+                SELECT Nome, Referencia, Descricao, Preco, Maquina_Id, Distribuidora_Id 
+                FROM Produto
+                ORDER BY Nome
+            """) 
+            produtos = cursor.fetchall()
+            
+            print(f"📊 TODOS os produtos (sem filtro): {len(produtos)} registos")
+            
+            cursor.execute("SELECT Id, Descricao FROM Maquina ORDER BY Descricao") 
+            maquinas = cursor.fetchall()
 
-        cursor.execute("SELECT Id, Nome FROM Distribuidora ORDER BY Nome")
-        distribuidoras = cursor.fetchall()
+            cursor.execute("SELECT Id, Nome FROM Distribuidora ORDER BY Nome")
+            distribuidoras = cursor.fetchall()
         
         cursor.close()
         return render_template('tabelas/produtos.html', 
@@ -1442,6 +1553,7 @@ def lista_stock():
     try:
         cursor = conn.cursor()
         
+        # Admin de Loja - vê apenas stock do armazém da sua loja
         if session.get('tipo_admin') == 'Loja' and session.get('loja_id'):
             loja_id = session.get('loja_id')
             cursor.execute("SELECT Armazem_Id FROM Loja WHERE Id = ?", (loja_id,))
@@ -1460,6 +1572,39 @@ def lista_stock():
             else:
                 flash('Sua loja não possui armazém associado.', 'warning')
                 return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+        
+        elif session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
+            fabrica_id = session.get('fabrica_id')
+            
+            cursor.execute("""
+                SELECT s.*
+                FROM vw_Stock s
+                INNER JOIN DistribuidoraArmazem da ON s.Armazem_Id = da.Armazem_Id
+                INNER JOIN Fabrica f ON da.Distribuidora_Id = f.Distribuidora_Id
+                WHERE f.Id = ?
+                ORDER BY s.UltimoMov DESC
+            """, (fabrica_id,))
+            registos = cursor.fetchall()
+            
+            cursor.execute("""
+                SELECT p.Referencia, p.Nome 
+                FROM Produto p
+                INNER JOIN Maquina m ON p.Maquina_Id = m.Id
+                WHERE m.Fabrica_Id = ?
+                ORDER BY p.Nome
+            """, (fabrica_id,))
+            produtos = cursor.fetchall()
+            
+            cursor.execute("""
+                SELECT a.Id, a.Localizacao
+                FROM Armazem a
+                INNER JOIN DistribuidoraArmazem da ON a.Id = da.Armazem_Id
+                INNER JOIN Fabrica f ON da.Distribuidora_Id = f.Distribuidora_Id
+                WHERE f.Id = ?
+                ORDER BY a.Localizacao
+            """, (fabrica_id,))
+            armazens = cursor.fetchall()
+        
         else:
             cursor.execute("SELECT * FROM vw_Stock ORDER BY UltimoMov DESC")
             registos = cursor.fetchall()

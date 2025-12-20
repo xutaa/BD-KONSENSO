@@ -141,20 +141,25 @@
             </div>
             {% endif %}
 
-            {% if tipo_admin == 'Geral' %}
+            {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
             <div class="col">
                 <a href="{{ url_for('lista_funcionarios') }}" class="action-tile p-3">
                     <i class="fa-solid fa-user-tie tile-icon mb-2 fs-4"></i>
                     <div class="tile-title fs-6">Funcionários</div>
                 </a>
             </div>
+            {% endif %}
+            
+            {% if tipo_admin == 'Geral' %}
             <div class="col">
                 <a href="{{ url_for('lista_cargos') }}" class="action-tile p-3">
                     <i class="fa-solid fa-id-badge tile-icon mb-2 fs-4"></i>
                     <div class="tile-title fs-6">Cargos</div>
                 </a>
             </div>
-            <div class="col-12">
+            {% endif %}
+            
+            {% if tipo_admin == 'Geral' %}
                 <a href="{{ url_for('lista_contratos_vendedor') }}"
                     class="action-tile p-3 flex-row gap-3 text-start align-items-center">
                     <i class="fa-solid fa-file-contract tile-icon mb-0 fs-4"></i>
@@ -208,18 +213,29 @@
                 </a>
             </div>
 
-            {% if tipo_admin == 'Geral' %}
-            <div class="col-12">
-                <a href="{{ url_for('lista_distribuidoras') }}"
-                    class="action-tile p-3 flex-row gap-3 text-start align-items-center">
-                    <i class="fa-solid fa-truck tile-icon mb-0 fs-4"></i>
-                    <div>
-                        <div class="tile-title fs-6 mb-0">Distribuidoras</div>
-                        <small class="text-muted">Logística e Transporte</small>
-                    </div>
+            {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
+            <div class="col">
+                <a href="{{ url_for('lista_maquinas') }}" class="action-tile p-3">
+                    <i class="fa-solid fa-gears tile-icon mb-2 fs-4"></i>
+                    <div class="tile-title fs-6">Máquinas</div>
+                </a>
+            </div>
+            
+            <div class="col">
+                <a href="{{ url_for('lista_materias_primas') }}" class="action-tile p-3">
+                    <i class="fa-solid fa-flask tile-icon mb-2 fs-4"></i>
+                    <div class="tile-title fs-6">Matérias-Primas</div>
+                </a>
+            </div>
+            
+            <div class="col">
+                <a href="{{ url_for('lista_distribuidoras') }}" class="action-tile p-3">
+                    <i class="fa-solid fa-truck tile-icon mb-2 fs-4"></i>
+                    <div class="tile-title fs-6">Distribuidora</div>
                 </a>
             </div>
             {% endif %}
+
         </div>
     </div>
     {% endif %}
