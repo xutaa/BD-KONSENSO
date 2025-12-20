@@ -235,7 +235,6 @@ def lista_armazens():
             return render_template('tabelas/armazens.html', registos=[], sucesso=False)
         
         cursor = conn.cursor()
-        # Usa View vw_StockPorArmazem para mostrar ocupação
         cursor.execute("""
             SELECT ArmazemId, Localizacao, Capacidade, StockAtual, EspacoLivre, PercentagemOcupada
             FROM vw_StockPorArmazem 
@@ -246,7 +245,6 @@ def lista_armazens():
         return render_template('tabelas/armazens.html', registos=armazens, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar armazéns: {e}")
-        # Fallback para query simples se View não existir
         try:
             cursor.execute("SELECT Id, Localizacao, Capacidade FROM Armazem ORDER BY Localizacao")
             armazens = cursor.fetchall()
@@ -284,7 +282,28 @@ def adicionar_armazem():
         if conn:
             conn.close()
     
-    return redirect(url_for('lista_armazens'))   
+    return redirect(url_for('lista_armazens'))
+
+@app.route('/armazem/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_armazem(id):
+    """Remove um armazém"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_armazens'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverArmazem (?)}", (id,))
+        conn.commit()
+        flash('✅ Armazém removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_armazens'))
 
 @app.route('/cargos')
 @login_required
@@ -324,13 +343,32 @@ def adicionar_cargo():
         cursor.execute("{CALL dbo.InserirNovoCargo (?, ?)}", (nome, descricao))
         conn.commit()
         flash('✅ Cargo adicionado com sucesso!', 'success')
-        
     except Exception as e:
         flash(f'❌ Erro ao adicionar cargo: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
-    
+    return redirect(url_for('lista_cargos'))
+
+@app.route('/cargo/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_cargo(id):
+    """Remove um cargo"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_cargos'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverCargo (?)}", (id,))
+        conn.commit()
+        flash('✅ Cargo removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
     return redirect(url_for('lista_cargos'))
 
 @app.route('/clientes')
@@ -344,7 +382,6 @@ def lista_clientes():
     
     try:
         cursor = conn.cursor()
-        # Usa View vw_Clientes
         cursor.execute("SELECT * FROM vw_Clientes ORDER BY Nome")
         registos = cursor.fetchall()
         
@@ -392,6 +429,27 @@ def adicionar_cliente():
         conn.close()
     return redirect(url_for('lista_clientes'))
 
+@app.route('/cliente/remover/<path:cc>', methods=['POST'])
+@login_required
+def remover_cliente(cc):
+    """Remove um cliente"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_clientes'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverCliente (?)}", (cc,))
+        conn.commit()
+        flash('✅ Cliente removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_clientes'))
+
 @app.route('/contratos_vendedor')
 @login_required
 def lista_contratos_vendedor():
@@ -402,7 +460,6 @@ def lista_contratos_vendedor():
             return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         
-        # Usa View vw_ContratosVendedor
         cursor.execute("SELECT * FROM vw_ContratosVendedor ORDER BY Vendedor")
         contratos = cursor.fetchall()
         
@@ -450,13 +507,33 @@ def adicionar_contrato_vendedor():
                        (vendedor_id, empresa_nif, data_in))
         conn.commit()
         flash('✅ Contrato de vendedor criado com sucesso!', 'success')
-        
     except Exception as e:
         flash(f'❌ Erro ao criar contrato: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
     
+    return redirect(url_for('lista_contratos_vendedor'))
+
+@app.route('/contrato_vendedor/remover/<int:vendedor_id>/<path:empresa_nif>', methods=['POST'])
+@login_required
+def remover_contrato_vendedor(vendedor_id, empresa_nif):
+    """Remove um contrato de vendedor"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_contratos_vendedor'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverContratoVendedor (?, ?)}", (vendedor_id, empresa_nif))
+        conn.commit()
+        flash('✅ Contrato de vendedor removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
     return redirect(url_for('lista_contratos_vendedor'))
 
 @app.route('/distribuidoras')
@@ -500,13 +577,33 @@ def adicionar_distribuidora():
         cursor.execute("{CALL dbo.InserirNovaDistribuidora (?, ?)}", (nome, localizacao))
         conn.commit()
         flash('✅ Distribuidora adicionada com sucesso!', 'success')
-        
     except Exception as e:
         flash(f'❌ Erro ao adicionar distribuidora: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
     
+    return redirect(url_for('lista_distribuidoras'))
+
+@app.route('/distribuidora/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_distribuidora(id):
+    """Remove uma distribuidora"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_distribuidoras'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverDistribuidora (?)}", (id,))
+        conn.commit()
+        flash('✅ Distribuidora removida com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
     return redirect(url_for('lista_distribuidoras'))
 
 @app.route('/distribuidoras_armazem')
@@ -579,13 +676,33 @@ def adicionar_empresa():
                        (nif, nome, localizacao, num_telefone, email))
         conn.commit()
         flash('✅ Empresa adicionada com sucesso!', 'success')
-        
     except Exception as e:
         flash(f'❌ Erro ao adicionar empresa: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
     
+    return redirect(url_for('lista_empresas'))
+
+@app.route('/empresa/remover/<path:nif>', methods=['POST'])
+@login_required
+def remover_empresa(nif):
+    """Remove uma empresa"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_empresas'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverEmpresa (?)}", (nif,))
+        conn.commit()
+        flash('✅ Empresa removida com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
     return redirect(url_for('lista_empresas'))
 
 @app.route('/fabricas')
@@ -601,15 +718,12 @@ def lista_fabricas():
         
         cursor = conn.cursor()
         
-        # Usa View vw_Fabricas
         cursor.execute("SELECT * FROM vw_Fabricas ORDER BY Nome")
         fabricas = cursor.fetchall()
         
-        # Buscar empresas para o modal
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
         
-        # Buscar distribuidoras para o modal
         cursor.execute("SELECT Id, Nome FROM Distribuidora ORDER BY Nome")
         distribuidoras = cursor.fetchall()
         
@@ -657,6 +771,27 @@ def adicionar_fabrica():
     
     return redirect(url_for('lista_fabricas'))
 
+@app.route('/fabrica/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_fabrica(id):
+    """Remove uma fábrica"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_fabricas'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverFabrica (?)}", (id,))
+        conn.commit()
+        flash('✅ Fábrica removida com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_fabricas'))
+
 @app.route('/fornecedores')
 @login_required
 def lista_fornecedores():
@@ -668,7 +803,6 @@ def lista_fornecedores():
     
     try:
         cursor = conn.cursor()
-        # Usa View vw_Fornecedores
         cursor.execute("SELECT * FROM vw_Fornecedores ORDER BY Nome")
         registos = cursor.fetchall()
         
@@ -700,13 +834,33 @@ def adicionar_fornecedor():
         cursor.execute("{CALL dbo.InserirNovoFornecedor (?, ?)}", (nome, empresa_nif))
         conn.commit()
         flash('✅ Fornecedor adicionado com sucesso!', 'success')
-        
     except Exception as e:
         flash(f'❌ Erro ao adicionar fornecedor: {str(e)}', 'error')
     finally:
         if conn:
             conn.close()
     
+    return redirect(url_for('lista_fornecedores'))
+
+@app.route('/fornecedor/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_fornecedor(id):
+    """Remove um fornecedor"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_fornecedores'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverFornecedor (?)}", (id,))
+        conn.commit()
+        flash('✅ Fornecedor removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
     return redirect(url_for('lista_fornecedores'))
 
 @app.route('/funcionarios')
@@ -720,7 +874,6 @@ def lista_funcionarios():
         
         cursor = conn.cursor()
         
-        # Usa View vw_Funcionarios
         cursor.execute("SELECT * FROM vw_Funcionarios ORDER BY Nome")
         funcionarios = cursor.fetchall()
         
@@ -790,6 +943,27 @@ def adicionar_funcionario():
     except Exception as e:
         error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
         flash(f'❌ Erro ao adicionar funcionário: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_funcionarios'))
+
+@app.route('/funcionario/remover/<path:cc>', methods=['POST'])
+@login_required
+def remover_funcionario(cc):
+    """Remove um funcionário"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_funcionarios'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverFuncionario (?)}", (cc,))
+        conn.commit()
+        flash('✅ Funcionário removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
     finally:
         if conn:
             conn.close()
@@ -882,6 +1056,27 @@ def adicionar_loja():
     
     return redirect(url_for('lista_lojas'))
 
+@app.route('/loja/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_loja(id):
+    """Remove uma loja"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_lojas'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverLoja (?)}", (id,))
+        conn.commit()
+        flash('✅ Loja removida com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_lojas'))
+
 @app.route('/maquinas')
 @login_required
 def lista_maquinas():
@@ -945,6 +1140,27 @@ def adicionar_maquina():
     
     return redirect(url_for('lista_maquinas'))
 
+@app.route('/maquina/remover/<int:id>', methods=['POST'])
+@login_required
+def remover_maquina(id):
+    """Remove uma máquina"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_maquinas'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverMaquina (?)}", (id,))
+        conn.commit()
+        flash('✅ Máquina removida com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_maquinas'))
+
 @app.route('/materias_primas')
 @login_required
 def lista_materias_primas():
@@ -996,6 +1212,27 @@ def adicionar_materia_prima():
         if conn:
             conn.close()
     
+    return redirect(url_for('lista_materias_primas'))
+
+@app.route('/materia_prima/remover/<path:referencia>', methods=['POST'])
+@login_required
+def remover_materia_prima(referencia):
+    """Remove uma matéria-prima"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_materias_primas'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverMateriaPrima (?)}", (referencia,))
+        conn.commit()
+        flash('✅ Matéria-prima removida com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
     return redirect(url_for('lista_materias_primas'))
 
 @app.route('/produtos')
@@ -1168,8 +1405,6 @@ def remover_produto(referencia):
     return redirect(url_for('lista_produtos'))
 
 
-
-
 @app.route('/stock')
 @login_required
 def lista_stock():
@@ -1217,9 +1452,29 @@ def adicionar_stock():
         cursor.execute("{CALL dbo.InserirNovoStock (?, ?, ?)}", (produto_ref, armazem_id, quantidade))
         conn.commit()
         flash('✅ Stock atualizado com sucesso!', 'success')
-        
     except Exception as e:
         flash(f'❌ Erro ao adicionar stock: {str(e)}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_stock'))
+
+@app.route('/stock/remover/<path:produto_ref>/<int:armazem_id>', methods=['POST'])
+@login_required
+def remover_stock(produto_ref, armazem_id):
+    """Remove um registo de stock"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_stock'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverStock (?, ?)}", (produto_ref, armazem_id))
+        conn.commit()
+        flash('✅ Registo de stock removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
     finally:
         if conn:
             conn.close()
@@ -1339,10 +1594,9 @@ def lista_vendedores():
         return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[])
     try:
         cursor = conn.cursor()
-        # Usa View vw_Vendedores
         cursor.execute("SELECT * FROM vw_Vendedores ORDER BY Nome")
         registos = cursor.fetchall()
-        
+
         cursor.execute("SELECT Id, Nome FROM Cargo ORDER BY Nome")
         cargos = cursor.fetchall()
 
@@ -1396,6 +1650,27 @@ def adicionar_vendedor():
             conn.close()
     return redirect(url_for('lista_vendedores'))
 
+@app.route('/vendedor/remover/<path:cc>', methods=['POST'])
+@login_required
+def remover_vendedor(cc):
+    """Remove um vendedor"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_vendedores'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.RemoverVendedor (?)}", (cc,))
+        conn.commit()
+        flash('✅ Vendedor removido com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao remover: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_vendedores'))
+
 # --- ROTA DE DIAGNÓSTICO (Apenas para admins Geral) ---
 @app.route('/admin/diagnostico')
 @login_required
@@ -1429,6 +1704,7 @@ def diagnostico_bd():
             WHERE OBJECT_SCHEMA_NAME(t.parent_id) = 'dbo'
             ORDER BY t.name
         """)
+
         for row in cursor.fetchall():
             diagnostico['triggers'].append({
                 'nome': row[0],

@@ -948,3 +948,495 @@ BEGIN
     END CATCH
 END
 GO
+
+-- =============================================
+-- STORED PROCEDURES DE DELETE
+-- =============================================
+
+-- =============================================
+-- SP: RemoverEmpresa
+-- Descrição: Remove uma empresa do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverEmpresa
+    @Nif VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Empresa WHERE Nif = @Nif)
+        BEGIN
+            RAISERROR('Empresa não encontrada.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Fabrica WHERE Empresa_Nif = @Nif)
+        BEGIN
+            RAISERROR('Não é possível remover esta empresa pois existem fábricas associadas.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Funcionario WHERE Empresa_Nif = @Nif)
+        BEGIN
+            RAISERROR('Não é possível remover esta empresa pois existem funcionários associados.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Fornecedor WHERE Empresa_Nif = @Nif)
+        BEGIN
+            RAISERROR('Não é possível remover esta empresa pois existem fornecedores associados.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.ContratoVendedor WHERE Empresa_Nif = @Nif)
+        BEGIN
+            RAISERROR('Não é possível remover esta empresa pois existem contratos de vendedor associados.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Empresa WHERE Nif = @Nif;
+        PRINT 'Empresa removida com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverFabrica
+-- Descrição: Remove uma fábrica do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverFabrica
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Fabrica WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Fábrica não encontrada.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Maquina WHERE Fabrica_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover esta fábrica pois existem máquinas associadas.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Funcionario WHERE Fabrica_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover esta fábrica pois existem funcionários associados.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Fabrica WHERE Id = @Id;
+        PRINT 'Fábrica removida com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverMaquina
+-- Descrição: Remove uma máquina do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverMaquina
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Maquina WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Máquina não encontrada.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Produto WHERE MaquinaID = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover esta máquina pois existem produtos associados.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Maquina WHERE Id = @Id;
+        PRINT 'Máquina removida com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverMateriaPrima
+-- Descrição: Remove uma matéria-prima do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverMateriaPrima
+    @Referencia VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.MateriaPrima WHERE Referencia = @Referencia)
+        BEGIN
+            RAISERROR('Matéria-prima não encontrada.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.MateriaPrima WHERE Referencia = @Referencia;
+        PRINT 'Matéria-prima removida com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverArmazem
+-- Descrição: Remove um armazém do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverArmazem
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Armazem WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Armazém não encontrado.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Stock WHERE Armazem_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover este armazém pois existe stock associado.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Loja WHERE Armazem_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover este armazém pois existem lojas associadas.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Armazem WHERE Id = @Id;
+        PRINT 'Armazém removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverCargo
+-- Descrição: Remove um cargo do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverCargo
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Cargo WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Cargo não encontrado.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Funcionario WHERE Cargo_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover este cargo pois existem funcionários associados.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Vendedor WHERE Cargo_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover este cargo pois existem vendedores associados.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Cargo WHERE Id = @Id;
+        PRINT 'Cargo removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverCliente
+-- Descrição: Remove um cliente do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverCliente
+    @Cc VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Cliente WHERE Pessoa_Cc = @Cc)
+        BEGIN
+            RAISERROR('Cliente não encontrado.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+        
+        -- Verificação feita pelo trigger TR_BloquearExclusaoClienteComVendas
+        DELETE FROM dbo.Cliente WHERE Pessoa_Cc = @Cc;
+        DELETE FROM dbo.Pessoa WHERE Cc = @Cc;
+        
+        COMMIT TRANSACTION;
+        PRINT 'Cliente removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverContratoVendedor
+-- Descrição: Remove um contrato de vendedor
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverContratoVendedor
+    @VendedorId INT,
+    @EmpresaNif VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (
+            SELECT 1 FROM dbo.ContratoVendedor 
+            WHERE Vendedor_Id = @VendedorId AND Empresa_Nif = @EmpresaNif
+        )
+        BEGIN
+            RAISERROR('Contrato de vendedor não encontrado.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.ContratoVendedor 
+        WHERE Vendedor_Id = @VendedorId AND Empresa_Nif = @EmpresaNif;
+        
+        PRINT 'Contrato de vendedor removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverFornecedor
+-- Descrição: Remove um fornecedor do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverFornecedor
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Fornecedor WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Fornecedor não encontrado.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.MateriaPrima WHERE Fornecedor_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover este fornecedor pois existem matérias-primas associadas.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Fornecedor WHERE Id = @Id;
+        PRINT 'Fornecedor removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverFuncionario
+-- Descrição: Remove um funcionário do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverFuncionario
+    @Cc VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Funcionario WHERE Pessoa_Cc = @Cc)
+        BEGIN
+            RAISERROR('Funcionário não encontrado.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Funcionario WHERE Pessoa_Cc = @Cc;
+        DELETE FROM dbo.Pessoa WHERE Cc = @Cc;
+        
+        COMMIT TRANSACTION;
+        PRINT 'Funcionário removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverStock
+-- Descrição: Remove stock de um produto num armazém
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverStock
+    @ProdutoReferencia VARCHAR(20),
+    @ArmazemId INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (
+            SELECT 1 FROM dbo.Stock 
+            WHERE Produto_Referencia = @ProdutoReferencia AND Armazem_Id = @ArmazemId
+        )
+        BEGIN
+            RAISERROR('Registo de stock não encontrado.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Stock 
+        WHERE Produto_Referencia = @ProdutoReferencia AND Armazem_Id = @ArmazemId;
+        
+        PRINT 'Registo de stock removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverVendedor
+-- Descrição: Remove um vendedor do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverVendedor
+    @Cc VARCHAR(20)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRANSACTION;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Vendedor WHERE Pessoa_Cc = @Cc)
+        BEGIN
+            RAISERROR('Vendedor não encontrado.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+        
+        DECLARE @VendedorId INT;
+        SELECT @VendedorId = Id FROM dbo.Vendedor WHERE Pessoa_Cc = @Cc;
+        
+        -- Remove contratos associados
+        DELETE FROM dbo.ContratoVendedor WHERE Vendedor_Id = @VendedorId;
+        
+        DELETE FROM dbo.Vendedor WHERE Pessoa_Cc = @Cc;
+        DELETE FROM dbo.Pessoa WHERE Cc = @Cc;
+        
+        COMMIT TRANSACTION;
+        PRINT 'Vendedor removido com sucesso!';
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverLoja
+-- Descrição: Remove uma loja do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverLoja
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Loja WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Loja não encontrada.', 16, 1);
+            RETURN;
+        END
+        
+        -- Nota: Vendas não devem ser removidas, então bloqueamos a exclusão se houver vendas
+        -- A verificação é opcional dependendo das regras de negócio
+        
+        DELETE FROM dbo.Loja WHERE Id = @Id;
+        PRINT 'Loja removida com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO
+
+-- =============================================
+-- SP: RemoverDistribuidora
+-- Descrição: Remove uma distribuidora do sistema
+-- =============================================
+CREATE OR ALTER PROCEDURE dbo.RemoverDistribuidora
+    @Id INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        IF NOT EXISTS (SELECT 1 FROM dbo.Distribuidora WHERE Id = @Id)
+        BEGIN
+            RAISERROR('Distribuidora não encontrada.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Fabrica WHERE Distribuidora_Id = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover esta distribuidora pois existem fábricas associadas.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM dbo.Produto WHERE DistribuidoraID = @Id)
+        BEGIN
+            RAISERROR('Não é possível remover esta distribuidora pois existem produtos associados.', 16, 1);
+            RETURN;
+        END
+        
+        DELETE FROM dbo.Distribuidora WHERE Id = @Id;
+        PRINT 'Distribuidora removida com sucesso!';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrorMessage, 16, 1);
+    END CATCH
+END
+GO

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row, action_buttons,
 modal_header, modal_footer, form_input, search_script_init %}
 
 {% block title %}Gestão de Clientes{% endblock %}
@@ -29,6 +29,7 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <th>Data Nascimento</th>
                 <th>Telemóvel</th>
                 <th>NIF Cliente</th>
+                <th class="text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -41,6 +42,7 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ registo[3] }}</td>
                 <td>{{ registo[4] }}</td>
                 <td>{{ registo[5] }}</td>
+                {{ action_buttons() }}
             </tr>
             {% endfor %}
             {% else %}
