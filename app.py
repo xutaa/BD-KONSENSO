@@ -184,7 +184,7 @@ def dashboard():
         }
     }
 
-    # Fetch Dashboard Stats
+    # Fetch Dashboard Stats usando View (1 query em vez de 4)
     stats = {
         'produtos': 0,
         'clientes': 0,
@@ -196,15 +196,24 @@ def dashboard():
     if conn:
         try:
             cursor = conn.cursor()
-            # Only fetch if permissions allow (optional optimization, but simple is fine)
-            stats['produtos'] = cursor.execute("SELECT COUNT(*) FROM Produto").fetchone()[0]
-            stats['clientes'] = cursor.execute("SELECT COUNT(*) FROM Cliente").fetchone()[0]
-            
-            # Tables might not be created yet if fresh install, wrap in try/except if needed but assuming schema exists
-            stats['vendas'] = cursor.execute("SELECT COUNT(*) FROM Venda").fetchone()[0]
-            stats['funcionarios'] = cursor.execute("SELECT COUNT(*) FROM Funcionario").fetchone()[0]
+            # Usa a View vw_DashboardStats para obter tudo numa única query
+            cursor.execute("SELECT * FROM vw_DashboardStats")
+            row = cursor.fetchone()
+            if row:
+                stats['produtos'] = row[0]
+                stats['clientes'] = row[1]
+                stats['vendas'] = row[2]
+                stats['funcionarios'] = row[3]
         except Exception as e:
             print(f"Erro ao carregar stats do dashboard: {e}")
+            # Fallback para queries individuais se a View não existir
+            try:
+                stats['produtos'] = cursor.execute("SELECT COUNT(*) FROM Produto").fetchone()[0]
+                stats['clientes'] = cursor.execute("SELECT COUNT(*) FROM Cliente").fetchone()[0]
+                stats['vendas'] = cursor.execute("SELECT COUNT(*) FROM Venda").fetchone()[0]
+                stats['funcionarios'] = cursor.execute("SELECT COUNT(*) FROM Funcionario").fetchone()[0]
+            except:
+                pass
         finally:
             conn.close()
     
@@ -217,7 +226,7 @@ def dashboard():
 @app.route('/armazens')
 @login_required
 def lista_armazens():
-    """Lista todos os armazéns"""
+    """Lista todos os armazéns com informação de ocupação"""
     conn = None
     try:
         conn = get_db_connection()
@@ -226,9 +235,10 @@ def lista_armazens():
             return render_template('tabelas/armazens.html', registos=[], sucesso=False)
         
         cursor = conn.cursor()
+        # Usa View vw_StockPorArmazem para mostrar ocupação
         cursor.execute("""
-            SELECT Id, Localizacao, Capacidade 
-            FROM Armazem 
+            SELECT ArmazemId, Localizacao, Capacidade, StockAtual, EspacoLivre, PercentagemOcupada
+            FROM vw_StockPorArmazem 
             ORDER BY Localizacao
         """)
         armazens = cursor.fetchall()
@@ -236,8 +246,14 @@ def lista_armazens():
         return render_template('tabelas/armazens.html', registos=armazens, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar armazéns: {e}")
-        flash(f'Erro ao carregar armazéns: {str(e)}', 'error')
-        return render_template('tabelas/armazens.html', registos=[], sucesso=False)
+        # Fallback para query simples se View não existir
+        try:
+            cursor.execute("SELECT Id, Localizacao, Capacidade FROM Armazem ORDER BY Localizacao")
+            armazens = cursor.fetchall()
+            return render_template('tabelas/armazens.html', registos=armazens, sucesso=True)
+        except:
+            flash(f'Erro ao carregar armazéns: {str(e)}', 'error')
+            return render_template('tabelas/armazens.html', registos=[], sucesso=False)
     finally:
         if conn:
             conn.close()

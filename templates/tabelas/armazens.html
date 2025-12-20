@@ -26,6 +26,9 @@ empty_row, modal_header, modal_footer, form_input, search_script_init %}
                 <th>ID</th>
                 <th>Localização</th>
                 <th>Capacidade</th>
+                <th>Stock Atual</th>
+                <th>Espaço Livre</th>
+                <th>Ocupação</th>
                 <th class="text-center">Ações</th>
             </tr>
         </thead>
@@ -36,11 +39,23 @@ empty_row, modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ armazem[0] }}</td>
                 <td>{{ armazem[1] }}</td>
                 <td>{{ armazem[2] }}</td>
+                <td>{{ armazem[3] if armazem|length > 3 else '-' }}</td>
+                <td>{{ armazem[4] if armazem|length > 4 else '-' }}</td>
+                <td>
+                    {% if armazem|length > 5 and armazem[5] is not none %}
+                    <span
+                        class="badge {% if armazem[5] >= 90 %}bg-danger{% elif armazem[5] >= 70 %}bg-warning{% else %}bg-success{% endif %}">
+                        {{ armazem[5] }}%
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary">-</span>
+                    {% endif %}
+                </td>
                 {{ action_buttons() }}
             </tr>
             {% endfor %}
             {% else %}
-            {{ empty_row(4, 'Nenhum armazém registado') }}
+            {{ empty_row(7, 'Nenhum armazém registado') }}
             {% endif %}
         </tbody>
     </table>
