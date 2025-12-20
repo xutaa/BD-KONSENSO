@@ -1,6 +1,13 @@
 -- =============================================
--- UDF: HashPassword
--- Descrição: Gera um hash SHA2_256 para uma password fornecida.
+-- TODAS AS UDFs - BD-KONSENSO
+-- Executa este ficheiro no SSMS para criar todas as UDFs
+-- =============================================
+
+USE p2g4;
+GO
+
+-- =============================================
+-- UDF 1: HashPassword
 -- =============================================
 CREATE OR ALTER FUNCTION dbo.HashPassword(@Password NVARCHAR(100))
 RETURNS NVARCHAR(100)
@@ -12,16 +19,16 @@ END
 GO
 
 -- =============================================
--- UDF: ValidarNIF
--- Descrição: Valida se um NIF (Número de Identificação Fiscal) português é válido.
+-- UDF 2: ValidarNIF
 -- =============================================
-CREATE FUNCTION dbo.ValidarNIF(@NIF VARCHAR(9))
+CREATE OR ALTER FUNCTION dbo.ValidarNIF(@NIF VARCHAR(9))
 RETURNS BIT
 AS BEGIN
     IF LEN(@NIF) <> 9 RETURN 0;
     IF @NIF NOT LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]' RETURN 0;
     RETURN 1;
-END;
+END
+GO
 
-
--- TODO: Ainda NADA usado
+PRINT '✅ Todas as 2 UDFs criadas com sucesso!';
+GO
