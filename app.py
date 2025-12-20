@@ -1436,6 +1436,380 @@ def adicionar_vendedor():
             conn.close()
     return redirect(url_for('lista_vendedores'))
 
+# --- ROTA DE DIAGNÓSTICO (Apenas para admins Geral) ---
+@app.route('/admin/diagnostico')
+@login_required
+@admin_tipo_required('Geral')
+def diagnostico_bd():
+    """Página de diagnóstico da base de dados - verifica triggers, indexes, etc."""
+    
+    diagnostico = {
+        'triggers': [],
+        'indexes': [],
+        'stats': {},
+        'erros': []
+    }
+    
+    conn = get_db_connection()
+    if not conn:
+        flash('Erro de conexão com a base de dados', 'error')
+        return redirect(url_for('dashboard'))
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Verificar Triggers
+        cursor.execute("""
+            SELECT 
+                t.name AS NomeTrigger,
+                OBJECT_NAME(t.parent_id) AS Tabela,
+                CASE WHEN t.is_disabled = 0 THEN 'Ativo' ELSE 'Desativado' END AS Estado,
+                t.create_date AS DataCriacao
+            FROM sys.triggers t
+            WHERE OBJECT_SCHEMA_NAME(t.parent_id) = 'dbo'
+            ORDER BY t.name
+        """)
+        for row in cursor.fetchall():
+            diagnostico['triggers'].append({
+                'nome': row[0],
+                'tabela': row[1],
+                'estado': row[2],
+                'data': row[3].strftime('%Y-%m-%d %H:%M') if row[3] else 'N/A'
+            })
+        
+        # Verificar Indexes
+        cursor.execute("""
+            SELECT TOP 10
+                i.name AS NomeIndex,
+                t.name AS Tabela,
+                i.type_desc AS Tipo
+            FROM sys.indexes i
+            INNER JOIN sys.tables t ON i.object_id = t.object_id
+            WHERE i.name IS NOT NULL 
+              AND t.is_ms_shipped = 0
+              AND SCHEMA_NAME(t.schema_id) = 'dbo'
+            ORDER BY t.name, i.name
+        """)
+        for row in cursor.fetchall():
+            diagnostico['indexes'].append({
+                'nome': row[0],
+                'tabela': row[1],
+                'tipo': row[2]
+            })
+        
+        # Estatísticas gerais
+        diagnostico['stats'] = {
+            'produtos': cursor.execute("SELECT COUNT(*) FROM Produto").fetchone()[0],
+            'clientes': cursor.execute("SELECT COUNT(*) FROM Cliente").fetchone()[0],
+            'vendas': cursor.execute("SELECT COUNT(*) FROM Venda").fetchone()[0],
+            'funcionarios': cursor.execute("SELECT COUNT(*) FROM Funcionario").fetchone()[0],
+            'armazens': cursor.execute("SELECT COUNT(*) FROM Armazem").fetchone()[0],
+        }
+        
+    except Exception as e:
+        diagnostico['erros'].append(str(e))
+    finally:
+        conn.close()
+    
+    # Renderizar página simples de diagnóstico
+    html = f"""
+    {{% extends 'base.html' %}}
+    {{% block title %}}Diagnóstico BD{{% endblock %}}
+    {{% block header_title %}}🔧 Diagnóstico da Base de Dados{{% endblock %}}
+    {{% block content %}}
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">🔥 Triggers Ativos</h5></div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead><tr><th>Nome</th><th>Tabela</th><th>Estado</th></tr></thead>
+                        <tbody>
+                        {{% for t in triggers %}}
+                            <tr>
+                                <td>{{{{ t.nome }}}}</td>
+                                <td><code>{{{{ t.tabela }}}}</code></td>
+                                <td>{{% if t.estado == 'Ativo' %}}<span class="badge bg-success">✅ Ativo</span>{{% else %}}<span class="badge bg-danger">❌ Desativado</span>{{% endif %}}</td>
+                            </tr>
+                        {{% else %}}
+                            <tr><td colspan="3" class="text-muted">Nenhum trigger encontrado</td></tr>
+                        {{% endfor %}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><h5 class="card-title mb-0">📊 Estatísticas</h5></div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between">Produtos <span class="badge bg-primary">{{{{ stats.produtos }}}}</span></li>
+                        <li class="list-group-item d-flex justify-content-between">Clientes <span class="badge bg-primary">{{{{ stats.clientes }}}}</span></li>
+                        <li class="list-group-item d-flex justify-content-between">Vendas <span class="badge bg-primary">{{{{ stats.vendas }}}}</span></li>
+                        <li class="list-group-item d-flex justify-content-between">Funcionários <span class="badge bg-primary">{{{{ stats.funcionarios }}}}</span></li>
+                        <li class="list-group-item d-flex justify-content-between">Armazéns <span class="badge bg-primary">{{{{ stats.armazens }}}}</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mt-4">
+        <a href="{{{{ url_for('dashboard') }}}}" class="btn btn-secondary">← Voltar</a>
+    </div>
+    {{% endblock %}}
+    """
+    
+    from flask import render_template_string
+    return render_template_string(html, triggers=diagnostico['triggers'], indexes=diagnostico['indexes'], stats=diagnostico['stats'])
+
+# --- PÁGINA DE TESTE DE TRIGGERS ---
+@app.route('/admin/testar-triggers')
+@login_required
+@admin_tipo_required('Geral')
+def testar_triggers_page():
+    """Página para testar triggers interativamente"""
+    
+    conn = get_db_connection()
+    armazens = []
+    produtos = []
+    
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT Id, Localizacao, Capacidade FROM Armazem ORDER BY Localizacao")
+            armazens = cursor.fetchall()
+            cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
+            produtos = cursor.fetchall()
+        except:
+            pass
+        finally:
+            conn.close()
+    
+    html = """
+    {% extends 'base.html' %}
+    {% block title %}Testar Triggers{% endblock %}
+    {% block header_title %}🧪 Testar Triggers{% endblock %}
+    {% block content %}
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    
+    <div class="row g-4">
+        <!-- TESTE 1: Capacidade Armazém -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">🏭 Teste: Capacidade do Armazém</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Tenta adicionar stock que excede a capacidade do armazém.</p>
+                    <p><strong>Trigger:</strong> <code>TR_ValidarCapacidadeArmazem</code></p>
+                    <p><strong>Resultado esperado:</strong> <span class="text-danger">Erro - "Capacidade excedida"</span></p>
+                    
+                    <form method="POST" action="{{ url_for('testar_trigger_capacidade') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Armazém</label>
+                            <select name="armazem_id" class="form-select" required>
+                                {% for a in armazens %}
+                                <option value="{{ a[0] }}">{{ a[1] }} (Cap: {{ a[2] }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Produto</label>
+                            <select name="produto_ref" class="form-select" required>
+                                {% for p in produtos %}
+                                <option value="{{ p[0] }}">{{ p[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Quantidade (coloca valor ALTO)</label>
+                            <input type="number" name="quantidade" class="form-control" value="999999999" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning">⚡ Testar Trigger</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- TESTE 2: Stock Negativo -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">📦 Teste: Stock Negativo</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Tenta colocar um valor de stock negativo.</p>
+                    <p><strong>Trigger:</strong> <code>GarantirStockPositivo</code></p>
+                    <p><strong>Resultado esperado:</strong> <span class="text-danger">Erro - "Stock insuficiente"</span></p>
+                    
+                    <form method="POST" action="{{ url_for('testar_trigger_stock_negativo') }}">
+                        <div class="mb-3">
+                            <label class="form-label">Armazém</label>
+                            <select name="armazem_id" class="form-select" required>
+                                {% for a in armazens %}
+                                <option value="{{ a[0] }}">{{ a[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Produto</label>
+                            <select name="produto_ref" class="form-select" required>
+                                {% for p in produtos %}
+                                <option value="{{ p[0] }}">{{ p[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-danger">⚡ Testar Trigger</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- INFO -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">ℹ️ Como Funcionam os Triggers</h5>
+                </div>
+                <div class="card-body">
+                    <p>Os triggers são executados <strong>automaticamente</strong> pelo SQL Server quando tentas fazer operações inválidas:</p>
+                    <ul>
+                        <li><strong>TR_ValidarCapacidadeArmazem</strong> - Bloqueia INSERT/UPDATE em Stock se exceder capacidade</li>
+                        <li><strong>GarantirStockPositivo</strong> - Bloqueia UPDATE em Stock se quantidade ficar negativa</li>
+                        <li><strong>AtualizarTotalVenda</strong> - Recalcula automaticamente o ValorTotal quando adicionas itens</li>
+                        <li><strong>TR_BloquearExclusaoClienteComVendas</strong> - Impede DELETE de clientes com histórico</li>
+                    </ul>
+                    <p class="mb-0">Se vires uma <span class="badge bg-danger">mensagem de erro vermelha</span> após clicar nos botões, significa que o <strong>trigger está a funcionar corretamente!</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="{{ url_for('diagnostico_bd') }}" class="btn btn-secondary">← Ver Diagnóstico</a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">← Dashboard</a>
+    </div>
+    {% endblock %}
+    """
+    
+    from flask import render_template_string
+    return render_template_string(html, armazens=armazens, produtos=produtos)
+
+
+@app.route('/admin/testar-triggers/capacidade', methods=['POST'])
+@login_required
+@admin_tipo_required('Geral')
+def testar_trigger_capacidade():
+    """Testa o trigger de capacidade do armazém"""
+    
+    armazem_id = request.form.get('armazem_id')
+    produto_ref = request.form.get('produto_ref')
+    quantidade = request.form.get('quantidade', 999999999)
+    
+    conn = get_db_connection()
+    if not conn:
+        flash('❌ Erro de conexão com a BD', 'error')
+        return redirect(url_for('testar_triggers_page'))
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Tentar inserir stock enorme
+        cursor.execute("""
+            INSERT INTO Stock (Produto_Referencia, Armazem_Id, Quantidade, UltimoMov)
+            VALUES (?, ?, ?, GETDATE())
+        """, (produto_ref, armazem_id, quantidade))
+        conn.commit()
+        
+        # Se chegou aqui, o trigger NÃO bloqueou
+        flash('⚠️ ATENÇÃO: A operação foi permitida! O trigger pode não estar ativo ou a capacidade é muito alta.', 'error')
+        
+        # Reverter a inserção de teste
+        cursor.execute("""
+            DELETE FROM Stock 
+            WHERE Produto_Referencia = ? AND Armazem_Id = ? AND Quantidade = ?
+        """, (produto_ref, armazem_id, quantidade))
+        conn.commit()
+        
+    except Exception as e:
+        error_msg = str(e)
+        if 'Capacidade' in error_msg or 'excedida' in error_msg.lower():
+            flash(f'✅ TRIGGER FUNCIONOU! Erro capturado: {error_msg.split("]")[-1]}', 'success')
+        else:
+            flash(f'❌ Erro (pode ser do trigger): {error_msg.split("]")[-1]}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('testar_triggers_page'))
+
+
+@app.route('/admin/testar-triggers/stock-negativo', methods=['POST'])
+@login_required
+@admin_tipo_required('Geral')
+def testar_trigger_stock_negativo():
+    """Testa o trigger de stock negativo"""
+    
+    armazem_id = request.form.get('armazem_id')
+    produto_ref = request.form.get('produto_ref')
+    
+    conn = get_db_connection()
+    if not conn:
+        flash('❌ Erro de conexão com a BD', 'error')
+        return redirect(url_for('testar_triggers_page'))
+    
+    try:
+        cursor = conn.cursor()
+        
+        # Verificar se existe stock para este produto/armazém
+        cursor.execute("""
+            SELECT Quantidade FROM Stock 
+            WHERE Produto_Referencia = ? AND Armazem_Id = ?
+        """, (produto_ref, armazem_id))
+        row = cursor.fetchone()
+        
+        if row:
+            # Tentar colocar stock negativo
+            cursor.execute("""
+                UPDATE Stock SET Quantidade = -100 
+                WHERE Produto_Referencia = ? AND Armazem_Id = ?
+            """, (produto_ref, armazem_id))
+            conn.commit()
+            
+            # Se chegou aqui, o trigger NÃO bloqueou - reverter
+            cursor.execute("""
+                UPDATE Stock SET Quantidade = ? 
+                WHERE Produto_Referencia = ? AND Armazem_Id = ?
+            """, (row[0], produto_ref, armazem_id))
+            conn.commit()
+            
+            flash('⚠️ ATENÇÃO: A operação foi permitida! O trigger GarantirStockPositivo pode não estar ativo.', 'error')
+        else:
+            flash('⚠️ Não existe stock para este produto/armazém. Adiciona stock primeiro.', 'error')
+        
+    except Exception as e:
+        error_msg = str(e)
+        if 'Stock insuficiente' in error_msg or 'negativ' in error_msg.lower():
+            flash(f'✅ TRIGGER FUNCIONOU! Erro capturado: {error_msg.split("]")[-1]}', 'success')
+        else:
+            flash(f'❌ Erro (pode ser do trigger): {error_msg.split("]")[-1]}', 'error')
+    finally:
+        conn.close()
+    
+    return redirect(url_for('testar_triggers_page'))
+
+
 if __name__ == '__main__':
     print("🚀 A iniciar servidor Flask...")
     print("📍 Aceda a: http://127.0.0.1:5000")

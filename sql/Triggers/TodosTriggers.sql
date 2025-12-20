@@ -46,3 +46,56 @@ GO
 -- Descrição: Muda o stock existente num armazem eliminado para o primeiro armazem.
 -- =============================================
 -- por implementar
+
+
+-- =============================================
+-- Trigger: TR_ValidarCapacidadeArmazem
+-- Descrição: Impede adicionar stock acima da capacidade do armazém
+-- =============================================
+CREATE OR ALTER TRIGGER TR_ValidarCapacidadeArmazem
+ON dbo.Stock
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    IF EXISTS (
+        SELECT 1 
+        FROM dbo.Armazem a
+        INNER JOIN (
+            SELECT Armazem_Id, SUM(Quantidade) AS TotalStock
+            FROM dbo.Stock
+            GROUP BY Armazem_Id
+        ) s ON a.Id = s.Armazem_Id
+        WHERE s.TotalStock > a.Capacidade
+          AND a.Id IN (SELECT Armazem_Id FROM inserted)
+    )
+    BEGIN
+        RAISERROR('Operação cancelada: Capacidade do armazém excedida!', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END
+GO
+
+-- =============================================
+-- Trigger: TR_BloquearExclusaoClienteComVendas
+-- Descrição: Impede eliminar clientes com histórico de compras
+-- =============================================
+CREATE OR ALTER TRIGGER TR_BloquearExclusaoClienteComVendas
+ON dbo.Cliente
+INSTEAD OF DELETE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    IF EXISTS (
+        SELECT 1 FROM dbo.Venda WHERE Cliente_Nif IN (SELECT Nif FROM deleted)
+    )
+    BEGIN
+        RAISERROR('Não é possível eliminar clientes com histórico de compras.', 16, 1);
+        RETURN;
+    END
+    
+    DELETE FROM dbo.Cliente WHERE Pessoa_Cc IN (SELECT Pessoa_Cc FROM deleted);
+END
+GO
