@@ -344,12 +344,8 @@ def lista_clientes():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT c.Pessoa_Cc, p.Nome, p.Email, p.DataNascimento , p.NumTelefone, c.Nif
-            FROM Cliente c
-            JOIN Pessoa p ON c.Pessoa_Cc = p.Cc
-            ORDER BY p.Nome
-        """)
+        # Usa View vw_Clientes
+        cursor.execute("SELECT * FROM vw_Clientes ORDER BY Nome")
         registos = cursor.fetchall()
         
         cursor.execute("""
@@ -406,14 +402,8 @@ def lista_contratos_vendedor():
             return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         
-        cursor.execute("""
-            SELECT cv.Vendedor_Id, p.Nome AS Vendedor, e.Nome AS Empresa, cv.DataIn, cv.DataOut
-            FROM ContratoVendedor cv
-            JOIN Vendedor v ON cv.Vendedor_Id = v.Id
-            JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
-            JOIN Empresa e ON cv.Empresa_Nif = e.Nif
-            ORDER BY p.Nome
-        """)
+        # Usa View vw_ContratosVendedor
+        cursor.execute("SELECT * FROM vw_ContratosVendedor ORDER BY Vendedor")
         contratos = cursor.fetchall()
         
         cursor.execute("""
@@ -611,14 +601,8 @@ def lista_fabricas():
         
         cursor = conn.cursor()
         
-        # Buscar fábricas
-        cursor.execute("""
-            SELECT f.Id, f.Nome, f.Localizacao, e.Nome AS Empresa, d.Nome AS Distribuidora
-            FROM Fabrica f
-            JOIN Empresa e ON f.Empresa_Nif = e.Nif
-            JOIN Distribuidora d ON f.Distribuidora_Id = d.Id
-            ORDER BY f.Nome
-        """)
+        # Usa View vw_Fabricas
+        cursor.execute("SELECT * FROM vw_Fabricas ORDER BY Nome")
         fabricas = cursor.fetchall()
         
         # Buscar empresas para o modal
@@ -684,12 +668,8 @@ def lista_fornecedores():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT f.Id, f.Nome, e.Nome AS Empresa, e.Nif
-            FROM Fornecedor f
-            JOIN Empresa e ON f.Empresa_Nif = e.Nif
-            ORDER BY f.Nome
-        """)
+        # Usa View vw_Fornecedores
+        cursor.execute("SELECT * FROM vw_Fornecedores ORDER BY Nome")
         registos = cursor.fetchall()
         
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
@@ -740,17 +720,8 @@ def lista_funcionarios():
         
         cursor = conn.cursor()
         
-        cursor.execute("""
-            SELECT f.Pessoa_Cc, p.Nome, c.Nome AS Cargo, 
-                   e.Nome AS Empresa,
-                   COALESCE(fab.Nome, 'N/A') AS Fabrica
-            FROM Funcionario f
-            JOIN Pessoa p ON f.Pessoa_Cc = p.Cc
-            JOIN Cargo c ON f.Cargo_Id = c.Id
-            JOIN Empresa e ON f.Empresa_Nif = e.Nif
-            LEFT JOIN Fabrica fab ON f.Fabrica_Id = fab.Id
-            ORDER BY p.Nome
-        """)
+        # Usa View vw_Funcionarios
+        cursor.execute("SELECT * FROM vw_Funcionarios ORDER BY Nome")
         funcionarios = cursor.fetchall()
         
         cursor.execute("""
@@ -835,12 +806,8 @@ def lista_itens():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT i.Venda_Id, p.Nome, i.Quantidade, i.Preco, (i.Quantidade * i.Preco) AS Total
-            FROM Item i
-            JOIN Produto p ON i.Produto_Referencia = p.Referencia
-            ORDER BY i.Venda_Id DESC
-        """)
+        # Usa View vw_Itens
+        cursor.execute("SELECT * FROM vw_Itens ORDER BY Venda_Id DESC")
         registos = cursor.fetchall()
         
         cursor.execute("SELECT Id FROM Venda ORDER BY Id DESC")
@@ -868,12 +835,8 @@ def lista_lojas():
             return render_template('tabelas/lojas.html', registos=[], armazens=[], sucesso=False)
         
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT l.Id, l.Nome, l.Localizacao, a.Localizacao AS Armazem
-            FROM dbo.Loja l
-            LEFT JOIN dbo.Armazem a ON l.Armazem_Id = a.Id
-            ORDER BY l.Nome
-        """)
+        # Usa View vw_Lojas
+        cursor.execute("SELECT * FROM vw_Lojas ORDER BY Nome")
         lojas = cursor.fetchall()
         
         cursor.execute("SELECT Id, Localizacao FROM dbo.Armazem ORDER BY Localizacao")
@@ -932,13 +895,8 @@ def lista_maquinas():
         
         cursor = conn.cursor()
         
-        # Buscar máquinas
-        cursor.execute("""
-            SELECT m.Id, m.Descricao, m.Tipo, f.Nome AS Fabrica
-            FROM Maquina m
-            JOIN Fabrica f ON m.Fabrica_Id = f.Id
-            ORDER BY m.Descricao
-        """)
+        # Usa View vw_Maquinas
+        cursor.execute("SELECT * FROM vw_Maquinas ORDER BY Descricao")
         maquinas = cursor.fetchall()
         
         # Buscar fábricas para o modal
@@ -998,12 +956,8 @@ def lista_materias_primas():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT mp.Referencia, mp.Descricao, f.Nome AS Fornecedor
-            FROM MateriaPrima mp
-            JOIN Fornecedor f ON mp.Fornecedor_Id = f.Id
-            ORDER BY mp.Referencia
-        """)
+        # Usa View vw_MateriasPrimas
+        cursor.execute("SELECT * FROM vw_MateriasPrimas ORDER BY Referencia")
         registos = cursor.fetchall()
         
         cursor.execute("SELECT Id, Nome FROM Fornecedor ORDER BY Nome")
@@ -1227,13 +1181,8 @@ def lista_stock():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT s.Produto_Referencia, p.Nome, a.Localizacao, s.Quantidade, s.UltimoMov
-            FROM Stock s
-            JOIN Produto p ON s.Produto_Referencia = p.Referencia
-            JOIN Armazem a ON s.Armazem_Id = a.Id
-            ORDER BY s.UltimoMov DESC
-        """)
+        # Usa View vw_Stock
+        cursor.execute("SELECT * FROM vw_Stock ORDER BY UltimoMov DESC")
         registos = cursor.fetchall()
         
         cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
@@ -1390,13 +1339,8 @@ def lista_vendedores():
         return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[])
     try:
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT v.Pessoa_Cc, p.Nome, c.Nome AS Cargo, v.NumVendas, p.NumTelefone
-            FROM Vendedor v
-            JOIN Pessoa p ON v.Pessoa_Cc = p.Cc
-            JOIN Cargo c ON v.Cargo_Id = c.Id
-            ORDER BY p.Nome
-        """)
+        # Usa View vw_Vendedores
+        cursor.execute("SELECT * FROM vw_Vendedores ORDER BY Nome")
         registos = cursor.fetchall()
         
         cursor.execute("SELECT Id, Nome FROM Cargo ORDER BY Nome")
