@@ -382,8 +382,21 @@ def lista_clientes():
     
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM vw_Clientes ORDER BY Nome")
-        registos = cursor.fetchall()
+        
+        if session.get('tipo_admin') == 'Loja' and session.get('loja_id'):
+            loja_id = session.get('loja_id')
+            cursor.execute("""
+                SELECT DISTINCT c.Pessoa_Cc, p.Nome, p.Email, p.DataNascimento, p.NumTelefone, c.Nif
+                FROM Cliente c
+                INNER JOIN Pessoa p ON c.Pessoa_Cc = p.Cc
+                INNER JOIN Venda v ON c.Nif = v.Cliente_Nif
+                WHERE v.Loja_Id = ?
+                ORDER BY p.Nome
+            """, (loja_id,))
+            registos = cursor.fetchall()
+        else:
+            cursor.execute("SELECT * FROM vw_Clientes ORDER BY Nome")
+            registos = cursor.fetchall()
         
         cursor.execute("""
             SELECT p.Cc, p.Nome, p.Email
@@ -980,12 +993,28 @@ def lista_itens():
     
     try:
         cursor = conn.cursor()
-        # Usa View vw_Itens
-        cursor.execute("SELECT * FROM vw_Itens ORDER BY Venda_Id DESC")
-        registos = cursor.fetchall()
         
-        cursor.execute("SELECT Id FROM Venda ORDER BY Id DESC")
-        vendas = cursor.fetchall()
+        if session.get('tipo_admin') == 'Loja' and session.get('loja_id'):
+            loja_id = session.get('loja_id')
+            cursor.execute("""
+                SELECT i.Venda_Id, p.Nome AS Produto, i.Produto_Referencia,
+                i.Quantidade, i.Preco, (i.Quantidade * i.Preco) AS Total
+                FROM Item i
+                INNER JOIN Produto p ON i.Produto_Referencia = p.Referencia
+                INNER JOIN Venda v ON i.Venda_Id = v.Id
+                WHERE v.Loja_Id = ?
+                ORDER BY i.Venda_Id DESC
+            """, (loja_id,))
+            registos = cursor.fetchall()
+            
+            cursor.execute("SELECT Id FROM Venda WHERE Loja_Id = ? ORDER BY Id DESC", (loja_id,))
+            vendas = cursor.fetchall()
+        else:
+            cursor.execute("SELECT * FROM vw_Itens ORDER BY Venda_Id DESC")
+            registos = cursor.fetchall()
+            
+            cursor.execute("SELECT Id FROM Venda ORDER BY Id DESC")
+            vendas = cursor.fetchall()
         
         cursor.execute("SELECT Referencia, Nome, Preco FROM Produto ORDER BY Nome")
         produtos = cursor.fetchall()
@@ -1009,7 +1038,6 @@ def lista_lojas():
             return render_template('tabelas/lojas.html', registos=[], armazens=[], sucesso=False)
         
         cursor = conn.cursor()
-        # Usa View vw_Lojas
         cursor.execute("SELECT * FROM vw_Lojas ORDER BY Nome")
         lojas = cursor.fetchall()
         
@@ -1090,11 +1118,9 @@ def lista_maquinas():
         
         cursor = conn.cursor()
         
-        # Usa View vw_Maquinas
         cursor.execute("SELECT * FROM vw_Maquinas ORDER BY Descricao")
         maquinas = cursor.fetchall()
         
-        # Buscar fábricas para o modal
         cursor.execute("SELECT Id, Nome FROM Fabrica ORDER BY Nome")
         fabricas = cursor.fetchall()
         
@@ -1172,7 +1198,6 @@ def lista_materias_primas():
     
     try:
         cursor = conn.cursor()
-        # Usa View vw_MateriasPrimas
         cursor.execute("SELECT * FROM vw_MateriasPrimas ORDER BY Referencia")
         registos = cursor.fetchall()
         
@@ -1416,15 +1441,34 @@ def lista_stock():
     
     try:
         cursor = conn.cursor()
-        # Usa View vw_Stock
-        cursor.execute("SELECT * FROM vw_Stock ORDER BY UltimoMov DESC")
-        registos = cursor.fetchall()
         
-        cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
-        produtos = cursor.fetchall()
-        
-        cursor.execute("SELECT Id, Localizacao FROM Armazem ORDER BY Localizacao")
-        armazens = cursor.fetchall()
+        if session.get('tipo_admin') == 'Loja' and session.get('loja_id'):
+            loja_id = session.get('loja_id')
+            cursor.execute("SELECT Armazem_Id FROM Loja WHERE Id = ?", (loja_id,))
+            armazem_row = cursor.fetchone()
+            
+            if armazem_row and armazem_row[0]:
+                armazem_id = armazem_row[0]
+                cursor.execute("SELECT * FROM vw_Stock WHERE Armazem_Id = ? ORDER BY UltimoMov DESC", (armazem_id,))
+                registos = cursor.fetchall()
+                
+                cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
+                produtos = cursor.fetchall()
+                
+                cursor.execute("SELECT Id, Localizacao FROM Armazem WHERE Id = ?", (armazem_id,))
+                armazens = cursor.fetchall()
+            else:
+                flash('Sua loja não possui armazém associado.', 'warning')
+                return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+        else:
+            cursor.execute("SELECT * FROM vw_Stock ORDER BY UltimoMov DESC")
+            registos = cursor.fetchall()
+            
+            cursor.execute("SELECT Referencia, Nome FROM Produto ORDER BY Nome")
+            produtos = cursor.fetchall()
+            
+            cursor.execute("SELECT Id, Localizacao FROM Armazem ORDER BY Localizacao")
+            armazens = cursor.fetchall()
         
         return render_template('tabelas/stock.html', registos=registos, produtos=produtos, armazens=armazens)
     except Exception as e:
@@ -1588,6 +1632,10 @@ def obter_itens_venda(venda_id):
 @login_required
 def lista_vendedores():
     """Lista todos os vendedores com opção de adicionar"""
+    
+    if session.get('tipo_admin') == 'Loja':
+        flash('Acesso negado. Admins de Loja não têm permissão para visualizar vendedores.', 'error')
+        return redirect(url_for('dashboard'))
     
     conn = get_db_connection()
     if not conn:

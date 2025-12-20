@@ -131,12 +131,15 @@
                     <div class="tile-title fs-6">Clientes</div>
                 </a>
             </div>
+            
+            {% if tipo_admin != 'Loja' %}
             <div class="col">
                 <a href="{{ url_for('lista_vendedores') }}" class="action-tile p-3">
                     <i class="fa-solid fa-briefcase tile-icon mb-2 fs-4"></i>
                     <div class="tile-title fs-6">Vendedores</div>
                 </a>
             </div>
+            {% endif %}
 
             {% if tipo_admin == 'Geral' %}
             <div class="col">

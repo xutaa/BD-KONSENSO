@@ -52,6 +52,7 @@
                 <tr>
                     <th>Venda ID</th>
                     <th>Produto</th>
+                    <th>Referência</th>
                     <th>Quantidade</th>
                     <th>Preço Unitário</th>
                     <th>Total</th>
@@ -64,8 +65,9 @@
                         <td>{{ registo[0] }}</td>
                         <td>{{ registo[1] }}</td>
                         <td>{{ registo[2] }}</td>
-                        <td>{{ "%.2f"|format(registo[3]) }}€</td>
-                        <td><strong>{{ "%.2f"|format(registo[4]) }}€</strong></td>
+                        <td>{{ registo[3] }}</td>
+                        <td>{{ "%.2f"|format(registo[4]) }}€</td>
+                        <td><strong>{{ "%.2f"|format(registo[5]) }}€</strong></td>
                     </tr>
                     {% endfor %}
                 {% else %}
