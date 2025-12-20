@@ -40,7 +40,11 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
                 <td>{{ stock[1] }}</td>
                 <td>{{ stock[2] }}</td>
                 <td>{{ stock[3] }}</td>
-                {{ action_buttons() }}
+                {{ action_buttons(
+                    show_edit=false,
+                    remove_modal='modalRemoverStock',
+                    remove_onclick="prepararRemocao('{}', '{}', '{}')".format(stock[0], stock[5], stock[1])
+                ) }}
             </tr>
             {% endfor %}
             {% else %}
@@ -75,8 +79,48 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
         </div>
     </div>
 </div>
+
+{# Modal Remover Stock #}
+<div class="modal fade" id="modalRemoverStock" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover este stock:</p>
+                <p class="fw-bold" id="stockRemoverNome"></p>
+                <p class="text-muted small">Produto: <span id="stockRemoverProduto"></span></p>
+                <p class="text-muted small">Armazém ID: <span id="stockRemoverArmazem"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverStock" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Stock
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    function prepararRemocao(produtoRef, armazemId, produtoNome) {
+        document.getElementById('stockRemoverProduto').textContent = produtoRef;
+        document.getElementById('stockRemoverArmazem').textContent = armazemId;
+        document.getElementById('stockRemoverNome').textContent = produtoNome;
+        document.getElementById('formRemoverStock').action = '/stock/remover/' + encodeURIComponent(produtoRef) + '/' + encodeURIComponent(armazemId);
+    }
+</script>
 {% endblock %}

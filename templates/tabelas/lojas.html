@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-
+{% from 'macros.html' import action_buttons %}
 {% block title %}Gestão de Lojas{% endblock %}
 
 {% block extra_css %}
@@ -58,6 +58,7 @@
                     <th>Nome</th>
                     <th>Localização</th>
                     <th>Armazém</th>
+                    <th class="text-center">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -68,6 +69,11 @@
                         <td>{{ loja[1] }}</td>
                         <td>{{ loja[2] }}</td>
                         <td>{{ loja[3] if loja[3] else 'Sem armazém' }}</td>
+                        {{ action_buttons(
+                            show_edit=false,
+                            remove_modal='modalRemoverLoja',
+                            remove_onclick="prepararRemocao('{}', '{}')".format(loja[0], loja[1])
+                        ) }}
                     </tr>
                     {% endfor %}
                 {% else %}
@@ -129,6 +135,37 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Remover Loja -->
+    <div class="modal fade" id="modalRemoverLoja" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Tem a certeza que deseja remover a loja:</p>
+                    <p class="fw-bold" id="lojaRemoverNome"></p>
+                    <p class="text-muted small">ID: <span id="lojaRemoverId"></span></p>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Esta ação não pode ser desfeita!
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <form method="POST" id="formRemoverLoja" action="">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash-fill"></i> Remover Loja
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block extra_js %}
@@ -137,5 +174,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         configurarAtalhos('searchInput');
     });
+
+    function prepararRemocao(id, nome) {
+        document.getElementById('lojaRemoverId').textContent = id;
+        document.getElementById('lojaRemoverNome').textContent = nome;
+        document.getElementById('formRemoverLoja').action = '/loja/remover/' + id;
+    }
 </script>
 {% endblock %}

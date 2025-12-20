@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row, action_buttons,
 modal_header, modal_footer, form_input, search_script_init %}
 
 {% block title %}Gestão de Distribuidoras{% endblock %}
@@ -26,6 +26,7 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <th>ID</th>
                 <th>Nome</th>
                 <th>Localização</th>
+                <th class="text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -35,6 +36,11 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ dist[0] }}</td>
                 <td>{{ dist[1] }}</td>
                 <td>{{ dist[2] }}</td>
+                {{ action_buttons(
+                    show_edit=false,
+                    remove_modal='modalRemoverDistribuidora',
+                    remove_onclick="prepararRemocao('{}', '{}')".format(dist[0], dist[1])
+                ) }}
             </tr>
             {% endfor %}
             {% else %}
@@ -67,8 +73,46 @@ modal_header, modal_footer, form_input, search_script_init %}
         </div>
     </div>
 </div>
+
+{# Modal Remover Distribuidora #}
+<div class="modal fade" id="modalRemoverDistribuidora" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover a distribuidora:</p>
+                <p class="fw-bold" id="distribuidoraRemoverNome"></p>
+                <p class="text-muted small">ID: <span id="distribuidoraRemoverId"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverDistribuidora" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Distribuidora
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    function prepararRemocao(id, nome) {
+        document.getElementById('distribuidoraRemoverId').textContent = id;
+        document.getElementById('distribuidoraRemoverNome').textContent = nome;
+        document.getElementById('formRemoverDistribuidora').action = '/distribuidora/remover/' + id;
+    }
+</script>
 {% endblock %}

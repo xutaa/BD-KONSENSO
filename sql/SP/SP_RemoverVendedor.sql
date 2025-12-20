@@ -19,7 +19,6 @@ BEGIN
         DECLARE @VendedorId INT;
         SELECT @VendedorId = Id FROM dbo.Vendedor WHERE Pessoa_Cc = @Cc;
         
-        -- Remove contratos associados
         DELETE FROM dbo.ContratoVendedor WHERE Vendedor_Id = @VendedorId;
         
         DELETE FROM dbo.Vendedor WHERE Pessoa_Cc = @Cc;

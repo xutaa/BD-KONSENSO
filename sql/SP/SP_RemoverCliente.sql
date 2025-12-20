@@ -16,7 +16,6 @@ BEGIN
             RETURN;
         END
         
-        -- Verificação feita pelo trigger TR_BloquearExclusaoClienteComVendas
         DELETE FROM dbo.Cliente WHERE Pessoa_Cc = @Cc;
         DELETE FROM dbo.Pessoa WHERE Cc = @Cc;
         

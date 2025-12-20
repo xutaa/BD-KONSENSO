@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, search_script_init %}
+empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover %}
 
 {% block title %}Gestão de Empresas{% endblock %}
 
@@ -40,7 +40,11 @@ empty_row, modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ empresa[2] }}</td>
                 <td>{{ empresa[3] }}</td>
                 <td>{{ empresa[4] }}</td>
-                {{ action_buttons() }}
+                {{ action_buttons(
+                    show_edit=false,
+                    remove_modal='modalRemoverEmpresa',
+                    remove_onclick="prepararRemocao('{}', '{}')".format(empresa[0], empresa[1])
+                ) }}
             </tr>
             {% endfor %}
             {% else %}
@@ -90,8 +94,17 @@ empty_row, modal_header, modal_footer, form_input, search_script_init %}
         </div>
     </div>
 </div>
+
+{{ modal_remover('Empresa', 'empresa', 'NIF', 'empresaRemoverNome', 'empresaRemoverNif') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    function prepararRemocao(nif, nome) {
+        document.getElementById('empresaRemoverNif').textContent = nif;
+        document.getElementById('empresaRemoverNome').textContent = nome;
+        document.getElementById('formRemoverEmpresa').action = '/empresa/remover/' + encodeURIComponent(nif);
+    }
+</script>
 {% endblock %}

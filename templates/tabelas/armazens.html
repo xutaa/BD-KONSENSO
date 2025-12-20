@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, search_script_init %}
+empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover %}
 
 {% block title %}Gestão de Armazéns{% endblock %}
 
@@ -51,7 +51,11 @@ empty_row, modal_header, modal_footer, form_input, search_script_init %}
                     <span class="badge bg-secondary">-</span>
                     {% endif %}
                 </td>
-                {{ action_buttons() }}
+                {{ action_buttons(
+                    show_edit=false,
+                    remove_modal='modalRemoverArmazem',
+                    remove_onclick="prepararRemocao('{}', '{}')".format(armazem[0], armazem[1])
+                ) }}
             </tr>
             {% endfor %}
             {% else %}
@@ -85,8 +89,17 @@ empty_row, modal_header, modal_footer, form_input, search_script_init %}
         </div>
     </div>
 </div>
+
+{{ modal_remover('Armazem', 'armazem', 'ID', 'armazemRemoverNome', 'armazemRemoverId') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    function prepararRemocao(id, localizacao) {
+        document.getElementById('armazemRemoverId').textContent = id;
+        document.getElementById('armazemRemoverNome').textContent = localizacao;
+        document.getElementById('formRemoverArmazem').action = '/armazem/remover/' + id;
+    }
+</script>
 {% endblock %}

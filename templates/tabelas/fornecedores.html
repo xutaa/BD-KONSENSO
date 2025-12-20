@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, form_select, search_script_init %}
+empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, modal_remover %}
 
 {% block title %}Gestão de Fornecedores{% endblock %}
 
@@ -36,7 +36,11 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
                 <td>{{ fornecedor[0] }}</td>
                 <td>{{ fornecedor[1] }}</td>
                 <td>{{ fornecedor[2] }}</td>
-                {{ action_buttons() }}
+                {{ action_buttons(
+                    show_edit=false,
+                    remove_modal='modalRemoverFornecedor',
+                    remove_onclick="prepararRemocao('{}', '{}')".format(fornecedor[0], fornecedor[1])
+                ) }}
             </tr>
             {% endfor %}
             {% else %}
@@ -68,8 +72,17 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
         </div>
     </div>
 </div>
+
+{{ modal_remover('Fornecedor', 'fornecedor', 'ID', 'fornecedorRemoverNome', 'fornecedorRemoverId') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    function prepararRemocao(id, nome) {
+        document.getElementById('fornecedorRemoverId').textContent = id;
+        document.getElementById('fornecedorRemoverNome').textContent = nome;
+        document.getElementById('formRemoverFornecedor').action = '/fornecedor/remover/' + id;
+    }
+</script>
 {% endblock %}

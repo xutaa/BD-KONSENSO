@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
-modal_header, modal_footer, form_input, search_script_init %}
+modal_header, modal_footer, form_input, search_script_init, action_buttons, modal_remover %}
 
 {% block title %}Gestão de Cargos{% endblock %}
 
@@ -26,6 +26,7 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <th>ID</th>
                 <th>Nome</th>
                 <th>Descrição</th>
+                <th class="text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -35,10 +36,15 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ cargo[0] }}</td>
                 <td>{{ cargo[1] }}</td>
                 <td>{{ cargo[2] if cargo[2] else 'N/A' }}</td>
+                {{ action_buttons(
+                    show_edit=false,
+                    remove_modal='modalRemoverCargo',
+                    remove_onclick="prepararRemocao('{}', '{}')".format(cargo[0], cargo[1])
+                ) }}
             </tr>
             {% endfor %}
             {% else %}
-            {{ empty_row(3, 'Nenhum cargo registado') }}
+            {{ empty_row(4, 'Nenhum cargo registado') }}
             {% endif %}
         </tbody>
     </table>
@@ -69,8 +75,17 @@ modal_header, modal_footer, form_input, search_script_init %}
         </div>
     </div>
 </div>
+
+{{ modal_remover('Cargo', 'cargo', 'ID', 'cargoRemoverNome', 'cargoRemoverId') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    function prepararRemocao(id, nome) {
+        document.getElementById('cargoRemoverId').textContent = id;
+        document.getElementById('cargoRemoverNome').textContent = nome;
+        document.getElementById('formRemoverCargo').action = '/cargo/remover/' + id;
+    }
+</script>
 {% endblock %}
