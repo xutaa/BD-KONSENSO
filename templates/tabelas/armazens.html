@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
+{% from 'macros.html' import flash_messages, search_bar_with_button, no_results_alert, action_buttons,
 empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover, page_navigation, table_pagination
 %}
 
@@ -10,15 +10,14 @@ empty_row, modal_header, modal_footer, form_input, search_script_init, modal_rem
 {% endblock %}
 
 {% block content %}
-{# Cabeçalho da página com botão de adicionar #}
-{{ page_header('📦 Gestão de Armazéns', 'Novo Armazém', 'modalNovoArmazem') }}
+<h1 class="mb-4">📦 Gestão de Armazéns</h1>
 
 {# Mensagens flash #}
 {{ flash_messages() }}
 
-{# Barra de pesquisa #}
-{{ search_bar('armazém', 'tabelaArmazens', 'totalArmazens', pagination.total if pagination else registos|length,
-'armazém(ns)') }}
+{# Barra de pesquisa com botão #}
+{{ search_bar_with_button('armazém', 'tabelaArmazens', 'totalArmazens', pagination.total if pagination else
+registos|length, 'Novo Armazém', 'modalNovoArmazem', 'armazém(ns)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">

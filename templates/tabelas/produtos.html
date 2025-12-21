@@ -8,32 +8,29 @@
 {% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>📦 Gestão de Produtos</h1>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
-        <i class="bi bi-plus-circle"></i> Novo Produto
-    </button>
-</div>
+<h1 class="mb-4">📦 Gestão de Produtos</h1>
 
 {# Mensagens flash #}
 {{ flash_messages() }}
 
-<!-- 🔍 BARRA DE PESQUISA -->
-<div class="mb-4">
-    <div class="search-container">
-        <i class="bi bi-search search-icon"></i>
-        <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar produto..."
-            onkeyup="filtrarTabela('searchInput', 'tabelaProdutos', 'totalProdutos', 'nenhumResultado')">
-        <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
-            <i class="bi bi-x"></i>
-        </button>
+<!-- 🔍 BARRA DE PESQUISA + BOTÃO NOVO -->
+<div class="d-flex justify-content-between align-items-center gap-3 mb-4 flex-wrap">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
+        <div class="search-container flex-grow-1" style="max-width: 400px;">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar produto..."
+                onkeyup="filtrarTabela('searchInput', 'tabelaProdutos', 'totalProdutos', 'nenhumResultado')">
+            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <small class="text-muted text-nowrap">
+            <span id="totalProdutos">{{ pagination.total if pagination else registos|length }}</span> produto(s)
+        </small>
     </div>
-    <small class="text-muted">
-        <span id="totalProdutos">{{ pagination.total if pagination else registos|length }}</span> produto(s)
-        {% if pagination and pagination.pages > 1 %}
-        <span class="ms-2">| A mostrar {{ registos|length }} nesta página</span>
-        {% endif %}
-    </small>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
+        <i class="bi bi-plus-circle"></i> Novo Produto
+    </button>
 </div>
 
 <div class="table-responsive">
@@ -89,7 +86,7 @@
 {# Paginação de registos #}
 {{ table_pagination(pagination, 'lista_produtos') }}
 
-{# Navegação Previous/Next entre páginas #}
+{# Navegação Previous/Next #}
 {{ page_navigation('produtos') }}
 
 <div class="modal fade" id="modalNovoProduto" data-bs-backdrop="static" tabindex="-1">

@@ -72,6 +72,36 @@ Uso: {{ search_bar('produto', 'tabelaProdutos', 'totalProdutos', registos|length
 
 
 {# --------------------------------------------------------------------
+SEARCH BAR WITH BUTTON - Barra de pesquisa + Botão Novo na mesma linha
+Uso: {{ search_bar_with_button('produto', 'tabelaProdutos', 'totalProdutos', registos|length, 'Novo Produto',
+'modalNovoProduto') }}
+-------------------------------------------------------------------- #}
+{% macro search_bar_with_button(entity_name, table_id, counter_id, total_count, button_text, modal_id,
+entity_plural=None) %}
+<div class="d-flex justify-content-between align-items-center gap-3 mb-4 flex-wrap">
+    <div class="d-flex align-items-center gap-3 flex-grow-1">
+        <div class="search-container flex-grow-1" style="max-width: 400px;">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar {{ entity_name }}..."
+                onkeyup="filtrarTabela('searchInput', '{{ table_id }}', '{{ counter_id }}', 'nenhumResultado')">
+            <button class="clear-btn" onclick="limparPesquisa('searchInput')" id="clearBtn" style="display: none;">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <small class="text-muted text-nowrap">
+            <span id="{{ counter_id }}">{{ total_count }}</span> {{ entity_plural or entity_name + '(s)' }}
+        </small>
+    </div>
+    {% if button_text and modal_id %}
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#{{ modal_id }}">
+        <i class="bi bi-plus-circle"></i> {{ button_text }}
+    </button>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
 TABLE PAGINATION - Controlos de paginação para tabelas (Previous/Next)
 Uso: {{ table_pagination(pagination, 'lista_produtos') }}
 Onde pagination é um dict com: page, pages, total, has_prev, has_next, prev_page, next_page

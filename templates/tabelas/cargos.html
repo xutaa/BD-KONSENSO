@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+{% from 'macros.html' import flash_messages, search_bar_with_button, no_results_alert, back_button, empty_row,
 modal_header, modal_footer, form_input, search_script_init, action_buttons, modal_remover, page_navigation,
 table_pagination %}
 
@@ -10,15 +10,14 @@ table_pagination %}
 {% endblock %}
 
 {% block content %}
-{# Cabeçalho da página com botão de adicionar #}
-{{ page_header('🎖️ Gestão de Cargos', 'Novo Cargo', 'modalNovoCargo') }}
+<h1 class="mb-4">🎖️ Gestão de Cargos</h1>
 
 {# Mensagens flash #}
 {{ flash_messages() }}
 
-{# Barra de pesquisa #}
-{{ search_bar('cargo', 'tabelaCargos', 'totalCargos', pagination.total if pagination else registos|length, 'cargo(s)')
-}}
+{# Barra de pesquisa com botão #}
+{{ search_bar_with_button('cargo', 'tabelaCargos', 'totalCargos', pagination.total if pagination else registos|length,
+'Novo Cargo', 'modalNovoCargo', 'cargo(s)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">

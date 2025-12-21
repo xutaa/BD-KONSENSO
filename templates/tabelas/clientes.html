@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+{% from 'macros.html' import flash_messages, search_bar_with_button, no_results_alert, empty_row,
 action_buttons, modal_header, modal_footer, form_input, search_script_init, page_navigation, table_pagination %}
 
 {% block title %}Gestão de Clientes{% endblock %}
@@ -9,15 +9,14 @@ action_buttons, modal_header, modal_footer, form_input, search_script_init, page
 {% endblock %}
 
 {% block content %}
-{# Cabeçalho da página com botão de adicionar #}
-{{ page_header('👥 Gestão de Clientes', 'Novo Cliente', 'modalNovoCliente') }}
+<h1 class="mb-4">👥 Gestão de Clientes</h1>
 
 {# Mensagens flash #}
 {{ flash_messages() }}
 
-{# Barra de pesquisa #}
-{{ search_bar('cliente', 'tabelaClientes', 'totalClientes', pagination.total if pagination else registos|length,
-'cliente(s)') }}
+{# Barra de pesquisa com botão #}
+{{ search_bar_with_button('cliente', 'tabelaClientes', 'totalClientes', pagination.total if pagination else
+registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
+{% from 'macros.html' import flash_messages, search_bar_with_button, no_results_alert, action_buttons,
 empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, page_navigation, table_pagination %}
 
 {% block title %}Gestão de Funcionários{% endblock %}
@@ -9,15 +9,14 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {% endblock %}
 
 {% block content %}
-{# Cabeçalho da página com botão de adicionar #}
-{{ page_header('👔 Gestão de Funcionários', 'Novo Funcionário', 'modalNovoFuncionario') }}
+<h1 class="mb-4">👔 Gestão de Funcionários</h1>
 
 {# Mensagens flash #}
 {{ flash_messages() }}
 
-{# Barra de pesquisa #}
-{{ search_bar('funcionário', 'tabelaFuncionarios', 'totalFuncionarios', pagination.total if pagination else
-registos|length, 'funcionário(s)') }}
+{# Barra de pesquisa com botão #}
+{{ search_bar_with_button('funcionário', 'tabelaFuncionarios', 'totalFuncionarios', pagination.total if pagination else
+registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">
