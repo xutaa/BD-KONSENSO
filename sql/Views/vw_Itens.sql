@@ -6,6 +6,7 @@ CREATE OR ALTER VIEW vw_Itens AS
 SELECT 
     i.Venda_Id,
     p.Nome AS Produto,
+    i.Produto_Referencia,
     i.Quantidade,
     i.Preco,
     (i.Quantidade * i.Preco) AS Total
