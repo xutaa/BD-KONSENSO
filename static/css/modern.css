@@ -237,6 +237,7 @@ body {
     color: var(--text-main);
     transition: all 0.2s;
     height: 100%;
+    min-height: 100px;
     position: relative;
     overflow: hidden;
 }
@@ -244,7 +245,7 @@ body {
 .action-tile:hover {
     border-color: var(--secondary-color);
     box-shadow: var(--shadow-md);
-    transform: translateY(-5px);
+    transform: translateY(-3px);
 }
 
 .action-tile .tile-icon {
@@ -267,6 +268,15 @@ body {
 .action-tile .tile-desc {
     font-size: 0.85rem;
     color: var(--text-muted);
+}
+
+/* Grid Columns - Equal Height */
+.row-cols-2>.col {
+    display: flex;
+}
+
+.row-cols-2>.col>.action-tile {
+    width: 100%;
 }
 
 .nav-link {

@@ -289,13 +289,13 @@ Uso: {{ modal_remover('Cliente', 'cliente', 'CC', 'clienteRemoverNome', 'cliente
 {# --------------------------------------------------------------------
 PAGE NAVIGATION - Navegação Previous/Next entre páginas
 Uso: {{ page_navigation('produtos') }}
-Páginas disponíveis: dashboard, vendas, produtos, itens, funcionarios,
+Páginas disponíveis: vendas, produtos, itens, funcionarios,
 clientes, vendedores, contratos, cargos, stock, armazens, lojas,
 fabricas, maquinas, materias_primas, empresas, fornecedores, distribuidoras
+NOTA: Dashboard removido - é o menu central, não faz parte da sequência
 -------------------------------------------------------------------- #}
 {% macro page_navigation(current_page) %}
 {% set pages = [
-('dashboard', 'Dashboard', 'dashboard', 'fa-chart-pie'),
 ('vendas', 'Vendas', 'lista_vendas', 'fa-cart-shopping'),
 ('produtos', 'Produtos', 'lista_produtos', 'fa-box'),
 ('itens', 'Itens de Venda', 'lista_itens', 'fa-receipt'),
