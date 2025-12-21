@@ -13,7 +13,7 @@ BEGIN
             RAISERROR('Venda não encontrada.', 16, 1)
             RETURN
         END
-        SELECT P.Nome, I.Quantidade, I.Preco, (I.Quantidade * I.Preco) as Total
+        SELECT P.Referencia, P.Nome, I.Quantidade, I.Preco, (I.Quantidade * I.Preco) as Total
         FROM Item I
         JOIN Produto P ON I.Produto_Referencia = P.Referencia
         WHERE I.Venda_Id = @VendaId;

@@ -34,7 +34,7 @@
                 <th>Loja</th>
                 <th>Pagamento</th>
                 <th class="text-end">Total (€)</th>
-                <th class="text-center">Detalhes</th>
+                <th class="text-center">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -46,11 +46,14 @@
                 <td>{{ venda[5] }}</td>
                 <td><span class="badge bg-secondary">{{ venda[3] }}</span></td>
                 <td class="text-end fw-bold text-success">{{ "%.2f"|format(venda[2]) }} €</td>
-
                 <td class="text-center">
-                    <button class="btn btn-soft-primary btn-sm" onclick="carregarDetalhesVenda('{{ venda[0] }}')"
-                        data-bs-toggle="modal" data-bs-target="#modalDetalhesVenda">
-                        <i class="bi bi-eye me-1"></i> Detalhes
+                    <button class="btn btn-soft-primary btn-sm me-1" onclick="carregarDetalhesVenda('{{ venda[0] }}')"
+                        data-bs-toggle="modal" data-bs-target="#modalDetalhesVenda" title="Ver Detalhes">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                    <button class="btn btn-soft-warning btn-sm" onclick="abrirModalEditarVenda('{{ venda[0] }}')"
+                        data-bs-toggle="modal" data-bs-target="#modalEditarVenda" title="Editar Venda">
+                        <i class="bi bi-pencil"></i>
                     </button>
                 </td>
             </tr>
@@ -199,11 +202,104 @@
     </div>
 </div>
 
+<!-- Modal de Editar Venda -->
+<div class="modal fade" id="modalEditarVenda" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-warning">
+                    <i class="fa-solid fa-edit me-2"></i> Editar Venda #<span id="editVendaId"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-4">
+                <!-- Secção Superior: Dados da Venda -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small text-uppercase fw-bold">Loja</label>
+                        <input type="text" class="form-control bg-light" id="edit_loja_nome" readonly>
+                        <input type="hidden" id="edit_loja_id">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small text-uppercase fw-bold">NIF Cliente</label>
+                        <input type="text" class="form-control" id="edit_venda_nif" maxlength="9" placeholder="999999999">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small text-uppercase fw-bold">Pagamento</label>
+                        <select class="form-select form-control" id="edit_venda_pagamento">
+                            <option value="Dinheiro">💵 Dinheiro</option>
+                            <option value="Multibanco">💳 Multibanco</option>
+                            <option value="MB Way">📱 MB Way</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="text-muted opacity-25 my-4">
+
+                <!-- Secção de Adicionar Produtos -->
+                <h6 class="fw-bold mb-3 text-secondary">Modificar Produtos</h6>
+                <div class="row g-2 align-items-end mb-4 p-3 bg-light rounded-3 border border-light">
+                    <div class="col-md-7">
+                        <label class="form-label small">Produto</label>
+                        <select class="form-select form-control" id="edit_add_produto">
+                            <option value="">-- Selecione --</option>
+                            {% for prod in dados_produtos %}
+                            <option value="{{ prod[0] }}" data-nome="{{ prod[1] }}">{{ prod[1] }} ({{ prod[0] }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label small">Qtd</label>
+                        <input type="number" class="form-control" id="edit_add_qtd" value="1" min="1">
+                    </div>
+                    <div class="col-md-3">
+                        <button type="button" class="btn btn-primary w-100" onclick="adicionarAoCarrinhoEdicao()">
+                            <i class="fa-solid fa-plus me-1"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabela de Itens -->
+                <div class="table-responsive border rounded-3" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-center" width="80">Qtd</th>
+                                <th class="text-center" width="80">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="editCorpoCarrinho">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-3 text-muted small" id="editEmptyCartMsg" style="display: none;">
+                    O carrinho está vazio. Adicione produtos acima.
+                </div>
+                <div class="text-center mt-3" id="editLoadingSpinner">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">A carregar dados da venda...</p>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 pb-4 pe-4">
+                <button type="button" class="btn btn-secondary text-muted bg-transparent border-0"
+                    data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning px-4" onclick="salvarEdicaoVenda()">
+                    <i class="fa-solid fa-save me-2"></i> Salvar Alterações (<span id="editCountItens">0</span>)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
     let carrinho = [];
+    let carrinhoEdicao = [];
+    let vendaIdEmEdicao = null;
 
     function adicionarAoCarrinho() {
         const select = document.getElementById('add_produto');
@@ -315,6 +411,139 @@
         } catch (erro) {
             tbody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar itens.</td></tr>';
             spinner.style.display = 'none';
+        }
+    }
+
+    // ========== FUNÇÕES DE EDIÇÃO ==========
+
+    async function abrirModalEditarVenda(vendaId) {
+        vendaIdEmEdicao = vendaId;
+        carrinhoEdicao = [];
+        
+        document.getElementById('editVendaId').textContent = vendaId;
+        document.getElementById('editLoadingSpinner').style.display = 'block';
+        document.getElementById('editCorpoCarrinho').innerHTML = '';
+        document.getElementById('editEmptyCartMsg').style.display = 'none';
+
+        try {
+            const response = await fetch(`/api/venda/${vendaId}/detalhes`);
+            
+            // Verificar se a resposta é OK
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Erro do servidor:', errorText);
+                throw new Error(`Erro ${response.status}: ${response.statusText}`);
+            }
+            
+            const venda = await response.json();
+
+            if (venda.erro) {
+                alert('Erro: ' + venda.erro);
+                document.getElementById('editLoadingSpinner').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('edit_loja_nome').value = venda.loja_nome || `ID: ${venda.loja_id}`;
+            document.getElementById('edit_loja_id').value = venda.loja_id;
+            document.getElementById('edit_venda_nif').value = venda.cliente_nif || '';
+            document.getElementById('edit_venda_pagamento').value = venda.metodo_pagamento;
+
+            venda.itens.forEach(item => {
+                const select = document.getElementById('edit_add_produto');
+                const option = Array.from(select.options).find(opt => opt.value === item.produto_ref);
+                const nome = option ? option.getAttribute('data-nome') : item.produto_ref;
+
+                carrinhoEdicao.push({
+                    ref: item.produto_ref,
+                    nome: nome,
+                    qtd: item.quantidade
+                });
+            });
+
+            renderizarCarrinhoEdicao();
+            document.getElementById('editLoadingSpinner').style.display = 'none';
+
+        } catch (erro) {
+            console.error('Erro completo:', erro);
+            alert('Erro ao carregar dados da venda: ' + erro.message);
+            document.getElementById('editLoadingSpinner').style.display = 'none';
+        }
+    }
+
+    function adicionarAoCarrinhoEdicao() {
+        const select = document.getElementById('edit_add_produto');
+        const ref = select.value;
+        const nome = select.options[select.selectedIndex].getAttribute('data-nome');
+        const qtd = parseInt(document.getElementById('edit_add_qtd').value);
+
+        if (!ref || qtd <= 0) return alert("Selecione um produto válido.");
+
+        const existente = carrinhoEdicao.find(item => item.ref === ref);
+        if (existente) {
+            existente.qtd += qtd;
+        } else {
+            carrinhoEdicao.push({ ref, nome, qtd });
+        }
+
+        renderizarCarrinhoEdicao();
+    }
+
+    function renderizarCarrinhoEdicao() {
+        const tbody = document.getElementById('editCorpoCarrinho');
+        const emptyMsg = document.getElementById('editEmptyCartMsg');
+        tbody.innerHTML = '';
+
+        if (carrinhoEdicao.length === 0) {
+            emptyMsg.style.display = 'block';
+        } else {
+            emptyMsg.style.display = 'none';
+            carrinhoEdicao.forEach((item, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="ps-3 align-middle">${item.nome}</td>
+                        <td class="text-center align-middle">${item.qtd}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-link text-danger border-0 p-0" onclick="removerDoCarrinhoEdicao(${index})">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+            });
+        }
+        document.getElementById('editCountItens').textContent = carrinhoEdicao.length;
+    }
+
+    function removerDoCarrinhoEdicao(index) {
+        carrinhoEdicao.splice(index, 1);
+        renderizarCarrinhoEdicao();
+    }
+
+    async function salvarEdicaoVenda() {
+        if (carrinhoEdicao.length === 0) {
+            return alert("A venda deve ter pelo menos 1 item!");
+        }
+
+        const dados = {
+            nif: document.getElementById('edit_venda_nif').value,
+            pagamento: document.getElementById('edit_venda_pagamento').value,
+            itens: carrinhoEdicao
+        };
+
+        try {
+            const response = await fetch(`/venda/editar/${vendaIdEmEdicao}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dados)
+            });
+
+            const res = await response.json();
+            if (res.sucesso) {
+                window.location.reload();
+            } else {
+                alert("Erro ao editar venda: " + res.erro);
+            }
+        } catch (err) {
+            alert("Falha na comunicação com o servidor: " + err);
         }
     }
 </script>

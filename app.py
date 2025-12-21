@@ -1858,18 +1858,123 @@ def obter_itens_venda(venda_id):
     itens = []
     try:
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.ObterItensVenda (?)}", venda_id)
+        # Usar query direta em vez da SP
+        cursor.execute("""
+            SELECT P.Nome, I.Quantidade, I.Preco, (I.Quantidade * I.Preco) as Total
+            FROM Item I
+            JOIN Produto P ON I.Produto_Referencia = P.Referencia
+            WHERE I.Venda_Id = ?
+        """, (venda_id,))
 
         for row in cursor.fetchall():
             itens.append({
-                'produto': row[0],
+                'produto': row[0],  # Nome do produto
                 'quantidade': row[1],
                 'preco_unit': row[2],
-                'subtotal': row[3]
+                'subtotal': float(row[3])  # Total já calculado
             })
         return jsonify(itens)
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/venda/<int:venda_id>/detalhes')
+@login_required
+def obter_detalhes_venda(venda_id):
+    """API que retorna todos os detalhes de uma venda para edição"""
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Buscar dados da venda
+        cursor.execute("""
+            SELECT v.Id, v.DataHora, v.ValorTotal, v.MetodoPagamento, 
+                   v.Cliente_Nif, v.Loja_Id, l.Nome as Loja_Nome
+            FROM Venda v
+            LEFT JOIN Loja l ON v.Loja_Id = l.Id
+            WHERE v.Id = ?
+        """, (venda_id,))
+        
+        venda_row = cursor.fetchone()
+        if not venda_row:
+            return jsonify({'erro': 'Venda não encontrada'}), 404
+        
+        # Buscar itens da venda
+        # Primeiro precisamos buscar com JOIN para pegar a Referencia
+        cursor.execute("""
+            SELECT P.Referencia, P.Nome, I.Quantidade, I.Preco, (I.Quantidade * I.Preco) as Total
+            FROM Item I
+            JOIN Produto P ON I.Produto_Referencia = P.Referencia
+            WHERE I.Venda_Id = ?
+        """, (venda_id,))
+        
+        itens = []
+        for row in cursor.fetchall():
+            itens.append({
+                'produto_ref': row[0],  # Referencia
+                'produto_nome': row[1],  # Nome
+                'quantidade': row[2],
+                'preco_unit': float(row[3]),
+                'subtotal': float(row[4])
+            })
+        
+        venda = {
+            'id': venda_row[0],
+            'data': venda_row[1].strftime('%Y-%m-%d') if venda_row[1] else '',
+            'valor_total': float(venda_row[2]) if venda_row[2] else 0,
+            'metodo_pagamento': venda_row[3],
+            'cliente_nif': venda_row[4],
+            'loja_id': venda_row[5],
+            'loja_nome': venda_row[6],
+            'itens': itens
+        }
+        
+        return jsonify(venda)
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/venda/editar/<int:venda_id>', methods=['POST'])
+@login_required
+def editar_venda(venda_id):
+    """Edita uma venda existente"""
+    
+    data = request.get_json()
+    
+    if not data or 'itens' not in data or len(data['itens']) == 0:
+        return jsonify({'sucesso': False, 'erro': 'Venda deve ter pelo menos 1 item'}), 400
+    
+    # Converter quantidade de float/string para int
+    itens_para_sql = [(item['ref'], int(float(item['qtd']))) for item in data['itens']]
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        nif = data.get('nif') if data.get('nif') else None
+        
+        sql = "{CALL dbo.EditarVenda (?, ?, ?, ?)}"
+        params = (
+            venda_id,
+            nif,
+            data['pagamento'],
+            itens_para_sql
+        )
+        
+        cursor.execute(sql, params)
+        conn.commit()
+
+        flash('✅ Venda editada com sucesso!', 'success')
+        return jsonify({'sucesso': True, 'mensagem': 'Venda editada com sucesso!'})
+        
+    except Exception as e:
+        conn.rollback()
+        error_msg = str(e)
+        flash(f'❌ Erro ao editar venda: {error_msg}', 'error')
+        return jsonify({'sucesso': False, 'erro': error_msg}), 500
     finally:
         conn.close()
 
