@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import action_buttons, page_navigation %}
+{% from 'macros.html' import action_buttons, page_navigation, table_pagination %}
 {% block title %}Gestão de Contratos de Vendedor{% endblock %}
 
 {% block extra_css %}
@@ -83,7 +83,10 @@
     <i class="bi bi-exclamation-triangle"></i> Nenhum contrato encontrado.
 </div>
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_contratos_vendedor') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('contratos') }}
 
 <div class="modal fade" id="modalNovoContrato" data-bs-backdrop="static" tabindex="-1">

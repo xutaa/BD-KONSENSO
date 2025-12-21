@@ -72,6 +72,52 @@ Uso: {{ search_bar('produto', 'tabelaProdutos', 'totalProdutos', registos|length
 
 
 {# --------------------------------------------------------------------
+TABLE PAGINATION - Controlos de paginação para tabelas (Previous/Next)
+Uso: {{ table_pagination(pagination, 'lista_produtos') }}
+Onde pagination é um dict com: page, pages, total, has_prev, has_next, prev_page, next_page
+-------------------------------------------------------------------- #}
+{% macro table_pagination(pagination, endpoint, extra_args={}) %}
+{% if pagination and pagination.pages > 1 %}
+<div class="table-pagination">
+    <div class="pagination-info">
+        <span class="pagination-text">
+            Página <strong>{{ pagination.page }}</strong> de <strong>{{ pagination.pages }}</strong>
+            <span class="text-muted">({{ pagination.total }} registos)</span>
+        </span>
+    </div>
+    <div class="pagination-controls">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for(endpoint, page=pagination.prev_page, **extra_args) }}"
+            class="pagination-btn pagination-prev">
+            <i class="fa-solid fa-chevron-left"></i>
+            <span>Anterior</span>
+        </a>
+        {% else %}
+        <span class="pagination-btn pagination-prev disabled">
+            <i class="fa-solid fa-chevron-left"></i>
+            <span>Anterior</span>
+        </span>
+        {% endif %}
+
+        {% if pagination.has_next %}
+        <a href="{{ url_for(endpoint, page=pagination.next_page, **extra_args) }}"
+            class="pagination-btn pagination-next">
+            <span>Próxima</span>
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        {% else %}
+        <span class="pagination-btn pagination-next disabled">
+            <span>Próxima</span>
+            <i class="fa-solid fa-chevron-right"></i>
+        </span>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+
+{# --------------------------------------------------------------------
 NO RESULTS ALERT - Alerta quando não há resultados de pesquisa
 Uso: {{ no_results_alert('produto') }}
 -------------------------------------------------------------------- #}

@@ -146,3 +146,50 @@ def execute_sp(sp_name, params=None, commit=True):
         raise  # Re-lançar para a rota tratar a mensagem
     finally:
         conn.close()
+
+
+def paginate(items, page, per_page=10):
+    """
+    Pagina uma lista de items.
+    
+    Args:
+        items: Lista de registos
+        page: Número da página atual (1-indexed)
+        per_page: Itens por página (default: 10)
+    
+    Returns:
+        dict com:
+            - items: Lista de itens da página atual
+            - page: Página atual
+            - per_page: Itens por página
+            - total: Total de itens
+            - pages: Número total de páginas
+            - has_prev: Se tem página anterior
+            - has_next: Se tem próxima página
+            - prev_page: Número da página anterior
+            - next_page: Número da próxima página
+    
+    Uso:
+        pagination = paginate(produtos, page=1, per_page=10)
+    """
+    if not items:
+        items = []
+    
+    total = len(items)
+    pages = max(1, (total + per_page - 1) // per_page)  # Ceiling division
+    page = max(1, min(page, pages))  # Clamp page to valid range
+    
+    start = (page - 1) * per_page
+    end = start + per_page
+    
+    return {
+        'items': items[start:end],
+        'page': page,
+        'per_page': per_page,
+        'total': total,
+        'pages': pages,
+        'has_prev': page > 1,
+        'has_next': page < pages,
+        'prev_page': page - 1 if page > 1 else None,
+        'next_page': page + 1 if page < pages else None
+    }

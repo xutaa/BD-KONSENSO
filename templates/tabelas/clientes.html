@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
-action_buttons,
-modal_header, modal_footer, form_input, search_script_init, page_navigation %}
+action_buttons, modal_header, modal_footer, form_input, search_script_init, page_navigation, table_pagination %}
 
 {% block title %}Gestão de Clientes{% endblock %}
 
@@ -17,7 +16,8 @@ modal_header, modal_footer, form_input, search_script_init, page_navigation %}
 {{ flash_messages() }}
 
 {# Barra de pesquisa #}
-{{ search_bar('cliente', 'tabelaClientes', 'totalClientes', registos|length, 'cliente(s)') }}
+{{ search_bar('cliente', 'tabelaClientes', 'totalClientes', pagination.total if pagination else registos|length,
+'cliente(s)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">
@@ -60,7 +60,10 @@ modal_header, modal_footer, form_input, search_script_init, page_navigation %}
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('cliente') }}
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_clientes') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('clientes') }}
 
 {# Modal Novo Cliente #}

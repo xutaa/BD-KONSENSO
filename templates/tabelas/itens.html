@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_navigation %}
+{% from 'macros.html' import page_navigation, table_pagination %}
 
 {% block title %}Gestão de Itens{% endblock %}
 
@@ -81,7 +81,10 @@
     <i class="bi bi-exclamation-triangle"></i> Nenhum item encontrado.
 </div>
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_itens') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('itens') }}
 {% endblock %}
 

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_navigation %}
+{% from 'macros.html' import page_navigation, table_pagination %}
 
 {% block title %}Lista de Vendas{% endblock %}
 
@@ -62,7 +62,10 @@
 <div class="alert alert-info">ℹ️ Nenhuma venda encontrada para esta loja.</div>
 {% endif %}
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_vendas') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('vendas') }}
 
 <div class="modal fade" id="modalDetalhesVenda" tabindex="-1" aria-hidden="true">

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
-modal_header, modal_footer, form_input, search_script_init, action_buttons, modal_remover, page_navigation %}
+modal_header, modal_footer, form_input, search_script_init, action_buttons, modal_remover, page_navigation,
+table_pagination %}
 
 {% block title %}Gestão de Cargos{% endblock %}
 
@@ -16,7 +17,8 @@ modal_header, modal_footer, form_input, search_script_init, action_buttons, moda
 {{ flash_messages() }}
 
 {# Barra de pesquisa #}
-{{ search_bar('cargo', 'tabelaCargos', 'totalCargos', registos|length, 'cargo(s)') }}
+{{ search_bar('cargo', 'tabelaCargos', 'totalCargos', pagination.total if pagination else registos|length, 'cargo(s)')
+}}
 
 {# Tabela de dados #}
 <div class="table-responsive">
@@ -53,7 +55,10 @@ modal_header, modal_footer, form_input, search_script_init, action_buttons, moda
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('cargo') }}
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_cargos') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('cargos') }}
 
 {# Modal Novo Cargo #}

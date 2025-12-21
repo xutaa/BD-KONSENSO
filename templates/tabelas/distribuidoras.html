@@ -1,7 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
-action_buttons,
-modal_header, modal_footer, form_input, search_script_init, page_navigation %}
+action_buttons, modal_header, modal_footer, form_input, search_script_init, page_navigation, table_pagination %}
 
 {% block title %}Gestão de Distribuidoras{% endblock %}
 
@@ -17,7 +16,8 @@ modal_header, modal_footer, form_input, search_script_init, page_navigation %}
 {{ flash_messages() }}
 
 {# Barra de pesquisa #}
-{{ search_bar('distribuidora', 'tabelaDistribuidoras', 'totalDistribuidoras', registos|length, 'distribuidora(s)') }}
+{{ search_bar('distribuidora', 'tabelaDistribuidoras', 'totalDistribuidoras', pagination.total if pagination else
+registos|length, 'distribuidora(s)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">
@@ -54,7 +54,10 @@ modal_header, modal_footer, form_input, search_script_init, page_navigation %}
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('distribuidora') }}
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_distribuidoras') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('distribuidoras') }}
 
 {# Modal Nova Distribuidora #}

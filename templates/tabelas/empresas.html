@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover, page_navigation %}
+empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover, page_navigation, table_pagination
+%}
 
 {% block title %}Gestão de Empresas{% endblock %}
 
@@ -57,7 +58,10 @@ empty_row, modal_header, modal_footer, form_input, search_script_init, modal_rem
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('empresa') }}
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_empresas') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('empresas') }}
 
 {# Modal Nova Empresa #}

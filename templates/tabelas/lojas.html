@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import action_buttons, page_navigation %}
+{% from 'macros.html' import action_buttons, page_navigation, table_pagination %}
 {% block title %}Gestão de Lojas{% endblock %}
 
 {% block extra_css %}
@@ -86,7 +86,10 @@
     <i class="bi bi-exclamation-triangle"></i> Nenhuma loja encontrada.
 </div>
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_lojas') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('lojas') }}
 
 <!-- Modal Nova Loja -->

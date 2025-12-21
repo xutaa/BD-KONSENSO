@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from database import get_db_connection
-from utils import login_required, admin_tipo_required, execute_query, execute_sp
+from utils import login_required, admin_tipo_required, execute_query, execute_sp, paginate
 
 app = Flask(__name__)
 app.secret_key = 'bd_konsenso_secret_key_2024'
@@ -230,13 +230,17 @@ def dashboard():
 @app.route('/armazens')
 @login_required
 def lista_armazens():
-    """Lista todos os armazéns com informação de ocupação"""
+    """Lista todos os armazéns com informação de ocupação e paginação"""
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
             flash('Erro de conexão com a base de dados', 'error')
-            return render_template('tabelas/armazens.html', registos=[], sucesso=False)
+            return render_template('tabelas/armazens.html', registos=[], pagination=None, sucesso=False)
         
         cursor = conn.cursor()
         
@@ -260,16 +264,21 @@ def lista_armazens():
             armazens = cursor.fetchall()
         
         cursor.close()
-        return render_template('tabelas/armazens.html', registos=armazens, sucesso=True)
+        
+        # Aplicar paginação
+        pagination = paginate(armazens, page, per_page)
+        
+        return render_template('tabelas/armazens.html', registos=pagination['items'], pagination=pagination, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar armazéns: {e}")
         try:
             cursor.execute("SELECT Id, Localizacao, Capacidade FROM Armazem ORDER BY Localizacao")
             armazens = cursor.fetchall()
-            return render_template('tabelas/armazens.html', registos=armazens, sucesso=True)
+            pagination = paginate(armazens, page, per_page)
+            return render_template('tabelas/armazens.html', registos=pagination['items'], pagination=pagination, sucesso=True)
         except:
             flash(f'Erro ao carregar armazéns: {str(e)}', 'error')
-            return render_template('tabelas/armazens.html', registos=[], sucesso=False)
+            return render_template('tabelas/armazens.html', registos=[], pagination=None, sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -326,19 +335,25 @@ def remover_armazem(id):
 @app.route('/cargos')
 @login_required
 def lista_cargos():
+    """Lista todos os cargos com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/cargos.html', registos=[], erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/cargos.html', registos=[], pagination=None, erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         cursor.execute("SELECT Id, Nome, Descricao FROM dbo.Cargo ORDER BY Id")
         cargos = cursor.fetchall()
         cursor.close()
-        return render_template('tabelas/cargos.html', registos=cargos, sucesso=True)
+        
+        pagination = paginate(cargos, page, per_page)
+        return render_template('tabelas/cargos.html', registos=pagination['items'], pagination=pagination, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar cargos: {e}")
-        return render_template('tabelas/cargos.html', registos=[], erro=str(e), sucesso=False)
+        return render_template('tabelas/cargos.html', registos=[], pagination=None, erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -392,11 +407,14 @@ def remover_cargo(id):
 @app.route('/clientes')
 @login_required
 def lista_clientes():
-    """Lista todos os clientes com opção de adicionar"""
+    """Lista todos os clientes com opção de adicionar e paginação"""
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/clientes.html', registos=[], pessoas=[])
+        return render_template('tabelas/clientes.html', registos=[], pessoas=[], pagination=None)
     
     try:
         cursor = conn.cursor()
@@ -424,10 +442,13 @@ def lista_clientes():
         """)
         pessoas = cursor.fetchall()
         
-        return render_template('tabelas/clientes.html', registos=registos, pessoas=pessoas)
+        # Aplicar paginação
+        pagination = paginate(registos, page, per_page)
+        
+        return render_template('tabelas/clientes.html', registos=pagination['items'], pessoas=pessoas, pagination=pagination)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/clientes.html', registos=[], pessoas=[])
+        return render_template('tabelas/clientes.html', registos=[], pessoas=[], pagination=None)
     finally:
         conn.close()
 
@@ -484,11 +505,15 @@ def remover_cliente(cc):
 @app.route('/contratos_vendedor')
 @login_required
 def lista_contratos_vendedor():
+    """Lista contratos de vendedor com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], pagination=None, erro="Erro de conexão", sucesso=False)
         cursor = conn.cursor()
         
         cursor.execute("SELECT * FROM vw_ContratosVendedor ORDER BY Vendedor")
@@ -506,14 +531,17 @@ def lista_contratos_vendedor():
         empresas = cursor.fetchall()
         
         cursor.close()
+        
+        pagination = paginate(contratos, page, per_page)
         return render_template('tabelas/contratos_vendedor.html', 
-                             registos=contratos,
+                             registos=pagination['items'],
                              vendedores=vendedores,
                              empresas=empresas,
+                             pagination=pagination,
                              sucesso=True)
     except Exception as e:
         print(f"Erro ao listar contratos vendedor: {e}")
-        return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], erro=str(e), sucesso=False)
+        return render_template('tabelas/contratos_vendedor.html', registos=[], vendedores=[], empresas=[], pagination=None, erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -570,12 +598,16 @@ def remover_contrato_vendedor(vendedor_id, empresa_nif):
 @app.route('/distribuidoras')
 @login_required
 def lista_distribuidoras():
+    """Lista distribuidoras com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
             flash('Erro de conexão com a base de dados', 'error')
-            return render_template('tabelas/distribuidoras.html', registos=[], sucesso=False)
+            return render_template('tabelas/distribuidoras.html', registos=[], pagination=None, sucesso=False)
         
         cursor = conn.cursor()
         
@@ -593,11 +625,13 @@ def lista_distribuidoras():
             distribuidoras = cursor.fetchall()
         
         cursor.close()
-        return render_template('tabelas/distribuidoras.html', registos=distribuidoras, sucesso=True)
+        
+        pagination = paginate(distribuidoras, page, per_page)
+        return render_template('tabelas/distribuidoras.html', registos=pagination['items'], pagination=pagination, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar distribuidoras: {e}")
         flash(f'Erro ao carregar distribuidoras: {str(e)}', 'error')
-        return render_template('tabelas/distribuidoras.html', registos=[], sucesso=False)
+        return render_template('tabelas/distribuidoras.html', registos=[], pagination=None, sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -672,13 +706,16 @@ def lista_distribuidoras_armazem():
 @app.route('/empresas')
 @login_required
 def lista_empresas():
-    """Lista todas as empresas"""
+    """Lista todas as empresas com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
             flash('Erro de conexão com a base de dados', 'error')
-            return render_template('tabelas/empresas.html', registos=[], sucesso=False)
+            return render_template('tabelas/empresas.html', registos=[], pagination=None, sucesso=False)
         
         cursor = conn.cursor()
         cursor.execute("""
@@ -688,11 +725,13 @@ def lista_empresas():
         """)
         empresas = cursor.fetchall()
         cursor.close()
-        return render_template('tabelas/empresas.html', registos=empresas, sucesso=True)
+        
+        pagination = paginate(empresas, page, per_page)
+        return render_template('tabelas/empresas.html', registos=pagination['items'], pagination=pagination, sucesso=True)
     except Exception as e:
         print(f"Erro ao listar empresas: {e}")
         flash(f'Erro ao carregar empresas: {str(e)}', 'error')
-        return render_template('tabelas/empresas.html', registos=[], sucesso=False)
+        return render_template('tabelas/empresas.html', registos=[], pagination=None, sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -751,13 +790,16 @@ def remover_empresa(nif):
 @app.route('/fabricas')
 @login_required
 def lista_fabricas():
-    """Lista todas as fábricas"""
+    """Lista todas as fábricas com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
             flash('Erro de conexão com a base de dados', 'error')
-            return render_template('tabelas/fabricas.html', registos=[], empresas=[], distribuidoras=[], sucesso=False)
+            return render_template('tabelas/fabricas.html', registos=[], empresas=[], distribuidoras=[], pagination=None, sucesso=False)
         
         cursor = conn.cursor()
         
@@ -782,15 +824,18 @@ def lista_fabricas():
         distribuidoras = cursor.fetchall()
         
         cursor.close()
+        
+        pagination = paginate(fabricas, page, per_page)
         return render_template('tabelas/fabricas.html', 
-                             registos=fabricas,
+                             registos=pagination['items'],
                              empresas=empresas,
                              distribuidoras=distribuidoras,
+                             pagination=pagination,
                              sucesso=True)
     except Exception as e:
         print(f"Erro ao listar fabricas: {e}")
         flash(f'Erro ao carregar fábricas: {str(e)}', 'error')
-        return render_template('tabelas/fabricas.html', registos=[], empresas=[], distribuidoras=[], sucesso=False)
+        return render_template('tabelas/fabricas.html', registos=[], empresas=[], distribuidoras=[], pagination=None, sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -849,11 +894,13 @@ def remover_fabrica(id):
 @app.route('/fornecedores')
 @login_required
 def lista_fornecedores():
-    """Lista todos os fornecedores com opção de adicionar"""
+    """Lista todos os fornecedores com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/fornecedores.html', registos=[], empresas=[])
+        return render_template('tabelas/fornecedores.html', registos=[], empresas=[], pagination=None)
     
     try:
         cursor = conn.cursor()
@@ -876,10 +923,11 @@ def lista_fornecedores():
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
         
-        return render_template('tabelas/fornecedores.html', registos=registos, empresas=empresas)
+        pagination = paginate(registos, page, per_page)
+        return render_template('tabelas/fornecedores.html', registos=pagination['items'], empresas=empresas, pagination=pagination)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/fornecedores.html', registos=[], empresas=[])
+        return render_template('tabelas/fornecedores.html', registos=[], empresas=[], pagination=None)
     finally:
         conn.close()
 
@@ -933,11 +981,16 @@ def remover_fornecedor(id):
 @app.route('/funcionarios')
 @login_required
 def lista_funcionarios():
+    """Lista todos os funcionários com paginação"""
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/funcionarios.html', registos=[], pessoas=[], cargos=[], empresas=[], fabricas=[], erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/funcionarios.html', registos=[], pessoas=[], cargos=[], empresas=[], fabricas=[], pagination=None, erro="Erro de conexão", sucesso=False)
         
         cursor = conn.cursor()
         
@@ -981,16 +1034,21 @@ def lista_funcionarios():
         empresas = cursor.fetchall()
         
         cursor.close()
+        
+        # Aplicar paginação
+        pagination = paginate(funcionarios, page, per_page)
+        
         return render_template('tabelas/funcionarios.html', 
-                             registos=funcionarios, 
+                             registos=pagination['items'], 
                              pessoas=pessoas,
                              cargos=cargos,
                              empresas=empresas,
                              fabricas=fabricas,
+                             pagination=pagination,
                              sucesso=True)
     except Exception as e:
         print(f"Erro ao listar funcionarios: {e}")
-        return render_template('tabelas/funcionarios.html', registos=[], pessoas=[], cargos=[], empresas=[], fabricas=[], erro=str(e), sucesso=False)
+        return render_template('tabelas/funcionarios.html', registos=[], pessoas=[], cargos=[], empresas=[], fabricas=[], pagination=None, erro=str(e), sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -1058,11 +1116,13 @@ def remover_funcionario(cc):
 @app.route('/itens')
 @login_required
 def lista_itens():
-    """Lista todos os itens de venda com opção de adicionar"""
+    """Lista todos os itens de venda com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/itens.html', registos=[], vendas=[], produtos=[])
+        return render_template('tabelas/itens.html', registos=[], vendas=[], produtos=[], pagination=None)
     
     try:
         cursor = conn.cursor()
@@ -1092,23 +1152,27 @@ def lista_itens():
         cursor.execute("SELECT Referencia, Nome, Preco FROM Produto ORDER BY Nome")
         produtos = cursor.fetchall()
         
-        return render_template('tabelas/itens.html', registos=registos, vendas=vendas, produtos=produtos)
+        pagination = paginate(registos, page, per_page)
+        return render_template('tabelas/itens.html', registos=pagination['items'], vendas=vendas, produtos=produtos, pagination=pagination)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/itens.html', registos=[], vendas=[], produtos=[])
+        return render_template('tabelas/itens.html', registos=[], vendas=[], produtos=[], pagination=None)
     finally:
         conn.close()
 
 @app.route('/lojas')
 @login_required
 def lista_lojas():
+    """Lista lojas com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
             flash('Erro de conexão com a base de dados', 'error')
-            return render_template('tabelas/lojas.html', registos=[], armazens=[], sucesso=False)
+            return render_template('tabelas/lojas.html', registos=[], armazens=[], pagination=None, sucesso=False)
         
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM vw_Lojas ORDER BY Nome")
@@ -1118,12 +1182,14 @@ def lista_lojas():
         armazens = cursor.fetchall()
         
         cursor.close()
-        return render_template('tabelas/lojas.html', registos=lojas, armazens=armazens, sucesso=True)
+        
+        pagination = paginate(lojas, page, per_page)
+        return render_template('tabelas/lojas.html', registos=pagination['items'], armazens=armazens, pagination=pagination, sucesso=True)
         
     except Exception as e:
         print(f"Erro ao listar lojas: {e}")
         flash(f'Erro ao carregar lojas: {str(e)}', 'error')
-        return render_template('tabelas/lojas.html', registos=[], armazens=[], sucesso=False)
+        return render_template('tabelas/lojas.html', registos=[], armazens=[], pagination=None, sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -1181,13 +1247,16 @@ def remover_loja(id):
 @app.route('/maquinas')
 @login_required
 def lista_maquinas():
-    """Lista todas as máquinas"""
+    """Lista todas as máquinas com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
     conn = None
     try:
         conn = get_db_connection()
         if conn is None: 
             flash('Erro de conexão com a base de dados', 'error')
-            return render_template('tabelas/maquinas.html', registos=[], fabricas=[], sucesso=False)
+            return render_template('tabelas/maquinas.html', registos=[], fabricas=[], pagination=None, sucesso=False)
         
         cursor = conn.cursor()
         
@@ -1212,14 +1281,17 @@ def lista_maquinas():
             fabricas = cursor.fetchall()
         
         cursor.close()
+        
+        pagination = paginate(maquinas, page, per_page)
         return render_template('tabelas/maquinas.html', 
-                             registos=maquinas,
+                             registos=pagination['items'],
                              fabricas=fabricas,
+                             pagination=pagination,
                              sucesso=True)
     except Exception as e:
         print(f"Erro ao listar maquinas: {e}")
         flash(f'Erro ao carregar máquinas: {str(e)}', 'error')
-        return render_template('tabelas/maquinas.html', registos=[], fabricas=[], sucesso=False)
+        return render_template('tabelas/maquinas.html', registos=[], fabricas=[], pagination=None, sucesso=False)
     finally:
         if conn:
             conn.close()
@@ -1277,11 +1349,13 @@ def remover_maquina(id):
 @app.route('/materias_primas')
 @login_required
 def lista_materias_primas():
-    """Lista todas as matérias-primas com opção de adicionar"""
+    """Lista todas as matérias-primas com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/materias_primas.html', registos=[], fornecedores=[])
+        return render_template('tabelas/materias_primas.html', registos=[], fornecedores=[], pagination=None)
     
     try:
         cursor = conn.cursor()
@@ -1291,10 +1365,11 @@ def lista_materias_primas():
         cursor.execute("SELECT Id, Nome FROM Fornecedor ORDER BY Nome")
         fornecedores = cursor.fetchall()
         
-        return render_template('tabelas/materias_primas.html', registos=registos, fornecedores=fornecedores)
+        pagination = paginate(registos, page, per_page)
+        return render_template('tabelas/materias_primas.html', registos=pagination['items'], fornecedores=fornecedores, pagination=pagination)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/materias_primas.html', registos=[], fornecedores=[])
+        return render_template('tabelas/materias_primas.html', registos=[], fornecedores=[], pagination=None)
     finally:
         conn.close()
 
@@ -1350,7 +1425,11 @@ def remover_materia_prima(referencia):
 @app.route('/produtos')
 @login_required
 def lista_produtos():
-    """Lista todos os produtos com dados para o modal"""
+    """Lista todos os produtos com dados para o modal e paginação"""
+    
+    # Obter página atual do query string
+    page = request.args.get('page', 1, type=int)
+    per_page = 10  # Produtos por página
     
     conn = None
     try:
@@ -1360,7 +1439,8 @@ def lista_produtos():
             return render_template('tabelas/produtos.html', 
                                  registos=[], 
                                  maquinas=[], 
-                                 distribuidoras=[], 
+                                 distribuidoras=[],
+                                 pagination=None,
                                  sucesso=False)
         cursor = conn.cursor()
         
@@ -1372,7 +1452,7 @@ def lista_produtos():
                 INNER JOIN Maquina m ON p.Maquina_Id = m.Id
                 WHERE m.Fabrica_Id = ?
                 ORDER BY p.Nome
-            """, (fabrica_id,)) #substituir por SP
+            """, (fabrica_id,))
             produtos = cursor.fetchall()
             
             cursor.execute("SELECT Id, Descricao FROM Maquina WHERE Fabrica_Id = ? ORDER BY Descricao", (fabrica_id,))
@@ -1402,10 +1482,15 @@ def lista_produtos():
             distribuidoras = cursor.fetchall()
         
         cursor.close()
+        
+        # Aplicar paginação
+        pagination = paginate(produtos, page, per_page)
+        
         return render_template('tabelas/produtos.html', 
-                             registos=produtos,
+                             registos=pagination['items'],
                              maquinas=maquinas,            
                              distribuidoras=distribuidoras,
+                             pagination=pagination,
                              sucesso=True)
     except Exception as e:
         print(f"Erro ao listar produtos: {e}")
@@ -1413,7 +1498,8 @@ def lista_produtos():
         return render_template('tabelas/produtos.html', 
                              registos=[], 
                              maquinas=[], 
-                             distribuidoras=[], 
+                             distribuidoras=[],
+                             pagination=None,
                              sucesso=False)
     finally:
         if conn:
@@ -1544,11 +1630,14 @@ def remover_produto(referencia):
 @app.route('/stock')
 @login_required
 def lista_stock():
-    """Lista todo o stock com opção de adicionar"""
+    """Lista todo o stock com opção de adicionar e paginação"""
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+        return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[], pagination=None)
     
     try:
         cursor = conn.cursor()
@@ -1571,7 +1660,7 @@ def lista_stock():
                 armazens = cursor.fetchall()
             else:
                 flash('Sua loja não possui armazém associado.', 'warning')
-                return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+                return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[], pagination=None)
         
         elif session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
             fabrica_id = session.get('fabrica_id')
@@ -1615,10 +1704,13 @@ def lista_stock():
             cursor.execute("SELECT Id, Localizacao FROM Armazem ORDER BY Localizacao")
             armazens = cursor.fetchall()
         
-        return render_template('tabelas/stock.html', registos=registos, produtos=produtos, armazens=armazens)
+        # Aplicar paginação
+        pagination = paginate(registos, page, per_page)
+        
+        return render_template('tabelas/stock.html', registos=pagination['items'], produtos=produtos, armazens=armazens, pagination=pagination)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[])
+        return render_template('tabelas/stock.html', registos=[], produtos=[], armazens=[], pagination=None)
     finally:
         conn.close()
 
@@ -1674,8 +1766,11 @@ def remover_stock(produto_ref, armazem_id):
 def lista_vendas():
     """
     Lista as vendas. Filtra automaticamente por Loja_Id se o admin for 'Loja'.
-    Se for 'Geral', lista todas as vendas.
+    Se for 'Geral', lista todas as vendas. Com paginação.
     """
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     tipo_admin = session.get('tipo_admin')
     loja_id_sessao = session.get('loja_id') 
@@ -1692,7 +1787,7 @@ def lista_vendas():
     try:
         conn = get_db_connection()
         if conn is None: 
-            return render_template('tabelas/vendas.html', erro="Erro de conexão", sucesso=False)
+            return render_template('tabelas/vendas.html', erro="Erro de conexão", sucesso=False, pagination=None)
         cursor = conn.cursor()
         cursor.execute("{CALL dbo.ObterVendasPorLoja (?)}", parametro_loja_id)
         vendas = cursor.fetchall()
@@ -1705,18 +1800,23 @@ def lista_vendas():
             cursor.execute("SELECT Id, Nome FROM Loja")
         lojas = cursor.fetchall()
         
+        # Aplicar paginação
+        pagination = paginate(vendas, page, per_page)
+        
         sucesso = True
     except Exception as e:
         erro = f"Erro ao listar vendas: {e}"
         print(f"❌ {erro}")
         vendas = []
+        pagination = None
     finally:
         if conn:
             conn.close()
     return render_template('tabelas/vendas.html', 
-                            dados_vendas=vendas, 
+                            dados_vendas=pagination['items'] if pagination else vendas, 
                             dados_produtos=produtos,
                             dados_lojas=lojas,
+                            pagination=pagination,
                             sucesso=sucesso, 
                             erro=erro,
                             filtro_ativo=True if parametro_loja_id is not None else False)
@@ -1776,7 +1876,9 @@ def obter_itens_venda(venda_id):
 @app.route('/vendedores')
 @login_required
 def lista_vendedores():
-    """Lista todos os vendedores com opção de adicionar"""
+    """Lista todos os vendedores com paginação"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
     
     if session.get('tipo_admin') == 'Loja':
         flash('Acesso negado. Admins de Loja não têm permissão para visualizar vendedores.', 'error')
@@ -1784,7 +1886,7 @@ def lista_vendedores():
     
     conn = get_db_connection()
     if not conn:
-        return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[])
+        return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[], pagination=None)
     try:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM vw_Vendedores ORDER BY Nome")
@@ -1796,10 +1898,11 @@ def lista_vendedores():
         cursor.execute("SELECT Nif, Nome FROM Empresa ORDER BY Nome")
         empresas = cursor.fetchall()
 
-        return render_template('tabelas/vendedores.html', registos=registos, cargos=cargos, empresas=empresas)
+        pagination = paginate(registos, page, per_page)
+        return render_template('tabelas/vendedores.html', registos=pagination['items'], cargos=cargos, empresas=empresas, pagination=pagination)
     except Exception as e:
         print(f"Erro: {e}")
-        return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[])
+        return render_template('tabelas/vendedores.html', registos=[], cargos=[], empresas=[], pagination=None)
     finally:
         conn.close()
 

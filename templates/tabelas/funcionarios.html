@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, page_navigation %}
+empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, page_navigation, table_pagination %}
 
 {% block title %}Gestão de Funcionários{% endblock %}
 
@@ -16,7 +16,8 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {{ flash_messages() }}
 
 {# Barra de pesquisa #}
-{{ search_bar('funcionário', 'tabelaFuncionarios', 'totalFuncionarios', registos|length, 'funcionário(s)') }}
+{{ search_bar('funcionário', 'tabelaFuncionarios', 'totalFuncionarios', pagination.total if pagination else
+registos|length, 'funcionário(s)') }}
 
 {# Tabela de dados #}
 <div class="table-responsive">
@@ -53,7 +54,10 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('funcionário') }}
 
-{# Navegação Previous/Next #}
+{# Paginação de registos #}
+{{ table_pagination(pagination, 'lista_funcionarios') }}
+
+{# Navegação Previous/Next entre páginas #}
 {{ page_navigation('funcionarios') }}
 
 {# Modal Novo Funcionário #}
