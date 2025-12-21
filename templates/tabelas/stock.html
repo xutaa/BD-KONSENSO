@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, form_select, search_script_init %}
+empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, page_navigation %}
 
 {% block title %}Gestão de Stock{% endblock %}
 
@@ -41,9 +41,9 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
                 <td>{{ stock[2] }}</td>
                 <td>{{ stock[3] }}</td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverStock',
-                    remove_onclick="prepararRemocao('{}', '{}', '{}')".format(stock[0], stock[5], stock[1])
+                show_edit=false,
+                remove_modal='modalRemoverStock',
+                remove_onclick="prepararRemocao('{}', '{}', '{}')".format(stock[0], stock[5], stock[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -57,8 +57,8 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('stock') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('stock') }}
 
 {# Modal Novo Stock #}
 <div class="modal fade" id="modalNovoStock" data-bs-backdrop="static" tabindex="-1">

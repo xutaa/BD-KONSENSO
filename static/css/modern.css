@@ -646,3 +646,96 @@ body {
     color: var(--primary-color);
     margin-bottom: 0.5rem;
 }
+
+/* Page Navigation (Previous/Next) */
+.page-nav-container {
+    padding: 1rem 0;
+    margin-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.page-nav-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.875rem 1.25rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--text-main);
+    transition: all 0.25s ease;
+    min-width: 180px;
+    box-shadow: var(--shadow-sm);
+}
+
+.page-nav-btn:hover {
+    border-color: var(--secondary-color);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+}
+
+.page-nav-prev:hover {
+    transform: translateX(-4px) translateY(-2px);
+}
+
+.page-nav-next:hover {
+    transform: translateX(4px) translateY(-2px);
+}
+
+.page-nav-btn i.fa-chevron-left,
+.page-nav-btn i.fa-chevron-right {
+    font-size: 1rem;
+    color: var(--text-muted);
+    transition: color 0.2s, transform 0.2s;
+}
+
+.page-nav-btn:hover i.fa-chevron-left {
+    color: var(--secondary-color);
+    transform: translateX(-3px);
+}
+
+.page-nav-btn:hover i.fa-chevron-right {
+    color: var(--secondary-color);
+    transform: translateX(3px);
+}
+
+.page-nav-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.page-nav-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.page-nav-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.page-nav-btn:hover .page-nav-title {
+    color: var(--secondary-color);
+}
+
+/* Responsive adjustments for page navigation */
+@media (max-width: 576px) {
+    .page-nav-btn {
+        min-width: auto;
+        padding: 0.75rem 1rem;
+    }
+    
+    .page-nav-label {
+        display: none;
+    }
+    
+    .page-nav-title {
+        font-size: 0.85rem;
+    }
+}

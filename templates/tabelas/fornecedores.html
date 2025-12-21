@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, modal_remover %}
+empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, modal_remover, page_navigation %}
 
 {% block title %}Gestão de Fornecedores{% endblock %}
 
@@ -37,9 +37,9 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
                 <td>{{ fornecedor[1] }}</td>
                 <td>{{ fornecedor[2] }}</td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverFornecedor',
-                    remove_onclick="prepararRemocao('{}', '{}')".format(fornecedor[0], fornecedor[1])
+                show_edit=false,
+                remove_modal='modalRemoverFornecedor',
+                remove_onclick="prepararRemocao('{}', '{}')".format(fornecedor[0], fornecedor[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -53,8 +53,8 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('fornecedor') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('fornecedores') }}
 
 {# Modal Novo Fornecedor #}
 <div class="modal fade" id="modalNovoFornecedor" data-bs-backdrop="static" tabindex="-1">

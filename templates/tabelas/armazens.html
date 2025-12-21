@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover %}
+empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover, page_navigation %}
 
 {% block title %}Gestão de Armazéns{% endblock %}
 
@@ -52,9 +52,9 @@ empty_row, modal_header, modal_footer, form_input, search_script_init, modal_rem
                     {% endif %}
                 </td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverArmazem',
-                    remove_onclick="prepararRemocao('{}', '{}')".format(armazem[0], armazem[1])
+                show_edit=false,
+                remove_modal='modalRemoverArmazem',
+                remove_onclick="prepararRemocao('{}', '{}')".format(armazem[0], armazem[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -68,8 +68,8 @@ empty_row, modal_header, modal_footer, form_input, search_script_init, modal_rem
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('armazém') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('armazens') }}
 
 {# Modal Novo Armazém #}
 <div class="modal fade" id="modalNovoArmazem" data-bs-backdrop="static" tabindex="-1">

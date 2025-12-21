@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import flash_messages %}
+{% from 'macros.html' import flash_messages, page_navigation %}
 
 {% block title %}Gestão de Produtos{% endblock %}
 
@@ -83,9 +83,8 @@
     <i class="bi bi-exclamation-triangle"></i> Nenhum produto encontrado.
 </div>
 
-<div class="mt-4">
-    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
-</div>
+{# Navegação Previous/Next #}
+{{ page_navigation('produtos') }}
 
 <div class="modal fade" id="modalNovoProduto" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -118,8 +117,8 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="descricao"
-                            class="form-label small text-uppercase fw-bold text-muted">Descrição *</label>
+                        <label for="descricao" class="form-label small text-uppercase fw-bold text-muted">Descrição
+                            *</label>
                         <textarea class="form-control" id="descricao" name="descricao" required rows="2" maxlength="200"
                             placeholder="Detalhes técnicos do produto..."></textarea>
                     </div>
@@ -142,7 +141,8 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="distribuidora_id" class="form-label small fw-bold">Distribuidora *</label>
-                                <select class="form-select form-control" id="distribuidora_id" name="distribuidora_id" required>
+                                <select class="form-select form-control" id="distribuidora_id" name="distribuidora_id"
+                                    required>
                                     {% for dist in distribuidoras %}
                                     <option value="{{ dist[0] }}">{{ dist[1] }}</option>
                                     {% endfor %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover %}
+empty_row, modal_header, modal_footer, form_input, search_script_init, modal_remover, page_navigation %}
 
 {% block title %}Gestão de Empresas{% endblock %}
 
@@ -41,9 +41,9 @@ empty_row, modal_header, modal_footer, form_input, search_script_init, modal_rem
                 <td>{{ empresa[3] }}</td>
                 <td>{{ empresa[4] }}</td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverEmpresa',
-                    remove_onclick="prepararRemocao('{}', '{}')".format(empresa[0], empresa[1])
+                show_edit=false,
+                remove_modal='modalRemoverEmpresa',
+                remove_onclick="prepararRemocao('{}', '{}')".format(empresa[0], empresa[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -57,8 +57,8 @@ empty_row, modal_header, modal_footer, form_input, search_script_init, modal_rem
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('empresa') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('empresas') }}
 
 {# Modal Nova Empresa #}
 <div class="modal fade" id="modalNovaEmpresa" data-bs-backdrop="static" tabindex="-1">

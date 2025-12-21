@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, action_buttons,
-empty_row, modal_header, modal_footer, form_input, form_select, search_script_init %}
+empty_row, modal_header, modal_footer, form_input, form_select, search_script_init, page_navigation %}
 
 {% block title %}Gestão de Funcionários{% endblock %}
 
@@ -53,8 +53,8 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('funcionário') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('funcionarios') }}
 
 {# Modal Novo Funcionário #}
 <div class="modal fade" id="modalNovoFuncionario" data-bs-backdrop="static" tabindex="-1">

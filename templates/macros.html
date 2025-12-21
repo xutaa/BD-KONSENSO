@@ -238,3 +238,72 @@ Uso: {{ modal_remover('Cliente', 'cliente', 'CC', 'clienteRemoverNome', 'cliente
     </div>
 </div>
 {% endmacro %}
+
+
+{# --------------------------------------------------------------------
+PAGE NAVIGATION - Navegação Previous/Next entre páginas
+Uso: {{ page_navigation('produtos') }}
+Páginas disponíveis: dashboard, vendas, produtos, itens, funcionarios,
+clientes, vendedores, contratos, cargos, stock, armazens, lojas,
+fabricas, maquinas, materias_primas, empresas, fornecedores, distribuidoras
+-------------------------------------------------------------------- #}
+{% macro page_navigation(current_page) %}
+{% set pages = [
+('dashboard', 'Dashboard', 'dashboard', 'fa-chart-pie'),
+('vendas', 'Vendas', 'lista_vendas', 'fa-cart-shopping'),
+('produtos', 'Produtos', 'lista_produtos', 'fa-box'),
+('itens', 'Itens de Venda', 'lista_itens', 'fa-receipt'),
+('funcionarios', 'Funcionários', 'lista_funcionarios', 'fa-user-tie'),
+('clientes', 'Clientes', 'lista_clientes', 'fa-users'),
+('vendedores', 'Vendedores', 'lista_vendedores', 'fa-briefcase'),
+('contratos', 'Contratos', 'lista_contratos_vendedor', 'fa-file-contract'),
+('cargos', 'Cargos', 'lista_cargos', 'fa-id-badge'),
+('stock', 'Stock', 'lista_stock', 'fa-boxes-stacked'),
+('armazens', 'Armazéns', 'lista_armazens', 'fa-warehouse'),
+('lojas', 'Lojas', 'lista_lojas', 'fa-store'),
+('fabricas', 'Fábricas', 'lista_fabricas', 'fa-industry'),
+('maquinas', 'Máquinas', 'lista_maquinas', 'fa-gears'),
+('materias_primas', 'Matérias-Primas', 'lista_materias_primas', 'fa-recycle'),
+('empresas', 'Empresas', 'lista_empresas', 'fa-building'),
+('fornecedores', 'Fornecedores', 'lista_fornecedores', 'fa-truck-field'),
+('distribuidoras', 'Distribuidoras', 'lista_distribuidoras', 'fa-truck')
+] %}
+
+{% set current_index = namespace(value=-1) %}
+{% for page in pages %}
+{% if page[0] == current_page %}
+{% set current_index.value = loop.index0 %}
+{% endif %}
+{% endfor %}
+
+{% if current_index.value >= 0 %}
+<nav class="page-nav-container mt-4 pt-3 border-top" aria-label="Navegação entre páginas">
+    <div class="d-flex justify-content-between align-items-center">
+        {% if current_index.value > 0 %}
+        {% set prev_page = pages[current_index.value - 1] %}
+        <a href="{{ url_for(prev_page[2]) }}" class="page-nav-btn page-nav-prev">
+            <i class="fa-solid fa-chevron-left me-2"></i>
+            <div class="page-nav-content">
+                <span class="page-nav-label">Anterior</span>
+                <span class="page-nav-title"><i class="fa-solid {{ prev_page[3] }} me-1"></i> {{ prev_page[1] }}</span>
+            </div>
+        </a>
+        {% else %}
+        <div></div>
+        {% endif %}
+
+        {% if current_index.value < pages|length - 1 %} {% set next_page=pages[current_index.value + 1] %} <a
+            href="{{ url_for(next_page[2]) }}" class="page-nav-btn page-nav-next">
+            <div class="page-nav-content text-end">
+                <span class="page-nav-label">Próxima</span>
+                <span class="page-nav-title">{{ next_page[1] }} <i class="fa-solid {{ next_page[3] }} ms-1"></i></span>
+            </div>
+            <i class="fa-solid fa-chevron-right ms-2"></i>
+            </a>
+            {% else %}
+            <div></div>
+            {% endif %}
+    </div>
+</nav>
+{% endif %}
+{% endmacro %}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
-modal_header, modal_footer, form_input, search_script_init, action_buttons, modal_remover %}
+modal_header, modal_footer, form_input, search_script_init, action_buttons, modal_remover, page_navigation %}
 
 {% block title %}Gestão de Cargos{% endblock %}
 
@@ -37,9 +37,9 @@ modal_header, modal_footer, form_input, search_script_init, action_buttons, moda
                 <td>{{ cargo[1] }}</td>
                 <td>{{ cargo[2] if cargo[2] else 'N/A' }}</td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverCargo',
-                    remove_onclick="prepararRemocao('{}', '{}')".format(cargo[0], cargo[1])
+                show_edit=false,
+                remove_modal='modalRemoverCargo',
+                remove_onclick="prepararRemocao('{}', '{}')".format(cargo[0], cargo[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -53,8 +53,8 @@ modal_header, modal_footer, form_input, search_script_init, action_buttons, moda
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('cargo') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('cargos') }}
 
 {# Modal Novo Cargo #}
 <div class="modal fade" id="modalNovoCargo" data-bs-backdrop="static" tabindex="-1">
@@ -63,7 +63,8 @@ modal_header, modal_footer, form_input, search_script_init, action_buttons, moda
             {{ modal_header('Novo Cargo', 'primary', 'bi bi-plus-circle') }}
             <form method="POST" action="{{ url_for('adicionar_cargo') }}">
                 <div class="modal-body">
-                    {{ form_input('nome', 'Nome do Cargo *', required=true, maxlength='100', placeholder='Ex: Gerente de Vendas') }}
+                    {{ form_input('nome', 'Nome do Cargo *', required=true, maxlength='100', placeholder='Ex: Gerente de
+                    Vendas') }}
                     <div class="mb-3">
                         <label for="descricao" class="form-label fw-bold">Descrição</label>
                         <textarea class="form-control" id="descricao" name="descricao" rows="3" maxlength="200"

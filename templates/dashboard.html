@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import page_navigation %}
 
 {% block title %}Dashboard | Konsenso{% endblock %}
 {% block header_title %}Painel de Controle{% endblock %}
@@ -131,7 +132,7 @@
                     <div class="tile-title fs-6">Clientes</div>
                 </a>
             </div>
-            
+
             {% if tipo_admin != 'Loja' %}
             <div class="col">
                 <a href="{{ url_for('lista_vendedores') }}" class="action-tile p-3">
@@ -149,7 +150,7 @@
                 </a>
             </div>
             {% endif %}
-            
+
             {% if tipo_admin == 'Geral' %}
             <div class="col">
                 <a href="{{ url_for('lista_cargos') }}" class="action-tile p-3">
@@ -158,88 +159,91 @@
                 </a>
             </div>
             {% endif %}
-            
+
             {% if tipo_admin == 'Geral' %}
-                <a href="{{ url_for('lista_contratos_vendedor') }}"
-                    class="action-tile p-3 flex-row gap-3 text-start align-items-center">
-                    <i class="fa-solid fa-file-contract tile-icon mb-0 fs-4"></i>
-                    <div>
-                        <div class="tile-title fs-6 mb-0">Contratos de Vendedor</div>
-                        <small class="text-muted">Vínculos contratuais</small>
-                    </div>
-                </a>
-            </div>
-            {% endif %}
+            <a href="{{ url_for('lista_contratos_vendedor') }}"
+                class="action-tile p-3 flex-row gap-3 text-start align-items-center">
+                <i class="fa-solid fa-file-contract tile-icon mb-0 fs-4"></i>
+                <div>
+                    <div class="tile-title fs-6 mb-0">Contratos de Vendedor</div>
+                    <small class="text-muted">Vínculos contratuais</small>
+                </div>
+            </a>
         </div>
+        {% endif %}
     </div>
-    {% endif %}
+</div>
+{% endif %}
 
-    {% if permissoes.empresas or permissoes.infraestrutura %}
-    <!-- Infraestrutura -->
-    <div class="col-lg-6">
-        <div class="section-header">
-            <i class="fa-solid fa-industry text-primary"></i>
-            <h3 class="section-title">Infraestrutura</h3>
-        </div>
-
-        <div class="row row-cols-2 g-3">
-            {% if tipo_admin == 'Geral' %}
-            <div class="col">
-                <a href="{{ url_for('lista_empresas') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-building tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Empresas</div>
-                </a>
-            </div>
-            {% endif %}
-
-            <div class="col">
-                <a href="{{ url_for('lista_fornecedores') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-truck-field tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Fornecedores</div>
-                </a>
-            </div>
-
-            <div class="col">
-                <a href="{{ url_for('lista_armazens') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-warehouse tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Armazéns</div>
-                </a>
-            </div>
-
-            <div class="col">
-                <a href="{{ url_for('lista_fabricas') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-industry tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Fábricas</div>
-                </a>
-            </div>
-
-            {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
-            <div class="col">
-                <a href="{{ url_for('lista_maquinas') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-gears tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Máquinas</div>
-                </a>
-            </div>
-            
-            <div class="col">
-                <a href="{{ url_for('lista_materias_primas') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-flask tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Matérias-Primas</div>
-                </a>
-            </div>
-            
-            <div class="col">
-                <a href="{{ url_for('lista_distribuidoras') }}" class="action-tile p-3">
-                    <i class="fa-solid fa-truck tile-icon mb-2 fs-4"></i>
-                    <div class="tile-title fs-6">Distribuidora</div>
-                </a>
-            </div>
-            {% endif %}
-
-        </div>
+{% if permissoes.empresas or permissoes.infraestrutura %}
+<!-- Infraestrutura -->
+<div class="col-lg-6">
+    <div class="section-header">
+        <i class="fa-solid fa-industry text-primary"></i>
+        <h3 class="section-title">Infraestrutura</h3>
     </div>
-    {% endif %}
+
+    <div class="row row-cols-2 g-3">
+        {% if tipo_admin == 'Geral' %}
+        <div class="col">
+            <a href="{{ url_for('lista_empresas') }}" class="action-tile p-3">
+                <i class="fa-solid fa-building tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Empresas</div>
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="col">
+            <a href="{{ url_for('lista_fornecedores') }}" class="action-tile p-3">
+                <i class="fa-solid fa-truck-field tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Fornecedores</div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{{ url_for('lista_armazens') }}" class="action-tile p-3">
+                <i class="fa-solid fa-warehouse tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Armazéns</div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{{ url_for('lista_fabricas') }}" class="action-tile p-3">
+                <i class="fa-solid fa-industry tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Fábricas</div>
+            </a>
+        </div>
+
+        {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
+        <div class="col">
+            <a href="{{ url_for('lista_maquinas') }}" class="action-tile p-3">
+                <i class="fa-solid fa-gears tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Máquinas</div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{{ url_for('lista_materias_primas') }}" class="action-tile p-3">
+                <i class="fa-solid fa-flask tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Matérias-Primas</div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{{ url_for('lista_distribuidoras') }}" class="action-tile p-3">
+                <i class="fa-solid fa-truck tile-icon mb-2 fs-4"></i>
+                <div class="tile-title fs-6">Distribuidora</div>
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
 
 </div>
+
+{# Navegação Previous/Next #}
+{{ page_navigation('dashboard') }}
 
 {% endblock %}

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row, action_buttons,
-modal_header, modal_footer, form_input, search_script_init %}
+{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+action_buttons,
+modal_header, modal_footer, form_input, search_script_init, page_navigation %}
 
 {% block title %}Gestão de Distribuidoras{% endblock %}
 
@@ -37,9 +38,9 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ dist[1] }}</td>
                 <td>{{ dist[2] }}</td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverDistribuidora',
-                    remove_onclick="prepararRemocao('{}', '{}')".format(dist[0], dist[1])
+                show_edit=false,
+                remove_modal='modalRemoverDistribuidora',
+                remove_onclick="prepararRemocao('{}', '{}')".format(dist[0], dist[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -53,8 +54,8 @@ modal_header, modal_footer, form_input, search_script_init %}
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('distribuidora') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('distribuidoras') }}
 
 {# Modal Nova Distribuidora #}
 <div class="modal fade" id="modalNovaDistribuidora" data-bs-backdrop="static" tabindex="-1">

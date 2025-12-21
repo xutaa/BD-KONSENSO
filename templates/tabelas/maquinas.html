@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from 'macros.html' import page_navigation %}
 
 {% block title %}Gestão de Máquinas{% endblock %}
 
@@ -89,9 +90,8 @@
     <i class="bi bi-exclamation-triangle"></i> Nenhuma máquina encontrada.
 </div>
 
-<div class="mt-4">
-    <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">← Voltar ao Dashboard</a>
-</div>
+{# Navegação Previous/Next #}
+{{ page_navigation('maquinas') }}
 
 <!-- Modal Nova Máquina -->
 <div class="modal fade" id="modalNovaMaquina" data-bs-backdrop="static" tabindex="-1">

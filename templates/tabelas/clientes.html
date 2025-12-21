@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
-{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row, action_buttons,
-modal_header, modal_footer, form_input, search_script_init %}
+{% from 'macros.html' import page_header, flash_messages, search_bar, no_results_alert, back_button, empty_row,
+action_buttons,
+modal_header, modal_footer, form_input, search_script_init, page_navigation %}
 
 {% block title %}Gestão de Clientes{% endblock %}
 
@@ -43,9 +44,9 @@ modal_header, modal_footer, form_input, search_script_init %}
                 <td>{{ registo[4] }}</td>
                 <td>{{ registo[5] }}</td>
                 {{ action_buttons(
-                    show_edit=false,
-                    remove_modal='modalRemoverCliente',
-                    remove_onclick="prepararRemocao('{}', '{}')".format(registo[0], registo[1])
+                show_edit=false,
+                remove_modal='modalRemoverCliente',
+                remove_onclick="prepararRemocao('{}', '{}')".format(registo[0], registo[1])
                 ) }}
             </tr>
             {% endfor %}
@@ -59,8 +60,8 @@ modal_header, modal_footer, form_input, search_script_init %}
 {# Alerta de nenhum resultado #}
 {{ no_results_alert('cliente') }}
 
-{# Botão voltar #}
-{{ back_button() }}
+{# Navegação Previous/Next #}
+{{ page_navigation('clientes') }}
 
 {# Modal Novo Cliente #}
 <div class="modal fade" id="modalNovoCliente" data-bs-backdrop="static" tabindex="-1">
@@ -81,7 +82,8 @@ modal_header, modal_footer, form_input, search_script_init %}
                         </div>
                     </div>
 
-                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar, Código Postal...') }}
+                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar,
+                    Código Postal...') }}
 
                     <div class="row">
                         <div class="col-md-6">
@@ -145,5 +147,5 @@ modal_header, modal_footer, form_input, search_script_init %}
         document.getElementById('clienteRemoverNome').textContent = nome;
         document.getElementById('formRemoverCliente').action = '/cliente/remover/' + encodeURIComponent(cc);
     }
-</script>   
+</script>
 {% endblock %}
