@@ -675,6 +675,32 @@ def remover_contrato_vendedor(vendedor_id, empresa_nif):
             conn.close()
     return redirect(url_for('lista_contratos_vendedor'))
 
+@app.route('/contrato_vendedor/editar', methods=['POST'])
+@login_required
+def editar_contrato_vendedor():
+    """Edita um contrato de vendedor existente"""
+    try:
+        vendedor_id = request.form.get('vendedor_id')
+        empresa_nif = request.form.get('empresa_nif')
+        data_in = request.form.get('data_in')
+        
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro de conexão', 'error')
+            return redirect(url_for('lista_contratos_vendedor'))
+        cursor = conn.cursor()
+        cursor.execute("{CALL dbo.AtualizarContratoVendedor (?, ?, ?)}", 
+                      (vendedor_id, empresa_nif, data_in))
+        conn.commit()
+        flash('✅ Contrato atualizado com sucesso!', 'success')
+    except Exception as e:
+        error_msg = str(e).split(']')[-1] if ']' in str(e) else str(e)
+        flash(f'❌ Erro ao atualizar: {error_msg}', 'error')
+    finally:
+        if conn:
+            conn.close()
+    return redirect(url_for('lista_contratos_vendedor'))
+
 @app.route('/distribuidoras')
 @login_required
 def lista_distribuidoras():

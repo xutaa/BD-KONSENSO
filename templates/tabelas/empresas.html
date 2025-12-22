@@ -41,11 +41,18 @@ registos|length, 'Nova Empresa', 'modalNovaEmpresa', 'empresa(s)') }}
                 <td>{{ empresa[2] }}</td>
                 <td>{{ empresa[3] }}</td>
                 <td>{{ empresa[4] }}</td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverEmpresa',
-                remove_onclick="prepararRemocao('{}', '{}')".format(empresa[0], empresa[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarEmpresa" data-nif="{{ empresa[0] }}" data-nome="{{ empresa[1] }}"
+                        data-localizacao="{{ empresa[2] }}" data-telefone="{{ empresa[3] }}"
+                        data-email="{{ empresa[4] }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverEmpresa" data-nif="{{ empresa[0] }}" data-nome="{{ empresa[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -99,16 +106,81 @@ registos|length, 'Nova Empresa', 'modalNovaEmpresa', 'empresa(s)') }}
     </div>
 </div>
 
+{# Modal Editar Empresa #}
+<div class="modal fade" id="modalEditarEmpresa" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Empresa', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_empresa') }}">
+                <input type="hidden" id="edit_nif" name="nif">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">NIF</label>
+                                <p class="form-control-plaintext" id="edit_nif_display"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_nome" class="form-label fw-bold">Nome *</label>
+                                <input type="text" class="form-control" id="edit_nome" name="nome" required
+                                    maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_localizacao" class="form-label fw-bold">Localização *</label>
+                        <input type="text" class="form-control" id="edit_localizacao" name="localizacao" required
+                            maxlength="200">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_num_telefone" class="form-label fw-bold">Telemóvel</label>
+                                <input type="tel" class="form-control" id="edit_num_telefone" name="num_telefone"
+                                    maxlength="20">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_email" class="form-label fw-bold">Email</label>
+                                <input type="email" class="form-control" id="edit_email" name="email" maxlength="100">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
 {{ modal_remover('Empresa', 'empresa', 'NIF', 'empresaRemoverNome', 'empresaRemoverNif') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(nif, nome) {
-        document.getElementById('empresaRemoverNif').textContent = nif;
-        document.getElementById('empresaRemoverNome').textContent = nome;
-        document.getElementById('formRemoverEmpresa').action = '/empresa/remover/' + encodeURIComponent(nif);
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_nif').value = this.dataset.nif;
+            document.getElementById('edit_nif_display').textContent = this.dataset.nif;
+            document.getElementById('edit_nome').value = this.dataset.nome;
+            document.getElementById('edit_localizacao').value = this.dataset.localizacao;
+            document.getElementById('edit_num_telefone').value = this.dataset.telefone || '';
+            document.getElementById('edit_email').value = this.dataset.email || '';
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('empresaRemoverNif').textContent = this.dataset.nif;
+            document.getElementById('empresaRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverEmpresa').action = '/empresa/remover/' + encodeURIComponent(this.dataset.nif);
+        });
+    });
 </script>
 {% endblock %}

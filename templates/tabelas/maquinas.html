@@ -18,8 +18,6 @@ search_script_init, no_results_alert, modal_header, modal_footer, form_input, ac
 {{ search_bar_with_button('máquina', 'tabelaMaquinas', 'totalMaquinas', pagination.total if pagination else
 registos|length, 'Nova Máquina', 'modalNovaMaquina', 'máquina(s)') }}
 
-
-
 <div class="table-responsive">
     <table class="table table-striped table-hover" id="tabelaMaquinas">
         <thead class="table-dark">
@@ -40,10 +38,15 @@ registos|length, 'Nova Máquina', 'modalNovaMaquina', 'máquina(s)') }}
                 <td>{{ maquina[2] }}</td>
                 <td>{{ maquina[3] }}</td>
                 <td class="text-center text-nowrap">
-                    <button type="button" class="btn btn-soft-warning btn-sm" title="Editar">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarMaquina" data-id="{{ maquina[0] }}"
+                        data-descricao="{{ maquina[1] }}" data-tipo="{{ maquina[2] }}"
+                        data-fabrica-id="{{ maquina[4] if maquina|length > 4 else '' }}">
                         <i class="bi bi-pencil-square"></i> Editar
                     </button>
-                    <button type="button" class="btn btn-soft-danger btn-sm ms-1" title="Remover">
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverMaquina" data-id="{{ maquina[0] }}"
+                        data-descricao="{{ maquina[1] }}">
                         <i class="bi bi-trash3"></i> Remover
                     </button>
                 </td>
@@ -72,26 +75,21 @@ registos|length, 'Nova Máquina', 'modalNovaMaquina', 'máquina(s)') }}
 <div class="modal fade" id="modalNovaMaquina" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle"></i> Nova Máquina
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            {{ modal_header('Nova Máquina', 'primary', 'bi bi-plus-circle') }}
             <form method="POST" action="{{ url_for('adicionar_maquina') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="descricao" class="form-label">Descrição *</label>
+                        <label for="descricao" class="form-label fw-bold">Descrição *</label>
                         <input type="text" class="form-control" id="descricao" name="descricao" required maxlength="200"
                             placeholder="Descrição da Máquina">
                     </div>
                     <div class="mb-3">
-                        <label for="tipo" class="form-label">Tipo *</label>
+                        <label for="tipo" class="form-label fw-bold">Tipo *</label>
                         <input type="text" class="form-control" id="tipo" name="tipo" required maxlength="50"
                             placeholder="Ex: CNC, Torno, Fresadora">
                     </div>
                     <div class="mb-3">
-                        <label for="fabrica_id" class="form-label">Fábrica *</label>
+                        <label for="fabrica_id" class="form-label fw-bold">Fábrica *</label>
                         <select class="form-select" id="fabrica_id" name="fabrica_id" required>
                             <option value="">-- Selecione a Fábrica --</option>
                             {% if fabricas %}
@@ -102,11 +100,74 @@ registos|length, 'Nova Máquina', 'modalNovaMaquina', 'máquina(s)') }}
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar Máquina</button>
-                </div>
+                {{ modal_footer('Adicionar Máquina', 'primary') }}
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Máquina -->
+<div class="modal fade" id="modalEditarMaquina" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Máquina', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_maquina') }}">
+                <input type="hidden" id="edit_id" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label fw-bold">Descrição *</label>
+                        <input type="text" class="form-control" id="edit_descricao" name="descricao" required
+                            maxlength="200">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_tipo" class="form-label fw-bold">Tipo *</label>
+                        <input type="text" class="form-control" id="edit_tipo" name="tipo" required maxlength="50">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fabrica_id" class="form-label fw-bold">Fábrica *</label>
+                        <select class="form-select" id="edit_fabrica_id" name="fabrica_id" required>
+                            <option value="">-- Selecione a Fábrica --</option>
+                            {% if fabricas %}
+                            {% for fabrica in fabricas %}
+                            <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Remover Máquina -->
+<div class="modal fade" id="modalRemoverMaquina" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover a máquina:</p>
+                <p class="fw-bold" id="maquinaRemoverNome"></p>
+                <p class="text-muted small">ID: <span id="maquinaRemoverId"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverMaquina" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Máquina
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -117,6 +178,25 @@ registos|length, 'Nova Máquina', 'modalNovaMaquina', 'máquina(s)') }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         configurarAtalhos('searchInput');
+
+        // Event listeners para botões de editar
+        document.querySelectorAll('.btn-editar').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit_id').value = this.dataset.id;
+                document.getElementById('edit_descricao').value = this.dataset.descricao;
+                document.getElementById('edit_tipo').value = this.dataset.tipo;
+                document.getElementById('edit_fabrica_id').value = this.dataset.fabricaId || '';
+            });
+        });
+
+        // Event listeners para botões de remover
+        document.querySelectorAll('.btn-remover').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('maquinaRemoverId').textContent = this.dataset.id;
+                document.getElementById('maquinaRemoverNome').textContent = this.dataset.descricao;
+                document.getElementById('formRemoverMaquina').action = '/maquina/remover/' + this.dataset.id;
+            });
+        });
     });
 </script>
 {% endblock %}

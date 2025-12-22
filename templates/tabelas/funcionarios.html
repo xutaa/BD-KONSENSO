@@ -40,7 +40,23 @@ registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)')
                 <td>{{ func[2] }}</td>
                 <td>{{ func[3] }}</td>
                 <td>{{ func[4] }}</td>
-                {{ action_buttons() }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarFuncionario" data-cc="{{ func[0] }}" data-nome="{{ func[1] }}"
+                        data-cargo-id="{{ func[5] if func|length > 5 else '' }}"
+                        data-empresa-nif="{{ func[6] if func|length > 6 else '' }}"
+                        data-fabrica-id="{{ func[7] if func|length > 7 else '' }}"
+                        data-email="{{ func[8] if func|length > 8 else '' }}"
+                        data-telemovel="{{ func[9] if func|length > 9 else '' }}"
+                        data-data-nasc="{{ func[10] if func|length > 10 else '' }}"
+                        data-morada="{{ func[11] if func|length > 11 else '' }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverFuncionario" data-cc="{{ func[0] }}" data-nome="{{ func[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -66,10 +82,8 @@ registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)')
             {{ modal_header('Novo Funcionário', 'primary', 'bi bi-person-badge-fill') }}
             <form method="POST" action="{{ url_for('adicionar_funcionario') }}">
                 <div class="modal-body px-4">
-
                     <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
                     {{ form_input('nome', 'Nome Completo *', required=true, placeholder='Ex: Alberto João') }}
-
                     <div class="row">
                         <div class="col-md-6">
                             {{ form_input('pessoa_cc', 'CC *', required=true, placeholder='Número do CC') }}
@@ -78,7 +92,6 @@ registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)')
                             {{ form_input('data_nasc', 'Data de Nascimento *', type='date', required=true) }}
                         </div>
                     </div>
-
                     <div class="row">
                         <div class="col-md-6">
                             {{ form_input('email', 'Email *', type='email', required=true,
@@ -89,10 +102,8 @@ registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)')
                             placeholder='9xxxxxxxx') }}
                         </div>
                     </div>
-
                     {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Código Postal,
                     Cidade') }}
-
                     <p class="text-muted border-bottom pb-1 mt-4 mb-3">Vínculo Profissional</p>
                     <div class="row">
                         <div class="col-md-6">
@@ -104,16 +115,129 @@ registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)')
                             Selecione a Empresa --') }}
                         </div>
                     </div>
-
                     {{ form_select('fabrica_id', 'Fábrica (Opcional)', fabricas, required=false, empty_option='-- Sem
                     Fábrica (Escritório/Outro) --') }}
-
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary px-4">Registar Funcionário</button>
-                </div>
+                {{ modal_footer('Registar Funcionário', 'primary') }}
             </form>
+        </div>
+    </div>
+</div>
+
+{# Modal Editar Funcionário #}
+<div class="modal fade" id="modalEditarFuncionario" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            {{ modal_header('Editar Funcionário', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_funcionario') }}">
+                <input type="hidden" id="edit_pessoa_cc" name="pessoa_cc">
+                <div class="modal-body px-4">
+                    <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label fw-bold">Nome Completo *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">CC</label>
+                                <p class="form-control-plaintext" id="edit_cc_display"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_data_nasc" class="form-label fw-bold">Data de Nascimento *</label>
+                                <input type="date" class="form-control" id="edit_data_nasc" name="data_nasc" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_email" class="form-label fw-bold">Email *</label>
+                                <input type="email" class="form-control" id="edit_email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_telemovel" class="form-label fw-bold">Telemóvel *</label>
+                                <input type="tel" class="form-control" id="edit_telemovel" name="telemovel" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_morada" class="form-label fw-bold">Morada *</label>
+                        <input type="text" class="form-control" id="edit_morada" name="morada" required maxlength="200">
+                    </div>
+
+                    <p class="text-muted border-bottom pb-1 mt-4 mb-3">Vínculo Profissional</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_cargo_id" class="form-label fw-bold">Cargo *</label>
+                                <select class="form-select" id="edit_cargo_id" name="cargo_id" required>
+                                    <option value="">-- Selecione o Cargo --</option>
+                                    {% for cargo in cargos %}
+                                    <option value="{{ cargo[0] }}">{{ cargo[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_empresa_nif" class="form-label fw-bold">Empresa *</label>
+                                <select class="form-select" id="edit_empresa_nif" name="empresa_nif" required>
+                                    <option value="">-- Selecione a Empresa --</option>
+                                    {% for empresa in empresas %}
+                                    <option value="{{ empresa[0] }}">{{ empresa[1] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fabrica_id" class="form-label fw-bold">Fábrica (Opcional)</label>
+                        <select class="form-select" id="edit_fabrica_id" name="fabrica_id">
+                            <option value="">-- Sem Fábrica --</option>
+                            {% for fabrica in fabricas %}
+                            <option value="{{ fabrica[0] }}">{{ fabrica[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+{# Modal Remover Funcionário #}
+<div class="modal fade" id="modalRemoverFuncionario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover o funcionário:</p>
+                <p class="fw-bold" id="funcRemoverNome"></p>
+                <p class="text-muted small">CC: <span id="funcRemoverCC"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverFuncionario" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Funcionário
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -121,4 +245,30 @@ registos|length, 'Novo Funcionário', 'modalNovoFuncionario', 'funcionário(s)')
 
 {% block extra_js %}
 {{ search_script_init() }}
+<script>
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_pessoa_cc').value = this.dataset.cc;
+            document.getElementById('edit_cc_display').textContent = this.dataset.cc;
+            document.getElementById('edit_nome').value = this.dataset.nome;
+            document.getElementById('edit_cargo_id').value = this.dataset.cargoId || '';
+            document.getElementById('edit_empresa_nif').value = this.dataset.empresaNif || '';
+            document.getElementById('edit_fabrica_id').value = this.dataset.fabricaId || '';
+            document.getElementById('edit_email').value = this.dataset.email || '';
+            document.getElementById('edit_telemovel').value = this.dataset.telemovel || '';
+            document.getElementById('edit_data_nasc').value = this.dataset.dataNasc || '';
+            document.getElementById('edit_morada').value = this.dataset.morada || '';
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('funcRemoverCC').textContent = this.dataset.cc;
+            document.getElementById('funcRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverFuncionario').action = '/funcionario/remover/' + encodeURIComponent(this.dataset.cc);
+        });
+    });
+</script>
 {% endblock %}

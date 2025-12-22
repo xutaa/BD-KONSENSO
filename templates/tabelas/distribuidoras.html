@@ -36,15 +36,21 @@ else registos|length, 'Nova Distribuidora', 'modalNovaDistribuidora', 'distribui
                 <td>{{ dist[0] }}</td>
                 <td>{{ dist[1] }}</td>
                 <td>{{ dist[2] }}</td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverDistribuidora',
-                remove_onclick="prepararRemocao('{}', '{}')".format(dist[0], dist[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarDistribuidora" data-id="{{ dist[0] }}" data-nome="{{ dist[1] }}"
+                        data-localizacao="{{ dist[2] }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverDistribuidora" data-id="{{ dist[0] }}" data-nome="{{ dist[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
-            {{ empty_row(3, 'Nenhuma distribuidora registada') }}
+            {{ empty_row(4, 'Nenhuma distribuidora registada') }}
             {% endif %}
         </tbody>
     </table>
@@ -61,7 +67,7 @@ else registos|length, 'Nova Distribuidora', 'modalNovaDistribuidora', 'distribui
 
 {# Modal Nova Distribuidora #}
 <div class="modal fade" id="modalNovaDistribuidora" data-bs-backdrop="static" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             {{ modal_header('Nova Distribuidora', 'primary', 'bi bi-plus-circle') }}
             <form method="POST" action="{{ url_for('adicionar_distribuidora') }}">
@@ -72,6 +78,30 @@ else registos|length, 'Nova Distribuidora', 'modalNovaDistribuidora', 'distribui
                     País') }}
                 </div>
                 {{ modal_footer('Adicionar Distribuidora', 'primary') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+{# Modal Editar Distribuidora #}
+<div class="modal fade" id="modalEditarDistribuidora" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Distribuidora', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_distribuidora') }}">
+                <input type="hidden" id="edit_id" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label fw-bold">Nome *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_localizacao" class="form-label fw-bold">Localização *</label>
+                        <input type="text" class="form-control" id="edit_localizacao" name="localizacao" required
+                            maxlength="100">
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
             </form>
         </div>
     </div>
@@ -112,10 +142,22 @@ else registos|length, 'Nova Distribuidora', 'modalNovaDistribuidora', 'distribui
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(id, nome) {
-        document.getElementById('distribuidoraRemoverId').textContent = id;
-        document.getElementById('distribuidoraRemoverNome').textContent = nome;
-        document.getElementById('formRemoverDistribuidora').action = '/distribuidora/remover/' + id;
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_id').value = this.dataset.id;
+            document.getElementById('edit_nome').value = this.dataset.nome;
+            document.getElementById('edit_localizacao').value = this.dataset.localizacao;
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('distribuidoraRemoverId').textContent = this.dataset.id;
+            document.getElementById('distribuidoraRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverDistribuidora').action = '/distribuidora/remover/' + this.dataset.id;
+        });
+    });
 </script>
 {% endblock %}

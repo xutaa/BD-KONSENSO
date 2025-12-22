@@ -18,7 +18,6 @@ search_script_init, no_results_alert, modal_header, modal_footer, form_input, ac
 {{ search_bar_with_button('matéria-prima', 'tabelaMateriasPrimas', 'totalMateriasPrimas', pagination.total if pagination
 else registos|length, 'Nova Matéria-Prima', 'modalNovaMateriaPrima', 'matéria(s)-prima(s)') }}
 
-
 <div class="table-responsive">
     <table class="table table-striped table-hover" id="tabelaMateriasPrimas">
         <thead class="table-dark">
@@ -37,10 +36,14 @@ else registos|length, 'Nova Matéria-Prima', 'modalNovaMateriaPrima', 'matéria(
                 <td>{{ mp[1] }}</td>
                 <td>{{ mp[2] }}</td>
                 <td class="text-center text-nowrap">
-                    <button type="button" class="btn btn-soft-warning btn-sm" title="Editar">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarMateriaPrima" data-referencia="{{ mp[0] }}"
+                        data-descricao="{{ mp[1] }}" data-fornecedor-id="{{ mp[3] if mp|length > 3 else '' }}">
                         <i class="bi bi-pencil-square"></i> Editar
                     </button>
-                    <button type="button" class="btn btn-soft-danger btn-sm ms-1" title="Remover">
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverMateriaPrima" data-referencia="{{ mp[0] }}"
+                        data-descricao="{{ mp[1] }}">
                         <i class="bi bi-trash3"></i> Remover
                     </button>
                 </td>
@@ -69,26 +72,21 @@ else registos|length, 'Nova Matéria-Prima', 'modalNovaMateriaPrima', 'matéria(
 <div class="modal fade" id="modalNovaMateriaPrima" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle"></i> Nova Matéria-Prima
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            {{ modal_header('Nova Matéria-Prima', 'primary', 'bi bi-plus-circle') }}
             <form method="POST" action="{{ url_for('adicionar_materia_prima') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="referencia" class="form-label">Referência *</label>
+                        <label for="referencia" class="form-label fw-bold">Referência *</label>
                         <input type="text" class="form-control" id="referencia" name="referencia" required
                             maxlength="20" placeholder="MP001">
                     </div>
                     <div class="mb-3">
-                        <label for="descricao" class="form-label">Descrição *</label>
+                        <label for="descricao" class="form-label fw-bold">Descrição *</label>
                         <textarea class="form-control" id="descricao" name="descricao" rows="2" required
                             maxlength="200"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="fornecedor_id" class="form-label">Fornecedor *</label>
+                        <label for="fornecedor_id" class="form-label fw-bold">Fornecedor *</label>
                         <select class="form-select" id="fornecedor_id" name="fornecedor_id" required>
                             <option value="">-- Selecione o Fornecedor --</option>
                             {% if fornecedores %}
@@ -99,11 +97,74 @@ else registos|length, 'Nova Matéria-Prima', 'modalNovaMateriaPrima', 'matéria(
                         </select>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar Matéria-Prima</button>
-                </div>
+                {{ modal_footer('Adicionar Matéria-Prima', 'primary') }}
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Matéria-Prima -->
+<div class="modal fade" id="modalEditarMateriaPrima" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Matéria-Prima', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_materia_prima') }}">
+                <input type="hidden" id="edit_referencia" name="referencia">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Referência</label>
+                        <p class="form-control-plaintext" id="edit_referencia_display"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label fw-bold">Descrição *</label>
+                        <textarea class="form-control" id="edit_descricao" name="descricao" rows="2" required
+                            maxlength="200"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_fornecedor_id" class="form-label fw-bold">Fornecedor *</label>
+                        <select class="form-select" id="edit_fornecedor_id" name="fornecedor_id" required>
+                            <option value="">-- Selecione o Fornecedor --</option>
+                            {% if fornecedores %}
+                            {% for fornecedor in fornecedores %}
+                            <option value="{{ fornecedor[0] }}">{{ fornecedor[1] }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Remover Matéria-Prima -->
+<div class="modal fade" id="modalRemoverMateriaPrima" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover a matéria-prima:</p>
+                <p class="fw-bold" id="mpRemoverNome"></p>
+                <p class="text-muted small">Referência: <span id="mpRemoverReferencia"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverMateriaPrima" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Matéria-Prima
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -114,6 +175,25 @@ else registos|length, 'Nova Matéria-Prima', 'modalNovaMateriaPrima', 'matéria(
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         configurarAtalhos('searchInput');
+
+        // Event listeners para botões de editar
+        document.querySelectorAll('.btn-editar').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit_referencia').value = this.dataset.referencia;
+                document.getElementById('edit_referencia_display').textContent = this.dataset.referencia;
+                document.getElementById('edit_descricao').value = this.dataset.descricao;
+                document.getElementById('edit_fornecedor_id').value = this.dataset.fornecedorId || '';
+            });
+        });
+
+        // Event listeners para botões de remover
+        document.querySelectorAll('.btn-remover').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('mpRemoverReferencia').textContent = this.dataset.referencia;
+                document.getElementById('mpRemoverNome').textContent = this.dataset.descricao;
+                document.getElementById('formRemoverMateriaPrima').action = '/materia_prima/remover/' + encodeURIComponent(this.dataset.referencia);
+            });
+        });
     });
 </script>
 {% endblock %}

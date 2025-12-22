@@ -37,11 +37,19 @@ registos|length, 'Novo Fornecedor', 'modalNovoFornecedor', 'fornecedor(es)') }}
                 <td>{{ fornecedor[0] }}</td>
                 <td>{{ fornecedor[1] }}</td>
                 <td>{{ fornecedor[2] }}</td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverFornecedor',
-                remove_onclick="prepararRemocao('{}', '{}')".format(fornecedor[0], fornecedor[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarFornecedor" data-id="{{ fornecedor[0] }}"
+                        data-nome="{{ fornecedor[1] }}"
+                        data-empresa-nif="{{ fornecedor[3] if fornecedor|length > 3 else '' }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverFornecedor" data-id="{{ fornecedor[0] }}"
+                        data-nome="{{ fornecedor[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -77,16 +85,58 @@ registos|length, 'Novo Fornecedor', 'modalNovoFornecedor', 'fornecedor(es)') }}
     </div>
 </div>
 
+{# Modal Editar Fornecedor #}
+<div class="modal fade" id="modalEditarFornecedor" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Fornecedor', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_fornecedor') }}">
+                <input type="hidden" id="edit_id" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label fw-bold">Nome *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_empresa_nif" class="form-label fw-bold">Empresa *</label>
+                        <select class="form-select" id="edit_empresa_nif" name="empresa_nif" required>
+                            <option value="">-- Selecione a Empresa --</option>
+                            {% if empresas %}
+                            {% for empresa in empresas %}
+                            <option value="{{ empresa[0] }}">{{ empresa[1] }}</option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
 {{ modal_remover('Fornecedor', 'fornecedor', 'ID', 'fornecedorRemoverNome', 'fornecedorRemoverId') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(id, nome) {
-        document.getElementById('fornecedorRemoverId').textContent = id;
-        document.getElementById('fornecedorRemoverNome').textContent = nome;
-        document.getElementById('formRemoverFornecedor').action = '/fornecedor/remover/' + id;
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_id').value = this.dataset.id;
+            document.getElementById('edit_nome').value = this.dataset.nome;
+            document.getElementById('edit_empresa_nif').value = this.dataset.empresaNif || '';
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('fornecedorRemoverId').textContent = this.dataset.id;
+            document.getElementById('fornecedorRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverFornecedor').action = '/fornecedor/remover/' + this.dataset.id;
+        });
+    });
 </script>
 {% endblock %}

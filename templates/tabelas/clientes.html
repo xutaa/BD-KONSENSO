@@ -42,15 +42,23 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
                 <td>{{ registo[3] }}</td>
                 <td>{{ registo[4] }}</td>
                 <td>{{ registo[5] }}</td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverCliente',
-                remove_onclick="prepararRemocao('{}', '{}')".format(registo[0], registo[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarCliente" data-cc="{{ registo[0] }}" data-nome="{{ registo[1] }}"
+                        data-email="{{ registo[2] }}" data-data-nasc="{{ registo[3] }}"
+                        data-telemovel="{{ registo[4] }}" data-nif="{{ registo[5] }}"
+                        data-morada="{{ registo[6] if registo|length > 6 else '' }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverCliente" data-cc="{{ registo[0] }}" data-nome="{{ registo[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
-            {{ empty_row(6, 'Nenhum cliente registado') }}
+            {{ empty_row(7, 'Nenhum cliente registado') }}
             {% endif %}
         </tbody>
     </table>
@@ -72,9 +80,7 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
             {{ modal_header('Novo Cliente', 'primary', 'bi bi-person-plus') }}
             <form method="POST" action="{{ url_for('adicionar_cliente') }}">
                 <div class="modal-body px-4">
-
                     {{ form_input('nome', 'Nome Completo *', required=true, placeholder='Ex: Maria Rodrigues') }}
-
                     <div class="row">
                         <div class="col-md-6">
                             {{ form_input('pessoa_cc', 'CC *', required=true, placeholder='8 ou mais dígitos') }}
@@ -83,9 +89,8 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
                             {{ form_input('nif', 'NIF *', required=true, placeholder='9 dígitos') }}
                         </div>
                     </div>
-
-                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar, Código Postal...') }}
-
+                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar,
+                    Código Postal...') }}
                     <div class="row">
                         <div class="col-md-6">
                             {{ form_input('telemovel', 'Telemóvel *', type='tel', required=true,
@@ -95,14 +100,64 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
                             {{ form_input('data_nasc', 'Data de Nascimento *', type='date', required=true) }}
                         </div>
                     </div>
-
                     {{ form_input('email', 'Email *', type='email', required=true, placeholder='cliente@exemplo.com') }}
+                </div>
+                {{ modal_footer('Guardar Cliente', 'primary') }}
+            </form>
+        </div>
+    </div>
+</div>
 
+{# Modal Editar Cliente #}
+<div class="modal fade" id="modalEditarCliente" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            {{ modal_header('Editar Cliente', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_cliente') }}">
+                <input type="hidden" id="edit_pessoa_cc" name="pessoa_cc">
+                <div class="modal-body px-4">
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label fw-bold">Nome Completo *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">CC</label>
+                                <p class="form-control-plaintext" id="edit_cc_display"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_nif" class="form-label fw-bold">NIF *</label>
+                                <input type="text" class="form-control" id="edit_nif" name="nif" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_morada" class="form-label fw-bold">Morada *</label>
+                        <input type="text" class="form-control" id="edit_morada" name="morada" required maxlength="200">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_telemovel" class="form-label fw-bold">Telemóvel *</label>
+                                <input type="tel" class="form-control" id="edit_telemovel" name="telemovel" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_data_nasc" class="form-label fw-bold">Data de Nascimento *</label>
+                                <input type="date" class="form-control" id="edit_data_nasc" name="data_nasc" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_email" class="form-label fw-bold">Email *</label>
+                        <input type="email" class="form-control" id="edit_email" name="email" required>
+                    </div>
                 </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary px-4">Guardar Cliente</button>
-                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
             </form>
         </div>
     </div>
@@ -143,10 +198,27 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(cc, nome) {
-        document.getElementById('clienteRemoverCC').textContent = cc;
-        document.getElementById('clienteRemoverNome').textContent = nome;
-        document.getElementById('formRemoverCliente').action = '/cliente/remover/' + encodeURIComponent(cc);
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_pessoa_cc').value = this.dataset.cc;
+            document.getElementById('edit_cc_display').textContent = this.dataset.cc;
+            document.getElementById('edit_nome').value = this.dataset.nome;
+            document.getElementById('edit_email').value = this.dataset.email;
+            document.getElementById('edit_data_nasc').value = this.dataset.dataNasc;
+            document.getElementById('edit_telemovel').value = this.dataset.telemovel;
+            document.getElementById('edit_nif').value = this.dataset.nif;
+            document.getElementById('edit_morada').value = this.dataset.morada || '';
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('clienteRemoverCC').textContent = this.dataset.cc;
+            document.getElementById('clienteRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverCliente').action = '/cliente/remover/' + encodeURIComponent(this.dataset.cc);
+        });
+    });
 </script>
 {% endblock %}

@@ -18,8 +18,6 @@ search_script_init, no_results_alert, modal_header, modal_footer, form_input, ac
 {{ search_bar_with_button('vendedor', 'tabelaVendedores', 'totalVendedores', pagination.total if pagination else
 registos|length, 'Novo Vendedor', 'modalNovoVendedor', 'vendedor(es)') }}
 
-
-
 <div class="table-responsive">
     <table class="table table-striped table-hover" id="tabelaVendedores">
         <thead class="table-dark">
@@ -42,10 +40,17 @@ registos|length, 'Novo Vendedor', 'modalNovoVendedor', 'vendedor(es)') }}
                 <td>{{ vendedor[3] }}</td>
                 <td>{{ vendedor[4] }}</td>
                 <td class="text-center text-nowrap">
-                    <button type="button" class="btn btn-soft-warning btn-sm" title="Editar">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarVendedor" data-cc="{{ vendedor[0] }}" data-nome="{{ vendedor[1] }}"
+                        data-cargo-id="{{ vendedor[5] if vendedor|length > 5 else '' }}"
+                        data-email="{{ vendedor[6] if vendedor|length > 6 else '' }}" data-telemovel="{{ vendedor[4] }}"
+                        data-data-nasc="{{ vendedor[7] if vendedor|length > 7 else '' }}"
+                        data-morada="{{ vendedor[8] if vendedor|length > 8 else '' }}">
                         <i class="bi bi-pencil-square"></i> Editar
                     </button>
-                    <button type="button" class="btn btn-soft-danger btn-sm ms-1" title="Remover">
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverVendedor" data-cc="{{ vendedor[0] }}"
+                        data-nome="{{ vendedor[1] }}">
                         <i class="bi bi-trash3"></i> Remover
                     </button>
                 </td>
@@ -53,7 +58,7 @@ registos|length, 'Novo Vendedor', 'modalNovoVendedor', 'vendedor(es)') }}
             {% endfor %}
             {% else %}
             <tr id="semResultados">
-                <td colspan="5" class="text-center text-muted">Nenhum vendedor registado</td>
+                <td colspan="6" class="text-center text-muted">Nenhum vendedor registado</td>
             </tr>
             {% endif %}
         </tbody>
@@ -73,15 +78,9 @@ registos|length, 'Novo Vendedor', 'modalNovoVendedor', 'vendedor(es)') }}
 <div class="modal fade" id="modalNovoVendedor" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-person-plus-fill"></i> Novo Vendedor e Contrato
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            {{ modal_header('Novo Vendedor e Contrato', 'primary', 'bi bi-person-plus-fill') }}
             <form method="POST" action="{{ url_for('adicionar_vendedor') }}">
                 <div class="modal-body px-4">
-
                     <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nome Completo *</label>
@@ -150,11 +149,101 @@ registos|length, 'Novo Vendedor', 'modalNovoVendedor', 'vendedor(es)') }}
                     </div>
                 </div>
 
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary px-4">Criar Vendedor e Ativar Contrato</button>
-                </div>
+                {{ modal_footer('Criar Vendedor e Ativar Contrato', 'primary') }}
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Vendedor -->
+<div class="modal fade" id="modalEditarVendedor" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            {{ modal_header('Editar Vendedor', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_vendedor') }}">
+                <input type="hidden" id="edit_pessoa_cc" name="pessoa_cc">
+                <div class="modal-body px-4">
+                    <p class="text-muted border-bottom pb-1 mb-3">Informação Pessoal</p>
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label fw-bold">Nome Completo *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">CC</label>
+                                <p class="form-control-plaintext" id="edit_cc_display"></p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_data_nasc" class="form-label fw-bold">Data de Nascimento *</label>
+                                <input type="date" class="form-control" id="edit_data_nasc" name="data_nasc" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_email" class="form-label fw-bold">Email *</label>
+                                <input type="email" class="form-control" id="edit_email" name="email" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="edit_telemovel" class="form-label fw-bold">Telemóvel *</label>
+                                <input type="tel" class="form-control" id="edit_telemovel" name="telemovel" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_morada" class="form-label fw-bold">Morada *</label>
+                        <input type="text" class="form-control" id="edit_morada" name="morada" required maxlength="200">
+                    </div>
+                    <p class="text-muted border-bottom pb-1 mt-4 mb-3">Informação Profissional</p>
+                    <div class="mb-3">
+                        <label for="edit_cargo_id" class="form-label fw-bold">Cargo *</label>
+                        <select class="form-select" id="edit_cargo_id" name="cargo_id" required>
+                            <option value="">-- Selecione o Cargo --</option>
+                            {% for cargo in cargos %}
+                            <option value="{{ cargo[0] }}">{{ cargo[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Remover Vendedor -->
+<div class="modal fade" id="modalRemoverVendedor" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover o vendedor:</p>
+                <p class="fw-bold" id="vendedorRemoverNome"></p>
+                <p class="text-muted small">CC: <span id="vendedorRemoverCC"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverVendedor" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Vendedor
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -165,6 +254,29 @@ registos|length, 'Novo Vendedor', 'modalNovoVendedor', 'vendedor(es)') }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         configurarAtalhos('searchInput');
+
+        // Event listeners para botões de editar
+        document.querySelectorAll('.btn-editar').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit_pessoa_cc').value = this.dataset.cc;
+                document.getElementById('edit_cc_display').textContent = this.dataset.cc;
+                document.getElementById('edit_nome').value = this.dataset.nome;
+                document.getElementById('edit_cargo_id').value = this.dataset.cargoId || '';
+                document.getElementById('edit_email').value = this.dataset.email || '';
+                document.getElementById('edit_telemovel').value = this.dataset.telemovel || '';
+                document.getElementById('edit_data_nasc').value = this.dataset.dataNasc || '';
+                document.getElementById('edit_morada').value = this.dataset.morada || '';
+            });
+        });
+
+        // Event listeners para botões de remover
+        document.querySelectorAll('.btn-remover').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('vendedorRemoverCC').textContent = this.dataset.cc;
+                document.getElementById('vendedorRemoverNome').textContent = this.dataset.nome;
+                document.getElementById('formRemoverVendedor').action = '/vendedor/remover/' + encodeURIComponent(this.dataset.cc);
+            });
+        });
     });
 </script>
 {% endblock %}

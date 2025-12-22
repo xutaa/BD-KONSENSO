@@ -17,8 +17,6 @@ search_script_init, no_results_alert, modal_header, modal_footer, form_input, fo
 {{ search_bar_with_button('contrato', 'tabelaContratos', 'totalContratos', pagination.total if pagination else
 registos|length, 'Novo Contrato', 'modalNovoContrato', 'contrato(s)') }}
 
-
-
 <div class="table-responsive">
     <table class="table table-striped table-hover" id="tabelaContratos">
         <thead class="table-dark">
@@ -40,7 +38,23 @@ registos|length, 'Novo Contrato', 'modalNovoContrato', 'contrato(s)') }}
                 <td>{{ contrato[2] }}</td>
                 <td>{{ contrato[3] }}</td>
                 <td>{{ contrato[4] if contrato[4] else 'Ativo' }}</td>
-                {{ action_buttons() }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarContrato" data-vendedor-id="{{ contrato[0] }}"
+                        data-vendedor-nome="{{ contrato[1] }}"
+                        data-empresa-nif="{{ contrato[5] if contrato|length > 5 else '' }}"
+                        data-empresa-nome="{{ contrato[2] }}" data-data-in="{{ contrato[3] }}"
+                        data-data-fim="{{ contrato[4] if contrato[4] else '' }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverContrato" data-vendedor-id="{{ contrato[0] }}"
+                        data-vendedor-nome="{{ contrato[1] }}"
+                        data-empresa-nif="{{ contrato[5] if contrato|length > 5 else '' }}"
+                        data-empresa-nome="{{ contrato[2] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -65,16 +79,11 @@ registos|length, 'Novo Contrato', 'modalNovoContrato', 'contrato(s)') }}
 <div class="modal fade" id="modalNovoContrato" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle"></i> Novo Contrato de Vendedor
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            {{ modal_header('Novo Contrato de Vendedor', 'primary', 'bi bi-plus-circle') }}
             <form method="POST" action="{{ url_for('adicionar_contrato_vendedor') }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="vendedor_id" class="form-label">Vendedor *</label>
+                        <label for="vendedor_id" class="form-label fw-bold">Vendedor *</label>
                         <select class="form-select" id="vendedor_id" name="vendedor_id" required>
                             <option value="">-- Selecione o Vendedor --</option>
                             {% for vendedor in vendedores %}
@@ -84,7 +93,7 @@ registos|length, 'Novo Contrato', 'modalNovoContrato', 'contrato(s)') }}
                     </div>
 
                     <div class="mb-3">
-                        <label for="empresa_nif" class="form-label">Empresa *</label>
+                        <label for="empresa_nif" class="form-label fw-bold">Empresa *</label>
                         <select class="form-select" id="empresa_nif" name="empresa_nif" required>
                             <option value="">-- Selecione a Empresa --</option>
                             {% for empresa in empresas %}
@@ -94,15 +103,76 @@ registos|length, 'Novo Contrato', 'modalNovoContrato', 'contrato(s)') }}
                     </div>
 
                     <div class="mb-3">
-                        <label for="data_in" class="form-label">Data de Início *</label>
+                        <label for="data_in" class="form-label fw-bold">Data de Início *</label>
                         <input type="date" class="form-control" id="data_in" name="data_in" required>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Criar Contrato</button>
-                </div>
+                {{ modal_footer('Criar Contrato', 'primary') }}
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Contrato -->
+<div class="modal fade" id="modalEditarContrato" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Contrato', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_contrato_vendedor') }}">
+                <input type="hidden" id="edit_vendedor_id" name="vendedor_id">
+                <input type="hidden" id="edit_empresa_nif" name="empresa_nif">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Vendedor</label>
+                        <p class="form-control-plaintext" id="edit_vendedor_display"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Empresa</label>
+                        <p class="form-control-plaintext" id="edit_empresa_display"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_data_in" class="form-label fw-bold">Data de Início *</label>
+                        <input type="date" class="form-control" id="edit_data_in" name="data_in" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_data_fim" class="form-label fw-bold">Data de Fim</label>
+                        <input type="date" class="form-control" id="edit_data_fim" name="data_fim">
+                        <div class="form-text">Deixe vazio para contratos sem termo.</div>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Remover Contrato -->
+<div class="modal fade" id="modalRemoverContrato" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover o contrato:</p>
+                <p class="fw-bold">Vendedor: <span id="contratoRemoverVendedor"></span></p>
+                <p class="fw-bold">Empresa: <span id="contratoRemoverEmpresa"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverContrato" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Contrato
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -113,6 +183,27 @@ registos|length, 'Novo Contrato', 'modalNovoContrato', 'contrato(s)') }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         configurarAtalhos('searchInput');
+
+        // Event listeners para botões de editar
+        document.querySelectorAll('.btn-editar').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit_vendedor_id').value = this.dataset.vendedorId;
+                document.getElementById('edit_empresa_nif').value = this.dataset.empresaNif;
+                document.getElementById('edit_vendedor_display').textContent = this.dataset.vendedorNome;
+                document.getElementById('edit_empresa_display').textContent = this.dataset.empresaNome;
+                document.getElementById('edit_data_in').value = this.dataset.dataIn || '';
+                document.getElementById('edit_data_fim').value = this.dataset.dataFim || '';
+            });
+        });
+
+        // Event listeners para botões de remover
+        document.querySelectorAll('.btn-remover').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('contratoRemoverVendedor').textContent = this.dataset.vendedorNome;
+                document.getElementById('contratoRemoverEmpresa').textContent = this.dataset.empresaNome;
+                document.getElementById('formRemoverContrato').action = '/contrato_vendedor/remover/' + this.dataset.vendedorId + '/' + encodeURIComponent(this.dataset.empresaNif);
+            });
+        });
     });
 </script>
 {% endblock %}

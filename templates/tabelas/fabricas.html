@@ -16,9 +16,7 @@ search_script_init, no_results_alert, modal_header, modal_footer, form_input, ac
 
 {# Barra de pesquisa com botão #}
 {{ search_bar_with_button('fábrica', 'tabelaFabricas', 'totalFabricas', pagination.total if pagination else
-registos|length, 'Nova Fábrica', 'modalNovoFabrica', 'fábrica(s)') }}
-
-
+registos|length, 'Nova Fábrica', 'modalNovaFabrica', 'fábrica(s)') }}
 
 <div class="table-responsive">
     <table class="table table-striped table-hover" id="tabelaFabricas">
@@ -42,10 +40,15 @@ registos|length, 'Nova Fábrica', 'modalNovoFabrica', 'fábrica(s)') }}
                 <td>{{ fabrica[3] }}</td>
                 <td>{{ fabrica[4] }}</td>
                 <td class="text-center text-nowrap">
-                    <button type="button" class="btn btn-soft-warning btn-sm" title="Editar">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarFabrica" data-id="{{ fabrica[0] }}" data-nome="{{ fabrica[1] }}"
+                        data-localizacao="{{ fabrica[2] }}"
+                        data-empresa-nif="{{ fabrica[5] if fabrica|length > 5 else '' }}"
+                        data-distribuidora-id="{{ fabrica[6] if fabrica|length > 6 else '' }}">
                         <i class="bi bi-pencil-square"></i> Editar
                     </button>
-                    <button type="button" class="btn btn-soft-danger btn-sm ms-1" title="Remover">
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverFabrica" data-id="{{ fabrica[0] }}" data-nome="{{ fabrica[1] }}">
                         <i class="bi bi-trash3"></i> Remover
                     </button>
                 </td>
@@ -74,29 +77,24 @@ registos|length, 'Nova Fábrica', 'modalNovoFabrica', 'fábrica(s)') }}
 <div class="modal fade" id="modalNovaFabrica" data-bs-backdrop="static" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle"></i> Nova Fábrica
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+            {{ modal_header('Nova Fábrica', 'primary', 'bi bi-plus-circle') }}
             <form method="POST" action="{{ url_for('adicionar_fabrica') }}">
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="nome" class="form-label">Nome *</label>
+                            <label for="nome" class="form-label fw-bold">Nome *</label>
                             <input type="text" class="form-control" id="nome" name="nome" required maxlength="100"
                                 placeholder="Nome da Fábrica">
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="localizacao" class="form-label">Localização *</label>
+                            <label for="localizacao" class="form-label fw-bold">Localização *</label>
                             <input type="text" class="form-control" id="localizacao" name="localizacao" required
                                 maxlength="200" placeholder="Cidade, Região">
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="empresa_nif" class="form-label">Empresa *</label>
+                            <label for="empresa_nif" class="form-label fw-bold">Empresa *</label>
                             <select class="form-select" id="empresa_nif" name="empresa_nif" required>
                                 <option value="">-- Selecione a Empresa --</option>
                                 {% if empresas %}
@@ -107,7 +105,7 @@ registos|length, 'Nova Fábrica', 'modalNovoFabrica', 'fábrica(s)') }}
                             </select>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="distribuidora_id" class="form-label">Distribuidora *</label>
+                            <label for="distribuidora_id" class="form-label fw-bold">Distribuidora *</label>
                             <select class="form-select" id="distribuidora_id" name="distribuidora_id" required>
                                 <option value="">-- Selecione a Distribuidora --</option>
                                 {% if distribuidoras %}
@@ -119,11 +117,89 @@ registos|length, 'Nova Fábrica', 'modalNovoFabrica', 'fábrica(s)') }}
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Adicionar Fábrica</button>
-                </div>
+                {{ modal_footer('Adicionar Fábrica', 'primary') }}
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Fábrica -->
+<div class="modal fade" id="modalEditarFabrica" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Fábrica', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_fabrica') }}">
+                <input type="hidden" id="edit_id" name="id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_nome" class="form-label fw-bold">Nome *</label>
+                            <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_localizacao" class="form-label fw-bold">Localização *</label>
+                            <input type="text" class="form-control" id="edit_localizacao" name="localizacao" required
+                                maxlength="200">
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_empresa_nif" class="form-label fw-bold">Empresa *</label>
+                            <select class="form-select" id="edit_empresa_nif" name="empresa_nif" required>
+                                <option value="">-- Selecione a Empresa --</option>
+                                {% if empresas %}
+                                {% for empresa in empresas %}
+                                <option value="{{ empresa[0] }}">{{ empresa[1] }}</option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_distribuidora_id" class="form-label fw-bold">Distribuidora *</label>
+                            <select class="form-select" id="edit_distribuidora_id" name="distribuidora_id" required>
+                                <option value="">-- Selecione a Distribuidora --</option>
+                                {% if distribuidoras %}
+                                {% for dist in distribuidoras %}
+                                <option value="{{ dist[0] }}">{{ dist[1] }}</option>
+                                {% endfor %}
+                                {% endif %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Remover Fábrica -->
+<div class="modal fade" id="modalRemoverFabrica" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-trash-fill"></i> Confirmar Remoção
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Tem a certeza que deseja remover a fábrica:</p>
+                <p class="fw-bold" id="fabricaRemoverNome"></p>
+                <p class="text-muted small">ID: <span id="fabricaRemoverId"></span></p>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Esta ação não pode ser desfeita!
+                </div>
+            </div>
+            <div class="modal-footer">
+                <form method="POST" id="formRemoverFabrica" action="">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash-fill"></i> Remover Fábrica
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -134,6 +210,26 @@ registos|length, 'Nova Fábrica', 'modalNovoFabrica', 'fábrica(s)') }}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         configurarAtalhos('searchInput');
+
+        // Event listeners para botões de editar
+        document.querySelectorAll('.btn-editar').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('edit_id').value = this.dataset.id;
+                document.getElementById('edit_nome').value = this.dataset.nome;
+                document.getElementById('edit_localizacao').value = this.dataset.localizacao;
+                document.getElementById('edit_empresa_nif').value = this.dataset.empresaNif || '';
+                document.getElementById('edit_distribuidora_id').value = this.dataset.distribuidoraId || '';
+            });
+        });
+
+        // Event listeners para botões de remover
+        document.querySelectorAll('.btn-remover').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('fabricaRemoverId').textContent = this.dataset.id;
+                document.getElementById('fabricaRemoverNome').textContent = this.dataset.nome;
+                document.getElementById('formRemoverFabrica').action = '/fabrica/remover/' + this.dataset.id;
+            });
+        });
     });
 </script>
 {% endblock %}
