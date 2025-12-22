@@ -46,14 +46,14 @@
                 <td>{{ venda[5] }}</td>
                 <td><span class="badge bg-secondary">{{ venda[3] }}</span></td>
                 <td class="text-end fw-bold text-success">{{ "%.2f"|format(venda[2]) }} €</td>
-                <td class="text-center">
-                    <button class="btn btn-soft-primary btn-sm me-1" onclick="carregarDetalhesVenda('{{ venda[0] }}')"
+                <td class="text-center text-nowrap">
+                    <button class="btn btn-soft-primary btn-sm" onclick="carregarDetalhesVenda('{{ venda[0] }}')"
                         data-bs-toggle="modal" data-bs-target="#modalDetalhesVenda" title="Ver Detalhes">
-                        <i class="bi bi-eye"></i>
+                        <i class="bi bi-eye"></i> Detalhes
                     </button>
-                    <button class="btn btn-soft-warning btn-sm" onclick="abrirModalEditarVenda('{{ venda[0] }}')"
+                    <button class="btn btn-soft-warning btn-sm ms-1" onclick="abrirModalEditarVenda('{{ venda[0] }}')"
                         data-bs-toggle="modal" data-bs-target="#modalEditarVenda" title="Editar Venda">
-                        <i class="bi bi-pencil"></i>
+                        <i class="bi bi-pencil-square"></i> Editar
                     </button>
                 </td>
             </tr>
@@ -222,7 +222,8 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted small text-uppercase fw-bold">NIF Cliente</label>
-                        <input type="text" class="form-control" id="edit_venda_nif" maxlength="9" placeholder="999999999">
+                        <input type="text" class="form-control" id="edit_venda_nif" maxlength="9"
+                            placeholder="999999999">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label text-muted small text-uppercase fw-bold">Pagamento</label>
@@ -244,7 +245,8 @@
                         <select class="form-select form-control" id="edit_add_produto">
                             <option value="">-- Selecione --</option>
                             {% for prod in dados_produtos %}
-                            <option value="{{ prod[0] }}" data-nome="{{ prod[1] }}">{{ prod[1] }} ({{ prod[0] }})</option>
+                            <option value="{{ prod[0] }}" data-nome="{{ prod[1] }}">{{ prod[1] }} ({{ prod[0] }})
+                            </option>
                             {% endfor %}
                         </select>
                     </div>
@@ -419,7 +421,7 @@
     async function abrirModalEditarVenda(vendaId) {
         vendaIdEmEdicao = vendaId;
         carrinhoEdicao = [];
-        
+
         document.getElementById('editVendaId').textContent = vendaId;
         document.getElementById('editLoadingSpinner').style.display = 'block';
         document.getElementById('editCorpoCarrinho').innerHTML = '';
@@ -427,14 +429,14 @@
 
         try {
             const response = await fetch(`/api/venda/${vendaId}/detalhes`);
-            
+
             // Verificar se a resposta é OK
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Erro do servidor:', errorText);
                 throw new Error(`Erro ${response.status}: ${response.statusText}`);
             }
-            
+
             const venda = await response.json();
 
             if (venda.erro) {
