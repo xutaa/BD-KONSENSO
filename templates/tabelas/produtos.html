@@ -185,13 +185,11 @@
                             <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
                         </div>
                         <div class="col-md-6">
-                            <label for="edit_referencia"
-                                class="form-label small text-uppercase fw-bold text-muted">Referência *</label>
+                            <label class="form-label small text-uppercase fw-bold text-muted">Referência</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i
                                         class="fa-solid fa-barcode text-muted"></i></span>
-                                <input type="text" class="form-control border-start-0 ps-0" id="edit_referencia"
-                                    name="referencia" required maxlength="20">
+                                <p class="form-control-plaintext ps-2 mb-0" id="edit_referencia_display"></p>
                             </div>
                         </div>
                     </div>
@@ -287,7 +285,7 @@
 
     function preencherModalEdicao(referencia, nome, descricao, preco, maquinaId, distribuidoraId) {
         document.getElementById('edit_referencia_atual').value = referencia;
-        document.getElementById('edit_referencia').value = referencia;
+        document.getElementById('edit_referencia_display').textContent = referencia;
         document.getElementById('edit_nome').value = nome;
         document.getElementById('edit_descricao').value = descricao;
         document.getElementById('edit_preco').value = preco;

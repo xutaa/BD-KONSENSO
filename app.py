@@ -563,15 +563,14 @@ def editar_cliente():
         data_nasc = request.form.get('data_nasc')
         morada = request.form.get('morada')
         telemovel = request.form.get('telemovel')
-        nif = request.form.get('nif')
         
         conn = get_db_connection()
         if not conn:
             flash('Erro de conexão', 'error')
             return redirect(url_for('lista_clientes'))
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.AtualizarCliente (?, ?, ?, ?, ?, ?, ?)}", 
-                      (cc, nome, email, data_nasc, morada, telemovel, nif))
+        cursor.execute("{CALL dbo.AtualizarCliente (?, ?, ?, ?, ?, ?)}", 
+                      (cc, nome, email, data_nasc, morada, telemovel))
         conn.commit()
         flash('✅ Cliente atualizado com sucesso!', 'success')
     except Exception as e:
@@ -1899,8 +1898,7 @@ def editar_produto():
     """Edita um produto existente"""
     try:
         # Dados do formulário
-        referencia_atual = request.form.get('referencia_atual')
-        nova_referencia = request.form.get('referencia')
+        referencia = request.form.get('referencia_atual')
         nome = request.form.get('nome')
         descricao = request.form.get('descricao')
         preco = float(request.form.get('preco').replace(',', '.'))
@@ -1911,8 +1909,8 @@ def editar_produto():
             flash('Erro de conexão com a base de dados', 'error')
             return redirect(url_for('lista_produtos'))
         cursor = conn.cursor()
-        cursor.execute("{CALL dbo.AtualizarProduto (?, ?, ?, ?, ?, ?, ?)}",
-                       (referencia_atual, nova_referencia, nome, descricao, preco, maquina_id, distribuidora_id))
+        cursor.execute("{CALL dbo.AtualizarProduto (?, ?, ?, ?, ?, ?)}",
+                       (referencia, nome, descricao, preco, maquina_id, distribuidora_id))
         conn.commit()
         flash('✅ Produto atualizado com sucesso!', 'success')
     except ValueError:

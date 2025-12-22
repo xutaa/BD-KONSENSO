@@ -1,10 +1,13 @@
 -- =============================================
 -- SP: AtualizarProduto
 -- Descrição: Atualiza os dados de um produto existente
+-- Nota: A Referência não é atualizável pois é a chave primária
 -- =============================================
+USE p2g4;
+GO
+
 CREATE OR ALTER PROCEDURE dbo.AtualizarProduto
-    @ReferenciaAtual VARCHAR(20),
-    @NovaReferencia VARCHAR(20),
+    @Referencia VARCHAR(20),
     @Nome VARCHAR(100),
     @Descricao VARCHAR(200),
     @Preco DECIMAL(10, 2),
@@ -15,26 +18,19 @@ BEGIN
     SET NOCOUNT ON;
    
     BEGIN TRY
-        IF NOT EXISTS (SELECT 1 FROM dbo.Produto WHERE Referencia = @ReferenciaAtual)
+        IF NOT EXISTS (SELECT 1 FROM dbo.Produto WHERE Referencia = @Referencia)
         BEGIN
             RAISERROR('Produto não encontrado.', 16, 1);
             RETURN;
         END
    
-        IF @ReferenciaAtual <> @NovaReferencia AND EXISTS (SELECT 1 FROM dbo.Produto WHERE Referencia = @NovaReferencia)
-        BEGIN
-            RAISERROR('A nova referência já existe em outro produto.', 16, 1);
-            RETURN;
-        END
-   
         UPDATE dbo.Produto
-        SET Referencia = @NovaReferencia,
-            Nome = @Nome,
+        SET Nome = @Nome,
             Descricao = @Descricao,
             Preco = @Preco,
-            MaquinaID = @MaquinaId,
-            DistribuidoraID = @DistribuidoraId
-        WHERE Referencia = @ReferenciaAtual;
+            Maquina_Id = @MaquinaId,
+            Distribuidora_Id = @DistribuidoraId
+        WHERE Referencia = @Referencia;
     END TRY
     BEGIN CATCH
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();

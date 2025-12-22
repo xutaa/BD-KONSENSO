@@ -89,7 +89,8 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
                             {{ form_input('nif', 'NIF *', required=true, placeholder='9 dígitos') }}
                         </div>
                     </div>
-                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar, Código Postal...') }}
+                    {{ form_input('morada', 'Morada *', required=true, maxlength='200', placeholder='Rua, Número, Andar,
+                    Código Postal...') }}
                     <div class="row">
                         <div class="col-md-6">
                             {{ form_input('telemovel', 'Telemóvel *', type='tel', required=true,
@@ -128,8 +129,8 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="edit_nif" class="form-label fw-bold">NIF *</label>
-                                <input type="text" class="form-control" id="edit_nif" name="nif" required>
+                                <label class="form-label fw-bold">NIF</label>
+                                <p class="form-control-plaintext" id="edit_nif_display"></p>
                             </div>
                         </div>
                     </div>
@@ -206,7 +207,7 @@ registos|length, 'Novo Cliente', 'modalNovoCliente', 'cliente(s)') }}
             document.getElementById('edit_email').value = this.dataset.email;
             document.getElementById('edit_data_nasc').value = this.dataset.dataNasc;
             document.getElementById('edit_telemovel').value = this.dataset.telemovel;
-            document.getElementById('edit_nif').value = this.dataset.nif;
+            document.getElementById('edit_nif_display').textContent = this.dataset.nif;
             document.getElementById('edit_morada').value = this.dataset.morada || '';
         });
     });
