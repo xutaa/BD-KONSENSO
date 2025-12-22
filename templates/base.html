@@ -35,7 +35,9 @@
                 </a>
             </div>
 
-            <!-- Dashboard -->
+            {% set tipo_admin = session.get('tipo_admin', 'Geral') %}
+
+            <!-- Dashboard - Visível para todos -->
             <div class="nav-section">
                 <div class="nav-section-title">Principal</div>
                 <a href="{{ url_for('dashboard') }}"
@@ -44,34 +46,46 @@
                 </a>
             </div>
 
-            <!-- Vendas & Produtos -->
+            <!-- Comercial - Geral e Loja veem vendas/itens, Fábrica só vê produtos -->
             <div class="nav-section">
                 <div class="nav-section-title">Comercial</div>
+                {% if tipo_admin != 'Fabrica' %}
                 <a href="{{ url_for('lista_vendas') }}"
                     class="nav-link {% if request.endpoint == 'lista_vendas' %}active{% endif %}">
                     <i class="fa-solid fa-cart-shopping"></i> Vendas
                 </a>
+                {% endif %}
                 <a href="{{ url_for('lista_produtos') }}"
                     class="nav-link {% if request.endpoint == 'lista_produtos' %}active{% endif %}">
                     <i class="fa-solid fa-box"></i> Produtos
                 </a>
+                {% if tipo_admin != 'Fabrica' %}
                 <a href="{{ url_for('lista_itens') }}"
                     class="nav-link {% if request.endpoint == 'lista_itens' %}active{% endif %}">
                     <i class="fa-solid fa-receipt"></i> Itens Venda
                 </a>
+                {% endif %}
             </div>
 
-            <!-- Gestão Pessoas -->
+            <!-- Recursos Humanos - Geral vê tudo, Loja vê clientes, Fábrica vê funcionários -->
+            {% if tipo_admin == 'Geral' or tipo_admin == 'Loja' or tipo_admin == 'Fabrica' %}
             <div class="nav-section">
-                <div class="nav-section-title">Recursos Humanos & Clientes</div>
+                <div class="nav-section-title">
+                    {% if tipo_admin == 'Loja' %}Clientes{% else %}Recursos Humanos{% endif %}
+                </div>
+                {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
                 <a href="{{ url_for('lista_funcionarios') }}"
                     class="nav-link {% if request.endpoint == 'lista_funcionarios' %}active{% endif %}">
                     <i class="fa-solid fa-user-tie"></i> Funcionários
                 </a>
+                {% endif %}
+                {% if tipo_admin == 'Geral' or tipo_admin == 'Loja' %}
                 <a href="{{ url_for('lista_clientes') }}"
                     class="nav-link {% if request.endpoint == 'lista_clientes' %}active{% endif %}">
                     <i class="fa-solid fa-users"></i> Clientes
                 </a>
+                {% endif %}
+                {% if tipo_admin == 'Geral' %}
                 <a href="{{ url_for('lista_vendedores') }}"
                     class="nav-link {% if request.endpoint == 'lista_vendedores' %}active{% endif %}">
                     <i class="fa-solid fa-briefcase"></i> Vendedores
@@ -84,26 +98,33 @@
                     class="nav-link {% if request.endpoint == 'lista_cargos' %}active{% endif %}">
                     <i class="fa-solid fa-id-badge"></i> Cargos
                 </a>
+                {% endif %}
             </div>
+            {% endif %}
 
-            <!-- Logística -->
+            <!-- Logística & Stock - Todos veem stock, Geral/Fábrica veem armazéns, só Geral vê lojas -->
             <div class="nav-section">
                 <div class="nav-section-title">Logística & Stock</div>
                 <a href="{{ url_for('lista_stock') }}"
                     class="nav-link {% if request.endpoint == 'lista_stock' %}active{% endif %}">
                     <i class="fa-solid fa-boxes-stacked"></i> Stock
                 </a>
+                {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
                 <a href="{{ url_for('lista_armazens') }}"
                     class="nav-link {% if request.endpoint == 'lista_armazens' %}active{% endif %}">
                     <i class="fa-solid fa-warehouse"></i> Armazéns
                 </a>
+                {% endif %}
+                {% if tipo_admin == 'Geral' %}
                 <a href="{{ url_for('lista_lojas') }}"
                     class="nav-link {% if request.endpoint == 'lista_lojas' %}active{% endif %}">
                     <i class="fa-solid fa-store"></i> Lojas
                 </a>
+                {% endif %}
             </div>
 
-            <!-- Produção -->
+            <!-- Produção - Apenas Geral e Fábrica -->
+            {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
             <div class="nav-section">
                 <div class="nav-section-title">Produção</div>
                 <a href="{{ url_for('lista_fabricas') }}"
@@ -119,14 +140,18 @@
                     <i class="fa-solid fa-recycle"></i> Matérias-Primas
                 </a>
             </div>
+            {% endif %}
 
-            <!-- Parceiros -->
+            <!-- Parceiros B2B - Geral vê tudo, Fábrica vê fornecedores/distribuidoras -->
+            {% if tipo_admin == 'Geral' or tipo_admin == 'Fabrica' %}
             <div class="nav-section">
                 <div class="nav-section-title">Parceiros B2B</div>
+                {% if tipo_admin == 'Geral' %}
                 <a href="{{ url_for('lista_empresas') }}"
                     class="nav-link {% if request.endpoint == 'lista_empresas' %}active{% endif %}">
                     <i class="fa-solid fa-building"></i> Empresas
                 </a>
+                {% endif %}
                 <a href="{{ url_for('lista_fornecedores') }}"
                     class="nav-link {% if request.endpoint == 'lista_fornecedores' %}active{% endif %}">
                     <i class="fa-solid fa-truck-field"></i> Fornecedores
@@ -136,8 +161,10 @@
                     <i class="fa-solid fa-truck"></i> Distribuidoras
                 </a>
             </div>
+            {% endif %}
 
         </nav>
+
 
         <!-- Main Content Area -->
         <main class="main-content">
