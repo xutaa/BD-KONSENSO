@@ -52,11 +52,17 @@ registos|length, 'Novo Armazém', 'modalNovoArmazem', 'armazém(ns)') }}
                     <span class="badge bg-secondary">-</span>
                     {% endif %}
                 </td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverArmazem',
-                remove_onclick="prepararRemocao('{}', '{}')".format(armazem[0], armazem[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarArmazem" data-id="{{ armazem[0] }}"
+                        data-localizacao="{{ armazem[1] }}" data-capacidade="{{ armazem[2] }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverArmazem" data-id="{{ armazem[0] }}" data-nome="{{ armazem[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -94,16 +100,53 @@ registos|length, 'Novo Armazém', 'modalNovoArmazem', 'armazém(ns)') }}
     </div>
 </div>
 
+{# Modal Editar Armazém #}
+<div class="modal fade" id="modalEditarArmazem" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Armazém', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_armazem') }}">
+                <input type="hidden" id="edit_id" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_localizacao" class="form-label fw-bold">Localização *</label>
+                        <input type="text" class="form-control" id="edit_localizacao" name="localizacao" required
+                            maxlength="200">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_capacidade" class="form-label fw-bold">Capacidade *</label>
+                        <input type="number" class="form-control" id="edit_capacidade" name="capacidade" required
+                            min="1">
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
 {{ modal_remover('Armazem', 'armazem', 'ID', 'armazemRemoverNome', 'armazemRemoverId') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(id, localizacao) {
-        document.getElementById('armazemRemoverId').textContent = id;
-        document.getElementById('armazemRemoverNome').textContent = localizacao;
-        document.getElementById('formRemoverArmazem').action = '/armazem/remover/' + id;
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_id').value = this.dataset.id;
+            document.getElementById('edit_localizacao').value = this.dataset.localizacao;
+            document.getElementById('edit_capacidade').value = this.dataset.capacidade;
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('armazemRemoverId').textContent = this.dataset.id;
+            document.getElementById('armazemRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverArmazem').action = '/armazem/remover/' + this.dataset.id;
+        });
+    });
 </script>
 {% endblock %}

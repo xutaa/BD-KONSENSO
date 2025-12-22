@@ -37,11 +37,18 @@ table_pagination %}
                 <td>{{ cargo[0] }}</td>
                 <td>{{ cargo[1] }}</td>
                 <td>{{ cargo[2] if cargo[2] else 'N/A' }}</td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverCargo',
-                remove_onclick="prepararRemocao('{}', '{}')".format(cargo[0], cargo[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar-cargo" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarCargo" data-id="{{ cargo[0] }}" data-nome="{{ cargo[1] }}"
+                        data-descricao="{{ cargo[2] or '' }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover-cargo"
+                        data-bs-toggle="modal" data-bs-target="#modalRemoverCargo" data-id="{{ cargo[0] }}"
+                        data-nome="{{ cargo[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -81,16 +88,52 @@ table_pagination %}
     </div>
 </div>
 
+{# Modal Editar Cargo #}
+<div class="modal fade" id="modalEditarCargo" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Cargo', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_cargo') }}">
+                <input type="hidden" id="edit_id" name="id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_nome" class="form-label fw-bold">Nome do Cargo *</label>
+                        <input type="text" class="form-control" id="edit_nome" name="nome" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_descricao" class="form-label fw-bold">Descrição</label>
+                        <textarea class="form-control" id="edit_descricao" name="descricao" rows="3"
+                            maxlength="200"></textarea>
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
+            </form>
+        </div>
+    </div>
+</div>
+
 {{ modal_remover('Cargo', 'cargo', 'ID', 'cargoRemoverNome', 'cargoRemoverId') }}
 {% endblock %}
 
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(id, nome) {
-        document.getElementById('cargoRemoverId').textContent = id;
-        document.getElementById('cargoRemoverNome').textContent = nome;
-        document.getElementById('formRemoverCargo').action = '/cargo/remover/' + id;
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar-cargo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_id').value = this.dataset.id;
+            document.getElementById('edit_nome').value = this.dataset.nome;
+            document.getElementById('edit_descricao').value = this.dataset.descricao;
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover-cargo').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('cargoRemoverId').textContent = this.dataset.id;
+            document.getElementById('cargoRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverCargo').action = '/cargo/remover/' + this.dataset.id;
+        });
+    });
 </script>
 {% endblock %}

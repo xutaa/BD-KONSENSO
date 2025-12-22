@@ -40,11 +40,18 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
                 <td>{{ stock[1] }}</td>
                 <td>{{ stock[2] }}</td>
                 <td>{{ stock[3] }}</td>
-                {{ action_buttons(
-                show_edit=false,
-                remove_modal='modalRemoverStock',
-                remove_onclick="prepararRemocao('{}', '{}', '{}')".format(stock[0], stock[5], stock[1])
-                ) }}
+                <td class="text-center text-nowrap">
+                    <button type="button" class="btn btn-soft-warning btn-sm btn-editar" data-bs-toggle="modal"
+                        data-bs-target="#modalEditarStock" data-produto-ref="{{ stock[0] }}"
+                        data-armazem-id="{{ stock[5] }}" data-quantidade="{{ stock[3] }}" data-nome="{{ stock[1] }}">
+                        <i class="bi bi-pencil-square"></i> Editar
+                    </button>
+                    <button type="button" class="btn btn-soft-danger btn-sm ms-1 btn-remover" data-bs-toggle="modal"
+                        data-bs-target="#modalRemoverStock" data-produto-ref="{{ stock[0] }}"
+                        data-armazem-id="{{ stock[5] }}" data-nome="{{ stock[1] }}">
+                        <i class="bi bi-trash3"></i> Remover
+                    </button>
+                </td>
             </tr>
             {% endfor %}
             {% else %}
@@ -78,6 +85,31 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
                     {{ form_input('ultimo_mov', 'Último Movimento *', type='date', required=true) }}
                 </div>
                 {{ modal_footer('Adicionar Stock', 'primary') }}
+            </form>
+        </div>
+    </div>
+</div>
+
+{# Modal Editar Stock #}
+<div class="modal fade" id="modalEditarStock" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            {{ modal_header('Editar Stock', 'warning', 'bi bi-pencil-square') }}
+            <form method="POST" action="{{ url_for('editar_stock') }}">
+                <input type="hidden" id="edit_produto_referencia" name="produto_referencia">
+                <input type="hidden" id="edit_armazem_id" name="armazem_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Produto</label>
+                        <p class="form-control-plaintext" id="edit_produto_nome"></p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit_quantidade" class="form-label fw-bold">Quantidade *</label>
+                        <input type="number" class="form-control" id="edit_quantidade" name="quantidade" required
+                            min="0">
+                    </div>
+                </div>
+                {{ modal_footer('Atualizar', 'warning') }}
             </form>
         </div>
     </div>
@@ -119,11 +151,24 @@ empty_row, modal_header, modal_footer, form_input, form_select, search_script_in
 {% block extra_js %}
 {{ search_script_init() }}
 <script>
-    function prepararRemocao(produtoRef, armazemId, produtoNome) {
-        document.getElementById('stockRemoverProduto').textContent = produtoRef;
-        document.getElementById('stockRemoverArmazem').textContent = armazemId;
-        document.getElementById('stockRemoverNome').textContent = produtoNome;
-        document.getElementById('formRemoverStock').action = '/stock/remover/' + encodeURIComponent(produtoRef) + '/' + encodeURIComponent(armazemId);
-    }
+    // Event listeners para botões de editar
+    document.querySelectorAll('.btn-editar').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('edit_produto_referencia').value = this.dataset.produtoRef;
+            document.getElementById('edit_armazem_id').value = this.dataset.armazemId;
+            document.getElementById('edit_quantidade').value = this.dataset.quantidade;
+            document.getElementById('edit_produto_nome').textContent = this.dataset.nome + ' (' + this.dataset.produtoRef + ')';
+        });
+    });
+
+    // Event listeners para botões de remover
+    document.querySelectorAll('.btn-remover').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            document.getElementById('stockRemoverProduto').textContent = this.dataset.produtoRef;
+            document.getElementById('stockRemoverArmazem').textContent = this.dataset.armazemId;
+            document.getElementById('stockRemoverNome').textContent = this.dataset.nome;
+            document.getElementById('formRemoverStock').action = '/stock/remover/' + encodeURIComponent(this.dataset.produtoRef) + '/' + encodeURIComponent(this.dataset.armazemId);
+        });
+    });
 </script>
 {% endblock %}
