@@ -1751,6 +1751,17 @@ def lista_produtos():
     page = request.args.get('page', 1, type=int)
     per_page = 10  # Produtos por página
     
+    # Parâmetros de ordenação
+    sort_by = request.args.get('sort_by', 'nome')  # Coluna para ordenar
+    sort_dir = request.args.get('sort_dir', 'asc')  # Direção: asc ou desc
+    
+    # Validar parâmetros de ordenação (prevenir SQL injection)
+    valid_columns = {'nome': 'Nome', 'referencia': 'Referencia', 'preco': 'Preco'}
+    valid_dirs = {'asc': 'ASC', 'desc': 'DESC'}
+    
+    order_column = valid_columns.get(sort_by.lower(), 'Nome')
+    order_dir = valid_dirs.get(sort_dir.lower(), 'ASC')
+    
     conn = None
     try:
         conn = get_db_connection()
@@ -1761,17 +1772,19 @@ def lista_produtos():
                                  maquinas=[], 
                                  distribuidoras=[],
                                  pagination=None,
+                                 sort_by=sort_by,
+                                 sort_dir=sort_dir,
                                  sucesso=False)
         cursor = conn.cursor()
         
         if session.get('tipo_admin') == 'Fabrica' and session.get('fabrica_id'):
             fabrica_id = session.get('fabrica_id')
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT p.Nome, p.Referencia, p.Descricao, p.Preco, p.Maquina_Id, p.Distribuidora_Id 
                 FROM Produto p
                 INNER JOIN Maquina m ON p.Maquina_Id = m.Id
                 WHERE m.Fabrica_Id = ?
-                ORDER BY p.Nome
+                ORDER BY p.{order_column} {order_dir}
             """, (fabrica_id,))
             produtos = cursor.fetchall()
             
@@ -1786,14 +1799,14 @@ def lista_produtos():
             """, (fabrica_id,))
             distribuidoras = cursor.fetchall()
         else:
-            cursor.execute("""
+            cursor.execute(f"""
                 SELECT Nome, Referencia, Descricao, Preco, Maquina_Id, Distribuidora_Id 
                 FROM Produto
-                ORDER BY Nome
+                ORDER BY {order_column} {order_dir}
             """) 
             produtos = cursor.fetchall()
             
-            print(f"📊 TODOS os produtos (sem filtro): {len(produtos)} registos")
+            print(f"📊 TODOS os produtos (sem filtro): {len(produtos)} registos - Ordenado por {order_column} {order_dir}")
             
             cursor.execute("SELECT Id, Descricao FROM Maquina ORDER BY Descricao") 
             maquinas = cursor.fetchall()
@@ -1811,6 +1824,8 @@ def lista_produtos():
                              maquinas=maquinas,            
                              distribuidoras=distribuidoras,
                              pagination=pagination,
+                             sort_by=sort_by,
+                             sort_dir=sort_dir,
                              sucesso=True)
     except Exception as e:
         print(f"Erro ao listar produtos: {e}")
@@ -1820,6 +1835,8 @@ def lista_produtos():
                              maquinas=[], 
                              distribuidoras=[],
                              pagination=None,
+                             sort_by=sort_by,
+                             sort_dir=sort_dir,
                              sucesso=False)
     finally:
         if conn:

@@ -13,7 +13,7 @@
 {# Mensagens flash #}
 {{ flash_messages() }}
 
-<!-- 🔍 BARRA DE PESQUISA + BOTÃO NOVO -->
+<!-- 🔍 BARRA DE PESQUISA + ORDENAÇÃO + BOTÃO NOVO -->
 <div class="d-flex justify-content-between align-items-center gap-3 mb-4 flex-wrap">
     <div class="d-flex align-items-center gap-3 flex-grow-1">
         <div class="search-container flex-grow-1" style="max-width: 400px;">
@@ -28,9 +28,65 @@
             <span id="totalProdutos">{{ pagination.total if pagination else registos|length }}</span> produto(s)
         </small>
     </div>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
-        <i class="bi bi-plus-circle"></i> Novo Produto
-    </button>
+    <div class="d-flex gap-2 align-items-center">
+        <!-- Dropdown de Ordenação -->
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <i class="bi bi-sort-alpha-down"></i> Ordenar por
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li>
+                    <h6 class="dropdown-header">Ordenar por</h6>
+                </li>
+                <li>
+                    <a class="dropdown-item {{ 'active' if sort_by == 'nome' and sort_dir == 'asc' else '' }}"
+                        href="{{ url_for('lista_produtos', sort_by='nome', sort_dir='asc') }}">
+                        <i class="bi bi-sort-alpha-down me-2"></i> Nome (A-Z)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {{ 'active' if sort_by == 'nome' and sort_dir == 'desc' else '' }}"
+                        href="{{ url_for('lista_produtos', sort_by='nome', sort_dir='desc') }}">
+                        <i class="bi bi-sort-alpha-up me-2"></i> Nome (Z-A)
+                    </a>
+                </li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li>
+                    <a class="dropdown-item {{ 'active' if sort_by == 'referencia' and sort_dir == 'asc' else '' }}"
+                        href="{{ url_for('lista_produtos', sort_by='referencia', sort_dir='asc') }}">
+                        <i class="bi bi-hash me-2"></i> Referência (A-Z)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {{ 'active' if sort_by == 'referencia' and sort_dir == 'desc' else '' }}"
+                        href="{{ url_for('lista_produtos', sort_by='referencia', sort_dir='desc') }}">
+                        <i class="bi bi-hash me-2"></i> Referência (Z-A)
+                    </a>
+                </li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+                <li>
+                    <a class="dropdown-item {{ 'active' if sort_by == 'preco' and sort_dir == 'asc' else '' }}"
+                        href="{{ url_for('lista_produtos', sort_by='preco', sort_dir='asc') }}">
+                        <i class="bi bi-currency-euro me-2"></i> Preço (menor primeiro)
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item {{ 'active' if sort_by == 'preco' and sort_dir == 'desc' else '' }}"
+                        href="{{ url_for('lista_produtos', sort_by='preco', sort_dir='desc') }}">
+                        <i class="bi bi-currency-euro me-2"></i> Preço (maior primeiro)
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNovoProduto">
+            <i class="bi bi-plus-circle"></i> Novo Produto
+        </button>
+    </div>
 </div>
 
 <div class="table-responsive">
