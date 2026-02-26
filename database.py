@@ -1,11 +1,6 @@
 import pyodbc
 from typing import Optional
 
-SERVER = 'mednat.ieeta.pt\\SQLSERVER,8101'  
-DATABASE = 'p2g4'
-USERNAME = 'p2g4' 
-PASSWORD = 'Sim@oxuta2025'
-
 ODBC_DRIVER = '{ODBC Driver 17 for SQL Server}' 
 
 CONNECTION_STRING = (
